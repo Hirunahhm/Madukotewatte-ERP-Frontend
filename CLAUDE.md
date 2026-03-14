@@ -17,6 +17,14 @@ npm run lint      # ESLint check
 
 No test runner is configured yet (Jest/Vitest/Playwright are planned per the coding guide).
 
+## UI Component Library
+
+shadcn/ui v4 is installed (style: `base-nova`, using `@base-ui/react` primitives). Components live in `src/components/ui/`. Installed: `button`, `card`, `input`, `table`, `badge`, `dropdown-menu`, `select`, `avatar`.
+
+- Add new components with `npx shadcn@latest add <component>`
+- The shadcn init used v4 (Tailwind v4-style) but the project is on **Tailwind CSS v3**. The `globals.css` therefore uses HSL CSS variables (not oklch) and `tailwind.config.ts` maps them as `hsl(var(--<token>))` color values. Do NOT add `@import "shadcn/tailwind.css"` or `@import "tw-animate-css"` — those require Tailwind v4.
+- Animations use `tailwindcss-animate` (v3 plugin, already in devDependencies).
+
 ## Architecture
 
 ### Routing (Next.js App Router)

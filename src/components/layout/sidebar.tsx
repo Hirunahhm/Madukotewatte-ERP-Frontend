@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
     LayoutDashboard,
@@ -9,7 +10,6 @@ import {
     TrendingUp,
     Briefcase,
     LogOut,
-    Leaf,
     CloudSun
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -33,14 +33,19 @@ export function Sidebar() {
     return (
         <div className="flex h-screen w-64 flex-col border-r border-gray-200 bg-white">
             {/* Brand */}
-            <div className="flex h-16 shrink-0 items-center px-6 border-b border-gray-100">
-                <Link href="/dashboard" className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-500 text-white">
-                        <Leaf className="h-5 w-5" />
+            <div className="flex h-20 shrink-0 items-center px-4 border-b border-gray-100">
+                <Link href="/dashboard" className="flex items-center gap-3">
+                    <Image
+                        src="/estate_logo.png"
+                        alt="Madukotewatta Estates Logo"
+                        width={48}
+                        height={48}
+                        className="rounded-full object-cover shrink-0"
+                    />
+                    <div className="flex flex-col leading-tight">
+                        <span className="text-sm font-bold text-brand-700 tracking-tight">Madukotewatta</span>
+                        <span className="text-xs font-semibold text-brand-500 tracking-wider uppercase">Estates ERP</span>
                     </div>
-                    <span className="text-xl font-bold text-brand-500 tracking-tight">
-                        AgriManage ERP
-                    </span>
                 </Link>
             </div>
 

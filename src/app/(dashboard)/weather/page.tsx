@@ -4,6 +4,8 @@ import {
     CloudLightning, Sunrise, Sunset, Clock, Droplets, Wind, Sun,
     CloudRain, Umbrella, Zap, Map, AlertTriangle, Info, Bell
 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function WeatherPage() {
     const hourlyForecast = [
@@ -39,8 +41,8 @@ export default function WeatherPage() {
                 </div>
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                     <div className="flex bg-white rounded-lg border border-gray-200 p-1">
-                        <button className="text-xs font-bold text-gray-900 bg-gray-100 px-3 py-1.5 rounded">°C</button>
-                        <button className="text-xs font-bold text-gray-500 hover:text-gray-900 px-3 py-1.5 rounded">°F</button>
+                        <Button size="sm" variant="secondary" className="h-7 text-xs text-gray-900">°C</Button>
+                        <Button size="sm" variant="ghost" className="h-7 text-xs text-gray-500 hover:text-gray-900">°F</Button>
                     </div>
                 </div>
             </div>
@@ -51,7 +53,7 @@ export default function WeatherPage() {
                 <div className="lg:col-span-2 space-y-6">
 
                     {/* Main Hero Card */}
-                    <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+                    <Card className="shadow-sm gap-0 overflow-hidden p-0">
                         <div className="p-6">
                             <div className="flex items-center gap-2 text-brand-600 font-bold text-xs tracking-wider mb-6">
                                 <span className="flex items-center gap-1"><Sun className="w-4 h-4" /> LIVE NOW • BANTING ESTATE</span>
@@ -63,7 +65,7 @@ export default function WeatherPage() {
                                         <span className="text-7xl font-bold text-gray-900 tracking-tighter">28</span>
                                         <span className="text-3xl font-bold text-brand-500 mt-2">°C</span>
                                     </div>
-                                    <p className="text-xl font-medium text-gray-600 mt-2 text-gray-400">Sunny Skies</p>
+                                    <p className="text-xl font-medium text-gray-400 mt-2">Sunny Skies</p>
 
                                     <div className="flex items-center gap-2 mt-6">
                                         <span className="px-3 py-1 bg-brand-50 text-brand-600 text-xs font-bold rounded-full border border-brand-100">High 31°</span>
@@ -113,10 +115,10 @@ export default function WeatherPage() {
                             </div>
                             <span className="flex items-center gap-1 mt-4 sm:mt-0 italic"><Clock className="w-3.5 h-3.5" /> Last updated: 2 mins ago</span>
                         </div>
-                    </div>
+                    </Card>
 
                     {/* Next 24 Hours */}
-                    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+                    <Card className="shadow-sm gap-0 p-6">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                 <Clock className="w-5 h-5 text-brand-500" /> Next 24 Hours
@@ -132,7 +134,7 @@ export default function WeatherPage() {
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    </Card>
 
                     {/* 5-Day Outlook */}
                     <div>
@@ -141,7 +143,7 @@ export default function WeatherPage() {
                         </h3>
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                             {dailyForecast.map((day, idx) => (
-                                <div key={idx} className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm flex flex-col items-center text-center">
+                                <Card key={idx} className="shadow-sm gap-0 p-4 flex flex-col items-center text-center">
                                     <span className="text-sm font-bold text-gray-900">{day.day}</span>
                                     <span className="text-xs text-gray-400 font-medium mb-4">{day.date}</span>
 
@@ -158,7 +160,7 @@ export default function WeatherPage() {
                                         <span className="text-base font-bold text-gray-900">{day.high}</span>
                                         <span className="text-sm font-semibold text-gray-400">{day.low}</span>
                                     </div>
-                                </div>
+                                </Card>
                             ))}
                         </div>
                     </div>
@@ -169,7 +171,7 @@ export default function WeatherPage() {
                 <div className="space-y-6">
 
                     {/* Radar Mock */}
-                    <div className="rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm flex flex-col h-[320px]">
+                    <Card className="shadow-sm gap-0 overflow-hidden p-0 flex flex-col h-[320px]">
                         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
                             <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
                                 <Map className="w-4 h-4 text-brand-500" /> Satellite View
@@ -181,7 +183,6 @@ export default function WeatherPage() {
                         <div className="flex-1 relative bg-gradient-to-br from-blue-900 via-emerald-800 to-emerald-600 overflow-hidden">
                             <div className="absolute inset-0 opacity-40 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay"></div>
 
-                            {/* Simulated clouds/radar */}
                             <div className="absolute top-10 left-10 w-40 h-40 bg-white/20 rounded-full blur-2xl"></div>
                             <div className="absolute bottom-20 right-10 w-60 h-60 bg-yellow-400/20 rounded-full blur-3xl"></div>
                             <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-red-500/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
@@ -200,7 +201,7 @@ export default function WeatherPage() {
                         <div className="p-3 text-center text-xs text-gray-500 font-medium">
                             Showing cloud density & moisture levels for Banting
                         </div>
-                    </div>
+                    </Card>
 
                     {/* Active Alerts */}
                     <div>
@@ -209,7 +210,6 @@ export default function WeatherPage() {
                         </h3>
 
                         <div className="space-y-3">
-                            {/* Alert 1 */}
                             <div className="p-4 rounded-xl border border-red-200 bg-red-50 flex items-start gap-3">
                                 <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                                 <div>
@@ -223,7 +223,6 @@ export default function WeatherPage() {
                                 </div>
                             </div>
 
-                            {/* Alert 2 */}
                             <div className="p-4 rounded-xl border border-orange-200 bg-orange-50 flex items-start gap-3">
                                 <Info className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
                                 <div>
@@ -240,7 +239,7 @@ export default function WeatherPage() {
                     </div>
 
                     {/* Air Quality */}
-                    <div className="rounded-xl border border-gray-100 bg-gray-50 p-6 shadow-sm">
+                    <Card className="bg-gray-50 shadow-sm gap-0 p-6">
                         <div className="flex items-center gap-2 mb-4">
                             <div className="w-2 h-2 rounded-full bg-brand-500"></div>
                             <h3 className="text-sm font-bold text-gray-900">Air Quality Index</h3>
@@ -257,14 +256,13 @@ export default function WeatherPage() {
                             </div>
                         </div>
 
-                        {/* Simple visual bar */}
                         <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden flex">
                             <div className="h-full bg-brand-500 w-1/4"></div>
                             <div className="h-full bg-yellow-400 w-1/4"></div>
                             <div className="h-full bg-orange-500 w-1/4"></div>
                             <div className="h-full bg-red-500 w-1/4"></div>
                         </div>
-                    </div>
+                    </Card>
 
                 </div>
             </div>
