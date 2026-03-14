@@ -34,8 +34,8 @@ export default function FinancialsPage() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">Financial Tracking</h1>
-                    <p className="text-sm text-gray-500 mt-1">Real-time overview of rubber plantation revenue and expenditures.</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Financial Tracking</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Real-time overview of rubber plantation revenue and expenditures.</p>
                 </div>
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                     <Button variant="outline" className="flex-1 sm:flex-none gap-2 text-gray-700 h-9">
@@ -61,21 +61,21 @@ export default function FinancialsPage() {
                         </div>
                         <div className="flex gap-6">
                             <div>
-                                <span className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">Total Revenue</span>
-                                <p className="text-2xl font-bold text-gray-900">$142,500 <span className="text-xs font-semibold text-brand-600">↗ +12.4%</span></p>
+                                <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase">Total Revenue</span>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">$142,500 <span className="text-xs font-semibold text-brand-600">↗ +12.4%</span></p>
                             </div>
                             <div>
-                                <span className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">Avg Price</span>
-                                <p className="text-2xl font-bold text-gray-900">$2.34 <span className="text-xs font-semibold text-brand-600">↗ +4.2%</span></p>
+                                <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase">Avg Price</span>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">$2.34 <span className="text-xs font-semibold text-brand-600">↗ +4.2%</span></p>
                             </div>
                         </div>
                     </div>
                     <div className="h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
-                                <YAxis dataKey="uv" domain={[2, 6]} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--chart-axis)' }} />
+                                <YAxis dataKey="uv" domain={[2, 6]} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--chart-axis)' }} />
                                 <RechartsTooltip />
                                 <Area type="monotone" dataKey="uv" stroke="#22c55e" strokeWidth={2} fill="transparent" />
                             </AreaChart>
@@ -94,26 +94,26 @@ export default function FinancialsPage() {
                             <CardDescription className="mt-1 max-w-[200px]">Monthly Expenditure by Functional Category</CardDescription>
                         </div>
                         <div className="text-right">
-                            <span className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">Total Expenses</span>
-                            <p className="text-xl font-bold text-gray-900">$91,700 <span className="text-xs font-semibold text-red-500 inline-block">↘ +2.1%</span></p>
+                            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase">Total Expenses</span>
+                            <p className="text-xl font-bold text-gray-900 dark:text-gray-100">$91,700 <span className="text-xs font-semibold text-red-500 inline-block">↘ +2.1%</span></p>
                         </div>
                     </div>
 
                     {/* Treemap mock using grid */}
                     <div className="flex-1 mt-4 grid grid-cols-3 grid-rows-3 gap-1 rounded-xl overflow-hidden text-white font-bold text-sm">
-                        <div className="col-span-2 row-span-3 bg-black p-4 flex flex-col">
+                        <div className="col-span-2 row-span-3 bg-black dark:bg-gray-700 p-4 flex flex-col">
                             <span>Labor</span>
                             <span className="text-xs opacity-70 mt-1">$45.0k</span>
                         </div>
-                        <div className="col-span-1 row-span-1 bg-black p-3 flex flex-col justify-end border-l border-b border-gray-800">
+                        <div className="col-span-1 row-span-1 bg-black dark:bg-gray-700 p-3 flex flex-col justify-end border-l border-b border-gray-800 dark:border-gray-600">
                             <span className="text-xs">Chemicals</span>
                             <span className="text-[10px] opacity-70">$22.0k</span>
                         </div>
-                        <div className="col-span-1 row-span-1 bg-black p-3 flex flex-col justify-end border-l border-b border-gray-800">
+                        <div className="col-span-1 row-span-1 bg-black dark:bg-gray-700 p-3 flex flex-col justify-end border-l border-b border-gray-800 dark:border-gray-600">
                             <span className="text-xs">Maintenance</span>
                             <span className="text-[10px] opacity-70">$12.0k</span>
                         </div>
-                        <div className="col-span-1 row-span-1 bg-black p-3 flex flex-col justify-end border-l border-gray-800">
+                        <div className="col-span-1 row-span-1 bg-black dark:bg-gray-700 p-3 flex flex-col justify-end border-l border-gray-800 dark:border-gray-600">
                             <span className="text-xs">Logistics</span>
                             <span className="text-[10px] opacity-70">$8.5k</span>
                         </div>
@@ -123,13 +123,13 @@ export default function FinancialsPage() {
 
             {/* Transaction Ledger */}
             <Card className="shadow-sm gap-0 overflow-hidden p-0">
-                <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="p-4 border-b border-gray-100 dark:border-gray-700/40 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-base font-semibold leading-6 text-gray-900">Transaction Ledger</h2>
-                        <p className="text-sm text-gray-500">Comprehensive log of all financial movements for May 2024</p>
+                        <h2 className="text-base font-semibold leading-6 text-gray-900 dark:text-gray-100">Transaction Ledger</h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Comprehensive log of all financial movements for May 2024</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="flex bg-gray-50 p-1 rounded-lg border border-gray-100">
+                        <div className="flex bg-gray-50 dark:bg-gray-800 p-1 rounded-lg border border-gray-100 dark:border-gray-700">
                             <Button size="sm" className="bg-brand-500 hover:bg-brand-600 h-7 text-xs shadow-sm">All</Button>
                             <Button variant="ghost" size="sm" className="h-7 text-xs text-gray-500 hover:text-gray-900">Income</Button>
                             <Button variant="ghost" size="sm" className="h-7 text-xs text-gray-500 hover:text-gray-900">Expenses</Button>
@@ -142,31 +142,31 @@ export default function FinancialsPage() {
                 </div>
 
                 <Table>
-                    <TableHeader className="bg-gray-50/50">
-                        <TableRow className="border-gray-100">
-                            <TableHead className="px-6 py-4 text-gray-500 font-semibold">TX ID</TableHead>
-                            <TableHead className="px-6 py-4 text-gray-500 font-semibold">Date</TableHead>
-                            <TableHead className="px-6 py-4 text-gray-500 font-semibold">Description</TableHead>
-                            <TableHead className="px-6 py-4 text-gray-500 font-semibold">Category</TableHead>
-                            <TableHead className="px-6 py-4 text-gray-500 font-semibold">Type</TableHead>
-                            <TableHead className="px-6 py-4 text-gray-500 font-semibold">Amount</TableHead>
-                            <TableHead className="px-6 py-4 text-gray-500 font-semibold">Status</TableHead>
+                    <TableHeader className="bg-gray-50/50 dark:bg-gray-800/50">
+                        <TableRow className="border-gray-100 dark:border-gray-700/40">
+                            <TableHead className="px-6 py-4 text-gray-500 dark:text-gray-400 font-semibold">TX ID</TableHead>
+                            <TableHead className="px-6 py-4 text-gray-500 dark:text-gray-400 font-semibold">Date</TableHead>
+                            <TableHead className="px-6 py-4 text-gray-500 dark:text-gray-400 font-semibold">Description</TableHead>
+                            <TableHead className="px-6 py-4 text-gray-500 dark:text-gray-400 font-semibold">Category</TableHead>
+                            <TableHead className="px-6 py-4 text-gray-500 dark:text-gray-400 font-semibold">Type</TableHead>
+                            <TableHead className="px-6 py-4 text-gray-500 dark:text-gray-400 font-semibold">Amount</TableHead>
+                            <TableHead className="px-6 py-4 text-gray-500 dark:text-gray-400 font-semibold">Status</TableHead>
                             <TableHead className="px-6 py-4 text-right"></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {transactions.map((tx, idx) => (
-                            <TableRow key={idx} className="border-gray-50 hover:bg-gray-50/50">
-                                <TableCell className="px-6 py-4 font-medium text-gray-900">{tx.id}</TableCell>
-                                <TableCell className="px-6 py-4 text-gray-500">{tx.date}</TableCell>
-                                <TableCell className="px-6 py-4 font-medium text-gray-900">{tx.desc}</TableCell>
-                                <TableCell className="px-6 py-4 text-gray-500">{tx.category}</TableCell>
+                            <TableRow key={idx} className="border-gray-50 dark:border-gray-700/30 hover:bg-gray-50/50 dark:hover:bg-gray-800/50">
+                                <TableCell className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">{tx.id}</TableCell>
+                                <TableCell className="px-6 py-4 text-gray-500 dark:text-gray-400">{tx.date}</TableCell>
+                                <TableCell className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">{tx.desc}</TableCell>
+                                <TableCell className="px-6 py-4 text-gray-500 dark:text-gray-400">{tx.category}</TableCell>
                                 <TableCell className="px-6 py-4">
                                     <Badge variant="outline" className={`text-[10px] font-bold uppercase border-transparent ${tx.type === 'income' ? 'bg-gray-100 text-gray-600' : 'bg-red-50 text-red-600'}`}>
                                         {tx.type}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className="px-6 py-4 font-bold text-gray-900">
+                                <TableCell className="px-6 py-4 font-bold text-gray-900 dark:text-gray-100">
                                     {tx.amount}
                                 </TableCell>
                                 <TableCell className="px-6 py-4">
@@ -183,7 +183,7 @@ export default function FinancialsPage() {
                         ))}
                     </TableBody>
                 </Table>
-                <div className="p-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                <div className="p-4 border-t border-gray-100 dark:border-gray-700/40 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                     <span>Showing 5 of 142 transactions this month</span>
                     <div className="flex items-center gap-2">
                         <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-900 h-7 text-xs">Previous</Button>

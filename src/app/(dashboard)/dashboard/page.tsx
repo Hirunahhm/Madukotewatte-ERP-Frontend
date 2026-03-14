@@ -29,8 +29,8 @@ export default function DashboardPage() {
             {/* Top Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-                    <p className="text-sm text-gray-500">Estate overview and daily operations</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Dashboard</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Estate overview and daily operations</p>
                 </div>
             </div>
 
@@ -39,51 +39,51 @@ export default function DashboardPage() {
                 {/* Total Latex */}
                 <Card className="shadow-sm gap-0 p-6">
                     <div className="flex items-center justify-between">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-green-50 text-brand-500">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-green-50 dark:bg-green-950/40 text-brand-500">
                             <Droplet className="h-5 w-5" />
                         </div>
                         <span className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
                             +5.2%
                         </span>
                     </div>
-                    <p className="mt-4 text-sm font-medium text-gray-500">Total Latex</p>
+                    <p className="mt-4 text-sm font-medium text-gray-500 dark:text-gray-400">Total Latex</p>
                     <p className="mt-1 flex items-baseline gap-2">
-                        <span className="text-3xl font-bold tracking-tight text-gray-900">14,250</span>
-                        <span className="text-sm font-medium text-gray-500">Liters</span>
+                        <span className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">14,250</span>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Liters</span>
                     </p>
                 </Card>
 
                 {/* Total Mass */}
                 <Card className="shadow-sm gap-0 p-6">
                     <div className="flex items-center justify-between">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-50 text-blue-500">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-500">
                             <Scale className="h-5 w-5" />
                         </div>
                         <span className="flex items-center text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">
                             -1.8%
                         </span>
                     </div>
-                    <p className="mt-4 text-sm font-medium text-gray-500">Total Mass</p>
+                    <p className="mt-4 text-sm font-medium text-gray-500 dark:text-gray-400">Total Mass</p>
                     <p className="mt-1 flex items-baseline gap-2">
-                        <span className="text-3xl font-bold tracking-tight text-gray-900">4,820</span>
-                        <span className="text-sm font-medium text-gray-500">kg</span>
+                        <span className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">4,820</span>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">kg</span>
                     </p>
                 </Card>
 
                 {/* Avg Metrolac */}
                 <Card className="shadow-sm gap-0 p-6">
                     <div className="flex items-center justify-between">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-zinc-100 text-zinc-900">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100">
                             <Zap className="h-5 w-5" />
                         </div>
                         <span className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
                             +0.5%
                         </span>
                     </div>
-                    <p className="mt-4 text-sm font-medium text-gray-500">Avg Metrolac</p>
+                    <p className="mt-4 text-sm font-medium text-gray-500 dark:text-gray-400">Avg Metrolac</p>
                     <p className="mt-1 flex items-baseline gap-2">
-                        <span className="text-3xl font-bold tracking-tight text-gray-900">32.4</span>
-                        <span className="text-sm font-medium text-gray-500">% DRC</span>
+                        <span className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">32.4</span>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">% DRC</span>
                     </p>
                 </Card>
             </div>
@@ -97,25 +97,25 @@ export default function DashboardPage() {
                         <CardDescription>Weather conditions impacting tapping schedules</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1 p-6">
-                        <div className="flex h-full items-center justify-between rounded-lg border border-gray-100 p-6">
+                        <div className="flex h-full items-center justify-between rounded-lg border border-gray-100 dark:border-gray-700/40 dark:bg-gray-800/30 p-6">
                             <div className="flex items-center gap-6">
                                 <CloudLightning className="h-16 w-16 text-gray-400" />
                                 <div>
-                                    <p className="text-4xl font-bold text-gray-900">28°C</p>
-                                    <p className="text-sm font-medium text-gray-900">Banting, Selangor</p>
-                                    <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                                    <p className="text-4xl font-bold text-gray-900 dark:text-gray-100">28°C</p>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Banting, Selangor</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
                                         <CloudLightning className="h-3 w-3" /> 12 km/h NW
                                     </p>
                                 </div>
                             </div>
 
                             {/* 5-day forecast */}
-                            <div className="hidden sm:flex items-center gap-4 text-center border-l border-gray-100 pl-6 ml-6">
+                            <div className="hidden sm:flex items-center gap-4 text-center border-l border-gray-100 dark:border-gray-700/40 pl-6 ml-6">
                                 {['MON', 'TUE', 'WED', 'THU', 'FRI'].map((day, i) => (
                                     <div key={day} className="flex flex-col items-center gap-2">
-                                        <span className="text-xs font-semibold text-gray-500">{day}</span>
-                                        <CloudLightning className="h-6 w-6 text-gray-400" />
-                                        <span className="text-xs font-bold text-gray-900">{28 - i}°C</span>
+                                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">{day}</span>
+                                        <CloudLightning className="h-6 w-6 text-gray-400 dark:text-gray-500" />
+                                        <span className="text-xs font-bold text-gray-900 dark:text-gray-100">{28 - i}°C</span>
                                     </div>
                                 ))}
                             </div>
@@ -125,8 +125,8 @@ export default function DashboardPage() {
 
                 {/* Production Yield Trend */}
                 <Card className="shadow-sm gap-0 p-6">
-                    <h2 className="text-base font-semibold leading-6 text-gray-900">Production Yield Trend</h2>
-                    <p className="text-sm text-gray-500 mb-6">Daily latex collection average across all tappers (Litres)</p>
+                    <h2 className="text-base font-semibold leading-6 text-gray-900 dark:text-gray-100">Production Yield Trend</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Daily latex collection average across all tappers (Litres)</p>
                     <div className="h-48 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -136,9 +136,9 @@ export default function DashboardPage() {
                                         <stop offset="95%" stopColor={chartColors.primary} stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--chart-axis)' }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--chart-axis)' }} />
                                 <Tooltip />
                                 <Area type="monotone" dataKey="uv" stroke={chartColors.primary} strokeWidth={3} fillOpacity={1} fill="url(#colorUv)" />
                             </AreaChart>
@@ -152,11 +152,11 @@ export default function DashboardPage() {
                 {/* Financial Health (Donut) */}
                 <div className="grid grid-cols-2 gap-4">
                     <Card className="col-span-2 sm:col-span-1 shadow-sm gap-0 p-6 flex flex-col items-center justify-center">
-                        <h3 className="text-xs font-bold text-gray-500 tracking-wider mb-6 self-start w-full text-center">LIQUIDITY DISTRIBUTION</h3>
+                        <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 tracking-wider mb-6 self-start w-full text-center">LIQUIDITY DISTRIBUTION</h3>
                         <div className="relative w-32 h-32 mb-4">
                             <svg className="w-full h-full" viewBox="0 0 36 36">
                                 <path
-                                    className="text-gray-100"
+                                    className="text-gray-100 dark:text-gray-700"
                                     strokeWidth="4"
                                     stroke="currentColor"
                                     fill="none"
@@ -173,24 +173,24 @@ export default function DashboardPage() {
                                 />
                             </svg>
                         </div>
-                        <div className="flex w-full justify-between text-xs font-medium mt-auto border-t border-gray-50 pt-4">
-                            <div className="flex flex-col"><span className="flex items-center gap-1 before:w-2 before:h-2 before:bg-brand-500 before:rounded-full">Cash in Hand</span><span className="text-gray-500">(65%)</span></div>
-                            <div className="flex flex-col"><span className="flex items-center gap-1 before:w-2 before:h-2 before:bg-gray-200 before:rounded-full">Credit</span><span className="text-gray-500">(35%)</span></div>
+                        <div className="flex w-full justify-between text-xs font-medium mt-auto border-t border-gray-50 dark:border-gray-700/30 pt-4">
+                            <div className="flex flex-col"><span className="flex items-center gap-1 before:w-2 before:h-2 before:bg-brand-500 before:rounded-full">Cash in Hand</span><span className="text-gray-500 dark:text-gray-400">(65%)</span></div>
+                            <div className="flex flex-col"><span className="flex items-center gap-1 before:w-2 before:h-2 before:bg-gray-200 dark:before:bg-gray-600 before:rounded-full">Credit</span><span className="text-gray-500 dark:text-gray-400">(35%)</span></div>
                         </div>
                     </Card>
                     <div className="col-span-2 sm:col-span-1 flex flex-col gap-4">
-                        <Card className="border-brand-100 bg-brand-50 p-6 flex-1 flex flex-col justify-center gap-0">
+                        <Card className="border-brand-100 dark:border-brand-800 bg-brand-50 dark:bg-brand-950/30 p-6 flex-1 flex flex-col justify-center gap-0">
                             <span className="text-xs font-bold text-brand-700">TOTAL SALES (MTD)</span>
                             <p className="text-2xl font-bold text-brand-900 mt-2">$124,500.00</p>
                             <span className="text-xs text-brand-600 mt-2">↗ 12% growth vs last month</span>
                         </Card>
                         <Card className="shadow-sm p-6 flex-1 flex flex-col justify-center gap-0">
-                            <span className="text-xs font-bold text-gray-900">OPERATIONAL EXPENSE</span>
-                            <p className="text-2xl font-bold text-gray-900 mt-2">$42,320.00</p>
-                            <div className="w-full bg-gray-100 h-1 mt-3 rounded-full overflow-hidden">
+                            <span className="text-xs font-bold text-gray-900 dark:text-gray-100">OPERATIONAL EXPENSE</span>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-2">$42,320.00</p>
+                            <div className="w-full bg-gray-100 dark:bg-gray-700 h-1 mt-3 rounded-full overflow-hidden">
                                 <div className="bg-red-500 h-full w-[45%] rounded-full"></div>
                             </div>
-                            <span className="text-xs text-gray-500 mt-2">45% of monthly budget utilized</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 mt-2">45% of monthly budget utilized</span>
                         </Card>
                     </div>
                 </div>
@@ -199,16 +199,16 @@ export default function DashboardPage() {
                 <Card className="shadow-sm gap-0 p-6">
                     <div className="flex items-start justify-between mb-6">
                         <div>
-                            <h2 className="text-base font-semibold leading-6 text-gray-900">Workforce Engagement</h2>
-                            <p className="text-sm text-gray-500">Active tappers per day (Last 28 Days)</p>
+                            <h2 className="text-base font-semibold leading-6 text-gray-900 dark:text-gray-100">Workforce Engagement</h2>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Active tappers per day (Last 28 Days)</p>
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded bg-green-50 text-brand-600 flex items-center justify-center">
+                            <div className="h-8 w-8 rounded bg-green-50 dark:bg-green-950/40 text-brand-600 flex items-center justify-center">
                                 <TreeDeciduous className="w-4 h-4" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-gray-900">128 Tappers Active</p>
-                                <p className="text-xs text-gray-500">Current deployment: 92% capacity</p>
+                                <p className="text-sm font-bold text-gray-900 dark:text-gray-100">128 Tappers Active</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Current deployment: 92% capacity</p>
                             </div>
                         </div>
                     </div>
@@ -216,8 +216,8 @@ export default function DashboardPage() {
                     <div className="grid grid-cols-7 gap-2 mb-6">
                         {workforceData.map((d, i) => {
                             const bgColors = [
-                                'bg-gray-100',
-                                'bg-green-200',
+                                'bg-gray-100 dark:bg-gray-700',
+                                'bg-green-200 dark:bg-green-800',
                                 'bg-brand-400',
                                 'bg-brand-500',
                             ];
@@ -231,7 +231,7 @@ export default function DashboardPage() {
                         })}
                     </div>
 
-                    <div className="flex items-center justify-between text-xs font-medium text-gray-500 pt-4 border-t border-gray-50">
+                    <div className="flex items-center justify-between text-xs font-medium text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-50 dark:border-gray-700/30">
                         <span>Highest Attendance: <span className="text-brand-600 font-bold">May 14th</span></span>
                         <span>Rain Disruption: <span className="text-red-500 font-bold">6 Days</span></span>
                     </div>

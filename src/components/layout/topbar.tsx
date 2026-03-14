@@ -37,13 +37,13 @@ export function Topbar() {
             <div className="flex items-center gap-3">
                 <button
                     type="button"
-                    className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 dark:text-gray-400 transition-colors"
                     onClick={toggleSidebar}
                 >
                     <span className="sr-only">Toggle sidebar</span>
                     <Menu className="h-5 w-5" aria-hidden="true" />
                 </button>
-                <span className="hidden sm:block text-sm font-semibold text-gray-700">{pageTitle}</span>
+                <span className="hidden sm:block text-sm font-semibold text-gray-700 dark:text-gray-200">{pageTitle}</span>
             </div>
 
             <div className="flex flex-1 items-center gap-x-4 self-stretch lg:gap-x-6">
@@ -84,16 +84,16 @@ export function Topbar() {
                     </Button>
 
                     {/* Separator */}
-                    <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-200" aria-hidden="true" />
+                    <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-200 dark:lg:bg-gray-700" aria-hidden="true" />
 
                     {/* Profile dropdown */}
                     <DropdownMenu>
-                        <DropdownMenuTrigger className="flex items-center gap-2 p-1.5 rounded-md hover:bg-gray-50 outline-none focus:outline-none">
+                        <DropdownMenuTrigger className="flex items-center gap-2 p-1.5 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 outline-none focus:outline-none">
                             <span className="hidden lg:flex lg:flex-col lg:items-end lg:mr-1">
-                                <span className="text-sm font-semibold leading-6 text-gray-900">
+                                <span className="text-sm font-semibold leading-6 text-gray-900 dark:text-gray-100">
                                     Estate Manager
                                 </span>
-                                <span className="text-xs leading-4 text-gray-500">
+                                <span className="text-xs leading-4 text-gray-500 dark:text-gray-400">
                                     Admin Access
                                 </span>
                             </span>

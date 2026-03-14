@@ -40,13 +40,13 @@ export default function EmployeesPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-3">
-                        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Employee Management</h1>
+                        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Employee Management</h1>
                         <Badge variant="outline" className="text-brand-600 bg-brand-50 border-brand-200 font-semibold">128 Active Staff</Badge>
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">Monitor performance, track attendance, and manage labor logistics.</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Monitor performance, track attendance, and manage labor logistics.</p>
                 </div>
-                <div className="flex items-center bg-white rounded-lg border border-gray-200 p-1">
-                    <span className="text-xs font-semibold text-gray-500 px-3">VIEW STATS FOR:</span>
+                <div className="flex items-center bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-1">
+                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-3">VIEW STATS FOR:</span>
                     <Button size="sm" className="bg-brand-500 hover:bg-brand-600 text-white h-7 text-xs">Monthly</Button>
                     <Button variant="ghost" size="sm" className="text-gray-500 h-7 text-xs">Annual</Button>
                     <Button variant="ghost" size="sm" className="text-gray-500 h-7 text-xs">Lifetime</Button>
@@ -59,26 +59,26 @@ export default function EmployeesPage() {
                 <Card className="shadow-sm gap-0 p-6 relative">
                     <Badge className="absolute top-4 right-4 bg-yellow-100 text-yellow-700 border-transparent">#1</Badge>
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-full bg-gray-200"></div>
+                        <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
                         <div>
-                            <h3 className="text-sm font-bold text-gray-900">Arjun Das</h3>
+                            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">Arjun Das</h3>
                             <p className="text-xs text-brand-600">↗ +12% efficiency increase</p>
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <p className="text-xs font-semibold text-gray-500">TREES TAPPED</p>
-                            <p className="text-lg font-bold text-gray-900">450</p>
+                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">TREES TAPPED</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-gray-100">450</p>
                         </div>
                         <div>
-                            <p className="text-xs font-semibold text-gray-500">LATEX VOL (L)</p>
+                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">LATEX VOL (L)</p>
                             <p className="text-lg font-bold text-brand-500">1250</p>
                         </div>
                     </div>
-                    <div className="flex items-end justify-between border-t border-gray-50 pt-4">
+                    <div className="flex items-end justify-between border-t border-gray-50 dark:border-gray-700/30 pt-4">
                         <div>
-                            <p className="text-xs font-semibold text-gray-500">TOTAL SALARY</p>
-                            <p className="text-lg font-bold text-gray-900">$5700</p>
+                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">TOTAL SALARY</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-gray-100">$5700</p>
                         </div>
                         <Badge variant="secondary" className="text-[10px] font-bold text-gray-500">Elite Tier</Badge>
                     </div>
@@ -87,26 +87,26 @@ export default function EmployeesPage() {
                 <Card className="shadow-sm gap-0 p-6 relative">
                     <Badge className="absolute top-4 right-4 bg-gray-100 text-gray-600 border-transparent">#2</Badge>
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-full bg-gray-200"></div>
+                        <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
                         <div>
-                            <h3 className="text-sm font-bold text-gray-900">Siti Aminah</h3>
+                            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">Siti Aminah</h3>
                             <p className="text-xs text-brand-600">↗ +8% efficiency increase</p>
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <p className="text-xs font-semibold text-gray-500">TREES TAPPED</p>
-                            <p className="text-lg font-bold text-gray-900">425</p>
+                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">TREES TAPPED</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-gray-100">425</p>
                         </div>
                         <div>
-                            <p className="text-xs font-semibold text-gray-500">LATEX VOL (L)</p>
+                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">LATEX VOL (L)</p>
                             <p className="text-lg font-bold text-brand-500">1180</p>
                         </div>
                     </div>
-                    <div className="flex items-end justify-between border-t border-gray-50 pt-4">
+                    <div className="flex items-end justify-between border-t border-gray-50 dark:border-gray-700/30 pt-4">
                         <div>
-                            <p className="text-xs font-semibold text-gray-500">TOTAL SALARY</p>
-                            <p className="text-lg font-bold text-gray-900">$5400</p>
+                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">TOTAL SALARY</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-gray-100">$5400</p>
                         </div>
                         <Badge variant="secondary" className="text-[10px] font-bold text-gray-500">Elite Tier</Badge>
                     </div>
@@ -115,26 +115,26 @@ export default function EmployeesPage() {
                 <Card className="shadow-sm gap-0 p-6 relative">
                     <Badge className="absolute top-4 right-4 bg-orange-100 text-orange-700 border-transparent">#3</Badge>
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-full bg-gray-200"></div>
+                        <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
                         <div>
-                            <h3 className="text-sm font-bold text-gray-900">Rajesh Kumar</h3>
+                            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">Rajesh Kumar</h3>
                             <p className="text-xs text-brand-600">↗ +5% efficiency increase</p>
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <p className="text-xs font-semibold text-gray-500">TREES TAPPED</p>
-                            <p className="text-lg font-bold text-gray-900">410</p>
+                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">TREES TAPPED</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-gray-100">410</p>
                         </div>
                         <div>
-                            <p className="text-xs font-semibold text-gray-500">LATEX VOL (L)</p>
+                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">LATEX VOL (L)</p>
                             <p className="text-lg font-bold text-brand-500">1100</p>
                         </div>
                     </div>
-                    <div className="flex items-end justify-between border-t border-gray-50 pt-4">
+                    <div className="flex items-end justify-between border-t border-gray-50 dark:border-gray-700/30 pt-4">
                         <div>
-                            <p className="text-xs font-semibold text-gray-500">TOTAL SALARY</p>
-                            <p className="text-lg font-bold text-gray-900">$5100</p>
+                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">TOTAL SALARY</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-gray-100">$5100</p>
                         </div>
                         <Badge variant="secondary" className="text-[10px] font-bold text-gray-500">Elite Tier</Badge>
                     </div>
@@ -156,9 +156,9 @@ export default function EmployeesPage() {
                     <div className="h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--chart-axis)' }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--chart-axis)' }} />
                                 <Tooltip cursor={{ fill: '#f0fdf4' }} />
                                 <Bar dataKey="uv" fill={chartColors.primary} radius={[4, 4, 0, 0]} barSize={32} />
                             </BarChart>
@@ -177,9 +177,9 @@ export default function EmployeesPage() {
                     </Card>
                     {/* Productivity Card */}
                     <Card className="shadow-sm p-6 flex-1 flex flex-col justify-center gap-0">
-                        <p className="text-xs font-bold tracking-wider text-gray-500 mb-2">AVERAGE PRODUCTIVITY</p>
-                        <p className="text-3xl font-bold text-gray-900">134 <span className="text-sm font-medium text-gray-500">trees / tapper</span></p>
-                        <div className="w-full bg-gray-100 h-1 mt-6 rounded-full overflow-hidden">
+                        <p className="text-xs font-bold tracking-wider text-gray-500 dark:text-gray-400 mb-2">AVERAGE PRODUCTIVITY</p>
+                        <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">134 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">trees / tapper</span></p>
+                        <div className="w-full bg-gray-100 dark:bg-gray-700 h-1 mt-6 rounded-full overflow-hidden">
                             <div className="bg-blue-600 h-full w-[80%] rounded-full"></div>
                         </div>
                     </Card>
@@ -188,7 +188,7 @@ export default function EmployeesPage() {
 
             {/* Table Section */}
             <Card className="shadow-sm gap-0 overflow-hidden p-0">
-                <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="p-4 border-b border-gray-100 dark:border-gray-700/40 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="relative w-full sm:w-96">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
                         <Input
@@ -207,29 +207,29 @@ export default function EmployeesPage() {
                     </div>
                 </div>
                 <Table>
-                    <TableHeader className="bg-gray-50/50">
-                        <TableRow className="border-gray-100">
-                            <TableHead className="px-6 py-4 text-gray-500 font-semibold">Employee Name</TableHead>
-                            <TableHead className="px-6 py-4 text-gray-500 font-semibold">Role</TableHead>
-                            <TableHead className="px-6 py-4 text-gray-500 font-semibold">Status</TableHead>
-                            <TableHead className="px-6 py-4 text-gray-500 font-semibold">Last Activity</TableHead>
-                            <TableHead className="px-6 py-4 text-gray-500 font-semibold">Trees (Today)</TableHead>
+                    <TableHeader className="bg-gray-50/50 dark:bg-gray-800/50">
+                        <TableRow className="border-gray-100 dark:border-gray-700/40">
+                            <TableHead className="px-6 py-4 text-gray-500 dark:text-gray-400 font-semibold">Employee Name</TableHead>
+                            <TableHead className="px-6 py-4 text-gray-500 dark:text-gray-400 font-semibold">Role</TableHead>
+                            <TableHead className="px-6 py-4 text-gray-500 dark:text-gray-400 font-semibold">Status</TableHead>
+                            <TableHead className="px-6 py-4 text-gray-500 dark:text-gray-400 font-semibold">Last Activity</TableHead>
+                            <TableHead className="px-6 py-4 text-gray-500 dark:text-gray-400 font-semibold">Trees (Today)</TableHead>
                             <TableHead className="px-6 py-4 text-right text-gray-500 font-semibold">Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {employees.map((emp, idx) => (
-                            <TableRow key={idx} className="border-gray-50 hover:bg-gray-50/50">
+                            <TableRow key={idx} className="border-gray-50 dark:border-gray-700/30 hover:bg-gray-50/50 dark:hover:bg-gray-800/50">
                                 <TableCell className="px-6 py-3">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-gray-200"></div>
+                                        <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700"></div>
                                         <div>
-                                            <p className="font-bold text-gray-900">{emp.name}</p>
-                                            <p className="text-xs text-gray-500">{emp.id}</p>
+                                            <p className="font-bold text-gray-900 dark:text-gray-100">{emp.name}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">{emp.id}</p>
                                         </div>
                                     </div>
                                 </TableCell>
-                                <TableCell className="px-6 py-3 text-gray-600">{emp.role}</TableCell>
+                                <TableCell className="px-6 py-3 text-gray-600 dark:text-gray-300">{emp.role}</TableCell>
                                 <TableCell className="px-6 py-3">
                                     <Badge variant="outline" className={cn(
                                         "text-[10px] font-bold tracking-wide uppercase border-transparent",
@@ -239,12 +239,12 @@ export default function EmployeesPage() {
                                         {emp.status}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className="px-6 py-3 text-gray-500 text-xs font-medium">{emp.lastActivity}</TableCell>
+                                <TableCell className="px-6 py-3 text-gray-500 dark:text-gray-400 text-xs font-medium">{emp.lastActivity}</TableCell>
                                 <TableCell className="px-6 py-3">
                                     <div className="flex items-center gap-2">
-                                        <span className="font-bold text-gray-900 w-8">{emp.trees}</span>
+                                        <span className="font-bold text-gray-900 dark:text-gray-100 w-8">{emp.trees}</span>
                                         {emp.trees > 0 && (
-                                            <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                            <div className="w-16 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                                                 <div className="h-full bg-brand-500" style={{ width: `${(emp.trees / 150) * 100}%` }}></div>
                                             </div>
                                         )}
@@ -259,14 +259,14 @@ export default function EmployeesPage() {
                         ))}
                     </TableBody>
                 </Table>
-                <div className="p-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                <div className="p-4 border-t border-gray-100 dark:border-gray-700/40 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                     <span>Showing 8 of 128 registered employees</span>
                     <div className="flex items-center gap-2">
                         <span>Download Attendance Log (CSV)</span>
                         <div className="flex gap-1 ml-4">
                             <button className="w-6 h-6 rounded flex items-center justify-center bg-brand-500 text-white font-bold">1</button>
-                            <button className="w-6 h-6 rounded flex items-center justify-center bg-white border border-gray-200 hover:bg-gray-50 font-medium">2</button>
-                            <button className="w-6 h-6 rounded flex items-center justify-center bg-white border border-gray-200 hover:bg-gray-50 font-medium">3</button>
+                            <button className="w-6 h-6 rounded flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium dark:text-gray-200">2</button>
+                            <button className="w-6 h-6 rounded flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium dark:text-gray-200">3</button>
                         </div>
                     </div>
                 </div>

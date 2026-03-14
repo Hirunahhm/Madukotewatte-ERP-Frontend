@@ -36,13 +36,13 @@ export default function WeatherPage() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">Climate & Forecasting</h1>
-                    <p className="text-sm text-gray-500 mt-1">Real-time weather tracking for estate operations scheduling.</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Climate & Forecasting</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Real-time weather tracking for estate operations scheduling.</p>
                 </div>
                 <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <div className="flex bg-white rounded-lg border border-gray-200 p-1">
-                        <Button size="sm" variant="secondary" className="h-7 text-xs text-gray-900">°C</Button>
-                        <Button size="sm" variant="ghost" className="h-7 text-xs text-gray-500 hover:text-gray-900">°F</Button>
+                    <div className="flex bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-1">
+                        <Button size="sm" variant="secondary" className="h-7 text-xs text-gray-900 dark:text-gray-100">°C</Button>
+                        <Button size="sm" variant="ghost" className="h-7 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">°F</Button>
                     </div>
                 </div>
             </div>
@@ -59,48 +59,48 @@ export default function WeatherPage() {
                                 <span className="flex items-center gap-1"><Sun className="w-4 h-4" /> LIVE NOW • BANTING ESTATE</span>
                             </div>
 
-                            <div className="flex flex-col md:flex-row justify-between gap-8 bg-white">
+                            <div className="flex flex-col md:flex-row justify-between gap-8 bg-white dark:bg-transparent">
                                 <div className="flex-1">
                                     <div className="flex items-start">
-                                        <span className="text-7xl font-bold text-gray-900 tracking-tighter">28</span>
+                                        <span className="text-7xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter">28</span>
                                         <span className="text-3xl font-bold text-brand-500 mt-2">°C</span>
                                     </div>
-                                    <p className="text-xl font-medium text-gray-400 mt-2">Sunny Skies</p>
+                                    <p className="text-xl font-medium text-gray-400 dark:text-gray-500 mt-2">Sunny Skies</p>
 
                                     <div className="flex items-center gap-2 mt-6">
-                                        <span className="px-3 py-1 bg-brand-50 text-brand-600 text-xs font-bold rounded-full border border-brand-100">High 31°</span>
-                                        <span className="px-3 py-1 bg-gray-50 text-gray-600 text-xs font-bold rounded-full border border-gray-100">Low 24°</span>
+                                        <span className="px-3 py-1 bg-brand-50 dark:bg-brand-950/30 text-brand-600 text-xs font-bold rounded-full border border-brand-100 dark:border-brand-800">High 31°</span>
+                                        <span className="px-3 py-1 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-bold rounded-full border border-gray-100 dark:border-gray-700/40">Low 24°</span>
                                     </div>
                                 </div>
 
                                 {/* Stats Grid */}
                                 <div className="flex-1 grid grid-cols-2 gap-4">
-                                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
+                                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/40 flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><Droplets className="w-5 h-5" /></div>
                                         <div>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Humidity</p>
-                                            <p className="text-sm font-bold text-gray-900">76<span className="text-xs text-gray-500">%</span></p>
+                                            <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Humidity</p>
+                                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">76<span className="text-xs text-gray-500 dark:text-gray-400">%</span></p>
                                         </div>
                                     </div>
-                                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
+                                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/40 flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-cyan-50 flex items-center justify-center text-cyan-500"><Wind className="w-5 h-5" /></div>
                                         <div>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Wind Speed</p>
-                                            <p className="text-sm font-bold text-gray-900">12<span className="text-xs text-gray-500">km/h</span></p>
+                                            <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Wind Speed</p>
+                                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">12<span className="text-xs text-gray-500 dark:text-gray-400">km/h</span></p>
                                         </div>
                                     </div>
-                                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
+                                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/40 flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500"><Sun className="w-5 h-5" /></div>
                                         <div>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">UV Index</p>
-                                            <p className="text-sm font-bold text-gray-900">8<span className="text-xs text-gray-500 inline-block ml-1">Very High</span></p>
+                                            <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">UV Index</p>
+                                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">8<span className="text-xs text-gray-500 dark:text-gray-400 inline-block ml-1">Very High</span></p>
                                         </div>
                                     </div>
-                                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
+                                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/40 flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-brand-500"><Umbrella className="w-5 h-5" /></div>
                                         <div>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Rain Chance</p>
-                                            <p className="text-sm font-bold text-gray-900">15<span className="text-xs text-gray-500">%</span></p>
+                                            <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Rain Chance</p>
+                                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">15<span className="text-xs text-gray-500 dark:text-gray-400">%</span></p>
                                         </div>
                                     </div>
                                 </div>
@@ -108,7 +108,7 @@ export default function WeatherPage() {
                         </div>
 
                         {/* Card Footer */}
-                        <div className="border-t border-gray-100 bg-gray-50/50 p-4 flex flex-col sm:flex-row items-center justify-between text-xs font-semibold text-gray-500">
+                        <div className="border-t border-gray-100 dark:border-gray-700/40 bg-gray-50/50 dark:bg-gray-800/50 p-4 flex flex-col sm:flex-row items-center justify-between text-xs font-semibold text-gray-500 dark:text-gray-400">
                             <div className="flex items-center gap-6">
                                 <span className="flex items-center gap-2"><Sunrise className="w-4 h-4 text-orange-400" /> Sunrise: 6:42 AM</span>
                                 <span className="flex items-center gap-2"><Sunset className="w-4 h-4 text-orange-500" /> Sunset: 6:15 PM</span>
@@ -120,16 +120,16 @@ export default function WeatherPage() {
                     {/* Next 24 Hours */}
                     <Card className="shadow-sm gap-0 p-6">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                                 <Clock className="w-5 h-5 text-brand-500" /> Next 24 Hours
                             </h3>
                             <button className="text-sm font-bold text-brand-600 hover:text-brand-700">View Detailed Timeline</button>
                         </div>
                         <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
                             {hourlyForecast.map((hour, idx) => (
-                                <div key={idx} className={`min-w-[80px] p-4 rounded-xl flex flex-col items-center justify-center gap-3 border transition-colors ${hour.active ? 'bg-brand-500 border-brand-500 text-white shadow-md' : 'bg-white border-gray-100 text-gray-900 hover:bg-gray-50'}`}>
-                                    <span className={`text-xs font-semibold ${hour.active ? 'text-brand-100' : 'text-gray-500'}`}>{hour.time}</span>
-                                    <hour.icon className={`w-6 h-6 ${hour.active ? 'text-white' : 'text-gray-400'}`} />
+                                <div key={idx} className={`min-w-[80px] p-4 rounded-xl flex flex-col items-center justify-center gap-3 border transition-colors ${hour.active ? 'bg-brand-500 border-brand-500 text-white shadow-md' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700/40 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}>
+                                    <span className={`text-xs font-semibold ${hour.active ? 'text-brand-100' : 'text-gray-500 dark:text-gray-400'}`}>{hour.time}</span>
+                                    <hour.icon className={`w-6 h-6 ${hour.active ? 'text-white' : 'text-gray-400 dark:text-gray-500'}`} />
                                     <span className="text-lg font-bold">{hour.temp}</span>
                                 </div>
                             ))}
@@ -138,27 +138,27 @@ export default function WeatherPage() {
 
                     {/* 5-Day Outlook */}
                     <div>
-                        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 mb-4">
                             <Map className="w-5 h-5 text-brand-500" /> 5-Day Outlook
                         </h3>
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                             {dailyForecast.map((day, idx) => (
                                 <Card key={idx} className="shadow-sm gap-0 p-4 flex flex-col items-center text-center">
-                                    <span className="text-sm font-bold text-gray-900">{day.day}</span>
-                                    <span className="text-xs text-gray-400 font-medium mb-4">{day.date}</span>
+                                    <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{day.day}</span>
+                                    <span className="text-xs text-gray-400 dark:text-gray-500 font-medium mb-4">{day.date}</span>
 
                                     <div className="w-12 h-12 rounded-full bg-brand-50 flex items-center justify-center mb-3">
                                         <day.icon className="w-6 h-6 text-brand-500" />
                                     </div>
 
-                                    <span className="text-sm font-semibold text-gray-700">{day.desc}</span>
+                                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">{day.desc}</span>
                                     <span className="text-[10px] font-bold text-brand-500 mt-1 flex items-center gap-1">
                                         <Droplets className="w-3 h-3" /> {day.rain}
                                     </span>
 
-                                    <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-50 w-full justify-center">
-                                        <span className="text-base font-bold text-gray-900">{day.high}</span>
-                                        <span className="text-sm font-semibold text-gray-400">{day.low}</span>
+                                    <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-50 dark:border-gray-700/30 w-full justify-center">
+                                        <span className="text-base font-bold text-gray-900 dark:text-gray-100">{day.high}</span>
+                                        <span className="text-sm font-semibold text-gray-400 dark:text-gray-500">{day.low}</span>
                                     </div>
                                 </Card>
                             ))}
@@ -172,8 +172,8 @@ export default function WeatherPage() {
 
                     {/* Radar Mock */}
                     <Card className="shadow-sm gap-0 overflow-hidden p-0 flex flex-col h-[320px]">
-                        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                        <div className="p-4 border-b border-gray-100 dark:border-gray-700/40 flex items-center justify-between">
+                            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                                 <Map className="w-4 h-4 text-brand-500" /> Satellite View
                             </h3>
                             <span className="text-[10px] font-bold tracking-wider text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">Live Radar</span>
@@ -205,7 +205,7 @@ export default function WeatherPage() {
 
                     {/* Active Alerts */}
                     <div>
-                        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2 mb-4">
+                        <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 mb-4">
                             <AlertTriangle className="w-4 h-4 text-brand-500" /> Active Alerts
                         </h3>
 
@@ -239,24 +239,24 @@ export default function WeatherPage() {
                     </div>
 
                     {/* Air Quality */}
-                    <Card className="bg-gray-50 shadow-sm gap-0 p-6">
+                    <Card className="bg-gray-50 dark:bg-gray-800/50 shadow-sm gap-0 p-6">
                         <div className="flex items-center gap-2 mb-4">
                             <div className="w-2 h-2 rounded-full bg-brand-500"></div>
-                            <h3 className="text-sm font-bold text-gray-900">Air Quality Index</h3>
+                            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">Air Quality Index</h3>
                         </div>
 
-                        <div className="flex items-end justify-between border-b border-gray-200 pb-4 mb-4">
+                        <div className="flex items-end justify-between border-b border-gray-200 dark:border-gray-600 pb-4 mb-4">
                             <div>
                                 <p className="text-4xl font-black text-brand-600 tracking-tighter">34</p>
                                 <p className="text-xs font-bold text-brand-600 uppercase tracking-wider mt-1">Excellent Quality</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Dominant Pollutant</p>
-                                <p className="text-sm font-bold text-gray-900">PM 2.5</p>
+                                <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Dominant Pollutant</p>
+                                <p className="text-sm font-bold text-gray-900 dark:text-gray-100">PM 2.5</p>
                             </div>
                         </div>
 
-                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden flex">
+                        <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden flex">
                             <div className="h-full bg-brand-500 w-1/4"></div>
                             <div className="h-full bg-yellow-400 w-1/4"></div>
                             <div className="h-full bg-orange-500 w-1/4"></div>
