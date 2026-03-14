@@ -3,6 +3,7 @@
 import { Search, Plus, Download, ChevronRight, Droplet } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from "@/lib/utils";
+import { chartColors } from "@/lib/theme";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -159,7 +160,7 @@ export default function EmployeesPage() {
                                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
                                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
                                 <Tooltip cursor={{ fill: '#f0fdf4' }} />
-                                <Bar dataKey="uv" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={32} />
+                                <Bar dataKey="uv" fill={chartColors.primary} radius={[4, 4, 0, 0]} barSize={32} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
