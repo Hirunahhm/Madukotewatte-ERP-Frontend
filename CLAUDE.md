@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AgriManage ERP — an estate management dashboard for a rubber plantation (Sri Lanka). Built with Next.js 14 App Router, TypeScript, Tailwind CSS, Zustand (client state), TanStack React Query (server state), React Hook Form + Zod (forms), and Recharts (charts).
+**Madukotewatta Estates** — an industrial-grade estate management ERP for a rubber plantation in Sri Lanka. Built with **Next.js 15 (App Router)**, **React 19**, TypeScript, Tailwind CSS, Zustand (client state), TanStack React Query (server state), React Hook Form + Zod (forms), and Recharts (charts).
 
 ## Commands
 
@@ -15,62 +15,49 @@ npm run start     # Start production server
 npm run lint      # ESLint check
 ```
 
-No test runner is configured yet (Jest/Vitest/Playwright are planned per the coding guide).
+No test runner is configured yet (Playwright is prioritized for critical ERP flows per the coding guide).
 
-## UI Component Library
+## UI & Design System
 
-shadcn/ui v4 is installed (style: `base-nova`, using `@base-ui/react` primitives). Components live in `src/components/ui/`. Installed: `button`, `card`, `input`, `table`, `badge`, `dropdown-menu`, `select`, `avatar`.
-
-- Add new components with `npx shadcn@latest add <component>`
-- The shadcn init used v4 (Tailwind v4-style) but the project is on **Tailwind CSS v3**. The `globals.css` therefore uses HSL CSS variables (not oklch) and `tailwind.config.ts` maps them as `hsl(var(--<token>))` color values. Do NOT add `@import "shadcn/tailwind.css"` or `@import "tw-animate-css"` — those require Tailwind v4.
-- Animations use `tailwindcss-animate` (v3 plugin, already in devDependencies).
+- **shadcn/ui v4** is the primary component library (primitives from `@base-ui/react`).
+- **Design Tokens:** `src/lib/theme.ts` is the central source of truth for brand colors, chart palettes, and secondary layout styles.
+- **Theme:** Supports dark and light modes. The **Sidebar** is dark-themed by default (Deep Forest Green) while most content uses `dark:` Tailwind classes for consistency.
+- **Components:** Live in `src/components/ui/`. Use `npx shadcn@latest add <component>` to add more.
+- **Styling:** Tailwind v3.4. (`globals.css` uses HSL variables). Do NOT use v4 features like `@import "shadcn/tailwind.css"`.
 
 ## Architecture
 
+### Feature-Sliced Design (Active)
+
+The project follows high-modularity standards defined in `ERP_CODING_GUIDE.md`. Features live in `src/features/<domain>/` with its own internal structure:
+- `components/` — UI components specific to the feature.
+- `hooks/` — Custom hooks for feature-level business logic.
+- `services/` — API calls and data transformation logic.
+- `types/` — Feature-specific TypeScript interfaces.
+- `utils/` — Feature-local helper functions.
+
+**Current Features:** `employees`, `overview`, `financials`, `assets`, `weather`, `production`.
+
 ### Routing (Next.js App Router)
 
-Two route groups:
-- `(auth)/` — login page with dark/moody theme
-- `(dashboard)/` — main ERP shell with `Sidebar` + `Topbar` + page content
-
-Root `page.tsx` redirects to `/login`.
+- `(auth)/` — login page with an atmospheric plantation-themed layout.
+- `(dashboard)/` — ERP core with the shared `Sidebar` + `Topbar` + content shell.
 
 ### State Management
 
-- **Zustand** (`src/stores/`) — only for global UI state (sidebar open/close). Never use for server data.
-- **React Query** — for all API data fetching once the backend is integrated (not yet wired up; pages currently use static mock data).
-- **`useState`** — component-local state only.
-
-### Feature-Sliced Design (planned)
-
-Per `ERP_CODING_GUIDE.md`, features should live in `src/features/<domain>/` with sub-folders: `components/`, `hooks/`, `api/`, `types/`, `utils/`. Currently all business logic is embedded directly in page components — new modules should follow this pattern.
-
-### Path Aliases
-
-Use `@/*` → `src/*` for all imports (configured in `tsconfig.json`).
-
-### Styling
-
-- Tailwind CSS with a custom `brand` green palette (defined in `tailwind.config.ts`).
-- Use the `cn()` helper from `src/lib/utils.ts` (wraps `clsx` + `tailwind-merge`) to compose class names.
-- CSS custom properties in `globals.css` support dark/light theming.
+- **React Query:** Primary tool for all data fetching and server-state caching.
+- **Zustand:** (`src/stores/`) Only for global, cross-cutting UI state (e.g., sidebar collapse).
+- **useState:** Strictly for isolated component-level state.
 
 ## Coding Conventions
 
-From `ERP_CODING_GUIDE.md`:
-
-- **Files/folders:** `kebab-case`
-- **Components/interfaces/types:** `PascalCase`
-- **Functions/variables:** `camelCase`
-- **Global constants:** `UPPER_SNAKE_CASE`
-- **Never use `any`** — use `unknown` with type guards when the type is uncertain.
-- Keep `"use client"` as far down the component tree as possible; default to Server Components.
-- Separate UI from logic: extract business logic into custom hooks inside the feature's `hooks/` folder.
+- **Naming:** `kebab-case` for files/folders; `PascalCase` for components/types; `camelCase` for variables/functions.
+- **TypeScript:** Strict mode. Never use `any`. Use `unknown` + type guards for uncertainty.
+- **Separation of Concerns:** Keep components lean; extract complex logic into hooks or services.
+- **Server-First:** Default to Server Components; keep `"use client"` as far down the component tree as possible.
 
 ## Commit Convention
 
-Conventional Commits format is required:
+Conventional Commits format is mandatory:
 - `feat(scope):`, `fix(scope):`, `refactor(scope):`, `docs(scope):`
 - Example: `feat(staff): add overtime approval workflow`
-
-Branch naming: `feature/<name>` or `bugfix/<name>`.

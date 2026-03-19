@@ -3,15 +3,16 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { chartColors } from "@/lib/theme";
 
 const chartData = [
-    { name: 'Mon', actual: 400, target: 450 },
-    { name: 'Tue', actual: 380, target: 450 },
-    { name: 'Wed', actual: 550, target: 450 },
-    { name: 'Thu', actual: 480, target: 400 },
-    { name: 'Fri', actual: 490, target: 400 },
-    { name: 'Sat', actual: 320, target: 350 },
-    { name: 'Sun', actual: 200, target: 250 },
+    { name: 'Mon', actual: 220, target: 250 },
+    { name: 'Tue', actual: 195, target: 250 },
+    { name: 'Wed', actual: 270, target: 250 },
+    { name: 'Thu', actual: 240, target: 220 },
+    { name: 'Fri', actual: 245, target: 220 },
+    { name: 'Sat', actual: 160, target: 175 },
+    { name: 'Sun', actual: 100, target: 125 },
 ];
 
 export function VolumeTrendsChart() {
@@ -32,15 +33,15 @@ export function VolumeTrendsChart() {
                     <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                         <defs>
                             <linearGradient id="colorO" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.1} />
-                                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                                <stop offset="5%" stopColor={chartColors.secondary} stopOpacity={0.15} />
+                                <stop offset="95%" stopColor={chartColors.secondary} stopOpacity={0} />
                             </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
                         <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--chart-axis)' }} />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--chart-axis)' }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--chart-axis)' }} domain={[0, 300]} />
                         <Tooltip />
-                        <Area type="monotone" dataKey="actual" stroke="#22c55e" strokeWidth={2} fillOpacity={1} fill="url(#colorO)" />
+                        <Area type="monotone" dataKey="actual" stroke={chartColors.primary} strokeWidth={2} fillOpacity={1} fill="url(#colorO)" />
                     </AreaChart>
                 </ResponsiveContainer>
             </div>

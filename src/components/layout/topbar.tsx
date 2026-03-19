@@ -1,10 +1,9 @@
 "use client";
 
-import { Bell, Search, Menu, ChevronDown, Moon, Sun } from "lucide-react";
+import { Bell, Menu, ChevronDown, Moon, Sun } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { useUiStore } from "@/stores/ui-store";
-import { Input } from "@/components/ui/input";
+import { useUiStore, type ProductionTab } from "@/stores/ui-store";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -25,11 +24,20 @@ const PAGE_NAMES: Record<string, string> = {
     "/weather": "Climate & Forecasting",
 };
 
+const PRODUCTION_TABS: { id: ProductionTab; label: string }[] = [
+    { id: "latex", label: "Latex Production" },
+    { id: "ammonia", label: "Ammonia Tracking" },
+    { id: "rubber", label: "Rubber Solid Collection" },
+];
+
 export function Topbar() {
     const pathname = usePathname();
     const toggleSidebar = useUiStore((state) => state.toggleSidebar);
+    const productionTab = useUiStore((state) => state.productionTab);
+    const setProductionTab = useUiStore((state) => state.setProductionTab);
     const pageTitle = PAGE_NAMES[pathname] ?? "Dashboard";
     const { theme, setTheme } = useTheme();
+    const isProduction = pathname === "/latex-production";
 
     return (
         <header className="flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 px-4 shadow-sm sm:gap-x-6 sm:px-6">
@@ -43,26 +51,32 @@ export function Topbar() {
                     <span className="sr-only">Toggle sidebar</span>
                     <Menu className="h-5 w-5" aria-hidden="true" />
                 </button>
-                <span className="hidden sm:block text-sm font-semibold text-gray-700 dark:text-gray-200">{pageTitle}</span>
+                {!isProduction && (
+                    <span className="hidden sm:block text-sm font-semibold text-gray-700 dark:text-gray-200">{pageTitle}</span>
+                )}
             </div>
 
             <div className="flex flex-1 items-center gap-x-4 self-stretch lg:gap-x-6">
-                <form className="relative flex flex-1 items-center" action="#" method="GET">
-                    <label htmlFor="search-field" className="sr-only">
-                        Search estate records...
-                    </label>
-                    <Search
-                        className="pointer-events-none absolute left-2 h-4 w-4 text-gray-400"
-                        aria-hidden="true"
-                    />
-                    <Input
-                        id="search-field"
-                        className="h-8 w-full border-0 pl-8 pr-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:border-transparent text-gray-900 placeholder:text-gray-400 sm:text-sm"
-                        placeholder="Search estate records..."
-                        type="search"
-                        name="search"
-                    />
-                </form>
+                {isProduction ? (
+                    <nav className="flex items-center gap-0.5">
+                        {PRODUCTION_TABS.map((tab) => (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => setProductionTab(tab.id)}
+                                className={`relative px-4 py-1.5 text-sm font-medium rounded-full transition-all ${
+                                    productionTab === tab.id
+                                        ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
+                                        : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                }`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </nav>
+                ) : (
+                    <div className="flex-1" />
+                )}
 
                 <div className="flex items-center gap-x-4 lg:gap-x-6">
                     <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
