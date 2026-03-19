@@ -9,17 +9,16 @@ import { DirectDataEntry } from "./direct-data-entry";
 import { MetrolacEntryForm } from "./metrolac-entry-form";
 import { ProductionChronology } from "./production-chronology";
 
-function ComingSoon({ label }: { label: string }) {
-    return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] rounded-xl border border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30">
-            <div className="w-12 h-12 rounded-full bg-brand-50 dark:bg-brand-900/20 border border-brand-100 dark:border-brand-800/40 flex items-center justify-center mb-4">
-                <span className="text-2xl">🚧</span>
-            </div>
-            <p className="text-base font-semibold text-gray-700 dark:text-gray-300">{label}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">This module is coming soon.</p>
-        </div>
-    );
-}
+import { AmmoniaKpis } from "./ammonia/ammonia-kpis";
+import { AmmoniaUsageChart } from "./ammonia/ammonia-usage-chart";
+import { AmmoniaDataEntry } from "./ammonia/ammonia-data-entry";
+import { AmmoniaPastRecords } from "./ammonia/ammonia-past-records";
+
+import { RubberKpis } from "./rubber/rubber-kpis";
+import { RubberCollectionChart } from "./rubber/rubber-collection-chart";
+import { RubberLoadTracker } from "./rubber/rubber-load-tracker";
+import { RubberDataEntry } from "./rubber/rubber-data-entry";
+import { RubberPastRecords } from "./rubber/rubber-past-records";
 
 export function ProductionPageClient() {
     const activeTab = useUiStore((state) => state.productionTab);
@@ -40,8 +39,24 @@ export function ProductionPageClient() {
                 </>
             )}
 
-            {activeTab === "ammonia" && <ComingSoon label="Ammonia Tracking" />}
-            {activeTab === "rubber" && <ComingSoon label="Rubber Solid Collection" />}
+            {activeTab === "ammonia" && (
+                <>
+                    <AmmoniaKpis />
+                    <AmmoniaUsageChart />
+                    <AmmoniaDataEntry />
+                    <AmmoniaPastRecords />
+                </>
+            )}
+
+            {activeTab === "rubber" && (
+                <>
+                    <RubberKpis />
+                    <RubberCollectionChart />
+                    <RubberLoadTracker />
+                    <RubberDataEntry />
+                    <RubberPastRecords />
+                </>
+            )}
         </div>
     );
 }
