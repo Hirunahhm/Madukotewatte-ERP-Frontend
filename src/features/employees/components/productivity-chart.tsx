@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { chartPalette } from "@/lib/theme";
+import { NoSSR } from "@/components/ui/no-ssr";
 
 const TAPPERS = ["Arjun", "Siti", "Rajesh", "Elena", "Karthik"];
 
@@ -73,17 +74,19 @@ export function ProductivityChart() {
                     </div>
                 </div>
                 <div className="h-64 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={data} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
-                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--chart-axis)' }} />
-                            <YAxis domain={[0, 2000]} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--chart-axis)' }} />
-                            <Tooltip cursor={{ fill: '#f0fdf4' }} />
-                            {TAPPERS.map((name, i) => (
-                                <Bar key={name} dataKey={name} fill={chartPalette[i]} radius={[4, 4, 0, 0]} barSize={timeScale === "year" ? 8 : 14} />
-                            ))}
-                        </BarChart>
-                    </ResponsiveContainer>
+                    <NoSSR>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={data} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--chart-axis)' }} />
+                                <YAxis domain={[0, 2000]} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--chart-axis)' }} />
+                                <Tooltip cursor={{ fill: '#f0fdf4' }} />
+                                {TAPPERS.map((name, i) => (
+                                    <Bar key={name} dataKey={name} fill={chartPalette[i]} radius={[4, 4, 0, 0]} barSize={timeScale === "year" ? 8 : 14} />
+                                ))}
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </NoSSR>
                 </div>
             </Card>
             <div className="flex flex-col gap-6">
@@ -96,11 +99,10 @@ export function ProductivityChart() {
                             <button
                                 key={reason}
                                 onClick={() => setNoWorkReason(noWorkReason === reason ? null : reason)}
-                                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                                    noWorkReason === reason
+                                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${noWorkReason === reason
                                         ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800"
                                         : "bg-slate-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-transparent hover:border-gray-300 dark:hover:border-gray-500"
-                                }`}
+                                    }`}
                             >
                                 {reason}
                             </button>

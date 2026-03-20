@@ -4,6 +4,7 @@ import { Filter } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { NoSSR } from "@/components/ui/no-ssr";
 
 const chartData = [
     { name: '2023-10', uv: 800000 },
@@ -32,35 +33,37 @@ export function LiquidityHistoryChart() {
             </div>
 
             <div className="h-72 w-full mt-auto">
-                <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 10, right: 0, left: -10, bottom: 0 }}>
-                        <defs>
-                            <linearGradient id="colorO" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.15} />
-                                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--chart-axis)' }} dy={10} />
-                        <YAxis
-                            axisLine={false}
-                            tickLine={false}
-                            tick={{ fontSize: 10, fill: 'var(--chart-axis)' }}
-                            tickFormatter={(val) => `$${val / 1000}k`}
-                        />
-                        <Tooltip
-                            formatter={(value) => [`$${(value as number).toLocaleString()}`, 'Liquidity']}
-                            contentStyle={{ borderRadius: '8px', border: '1px solid var(--chart-grid)' }}
-                        />
-                        <Area
-                            type="stepAfter"
-                            dataKey="uv"
-                            stroke="#22c55e"
-                            strokeWidth={2}
-                            fill="url(#colorO)"
-                        />
-                    </AreaChart>
-                </ResponsiveContainer>
+                <NoSSR>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={chartData} margin={{ top: 10, right: 0, left: -10, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="colorO" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.15} />
+                                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
+                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--chart-axis)' }} dy={10} />
+                            <YAxis
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fontSize: 10, fill: 'var(--chart-axis)' }}
+                                tickFormatter={(val) => `$${val / 1000}k`}
+                            />
+                            <Tooltip
+                                formatter={(value) => [`$${(value as number).toLocaleString()}`, 'Liquidity']}
+                                contentStyle={{ borderRadius: '8px', border: '1px solid var(--chart-grid)' }}
+                            />
+                            <Area
+                                type="stepAfter"
+                                dataKey="uv"
+                                stroke="#22c55e"
+                                strokeWidth={2}
+                                fill="url(#colorO)"
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </NoSSR>
             </div>
         </Card>
     );
