@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 export type ProductionTab = 'latex' | 'ammonia' | 'rubber';
 export type EmployeesTab = 'attendance' | 'payment';
+export type FinancialsTab = 'sales' | 'expenses' | 'stats';
 
 interface UiState {
     isSidebarOpen: boolean;
@@ -11,6 +12,8 @@ interface UiState {
     setProductionTab: (tab: ProductionTab) => void;
     employeesTab: EmployeesTab;
     setEmployeesTab: (tab: EmployeesTab) => void;
+    financialsTab: FinancialsTab;
+    setFinancialsTab: (tab: FinancialsTab) => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -21,4 +24,6 @@ export const useUiStore = create<UiState>((set) => ({
     setProductionTab: (tab) => set({ productionTab: tab }),
     employeesTab: 'attendance',
     setEmployeesTab: (tab) => set({ employeesTab: tab }),
+    financialsTab: 'sales',
+    setFinancialsTab: (tab) => set({ financialsTab: tab }),
 }));
