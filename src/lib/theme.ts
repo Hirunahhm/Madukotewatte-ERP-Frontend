@@ -44,6 +44,7 @@ export const chartColors = {
     danger: '#f87171',   // red-400
     neutral: '#94a3b8',   // slate-400
     blue: '#60a5fa',   // blue-400
+    cyan: '#06b6d4',   // cyan-500
 } as const;
 
 // Ordered palette for multi-series charts (pie, bar, etc.)
