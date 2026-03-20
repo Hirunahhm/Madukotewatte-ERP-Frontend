@@ -3,7 +3,7 @@
 import { Bell, Menu, ChevronDown, Moon, Sun } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { useUiStore, type ProductionTab, type EmployeesTab } from "@/stores/ui-store";
+import { useUiStore, type ProductionTab, type EmployeesTab, type FinancialsTab } from "@/stores/ui-store";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -35,6 +35,12 @@ const EMPLOYEES_TABS: { id: EmployeesTab; label: string }[] = [
     { id: "payment", label: "Payment" },
 ];
 
+const FINANCIALS_TABS: { id: FinancialsTab; label: string }[] = [
+    { id: "sales", label: "Sales Tracking" },
+    { id: "expenses", label: "Expenses Tracking" },
+    { id: "stats", label: "Stats" },
+];
+
 export function Topbar() {
     const pathname = usePathname();
     const toggleSidebar = useUiStore((state) => state.toggleSidebar);
@@ -42,10 +48,13 @@ export function Topbar() {
     const setProductionTab = useUiStore((state) => state.setProductionTab);
     const employeesTab = useUiStore((state) => state.employeesTab);
     const setEmployeesTab = useUiStore((state) => state.setEmployeesTab);
+    const financialsTab = useUiStore((state) => state.financialsTab);
+    const setFinancialsTab = useUiStore((state) => state.setFinancialsTab);
     const pageTitle = PAGE_NAMES[pathname] ?? "Dashboard";
     const { theme, setTheme } = useTheme();
     const isProduction = pathname === "/latex-production";
     const isEmployees = pathname === "/employees";
+    const isFinancials = pathname === "/financials";
 
     return (
         <header className="flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 px-4 shadow-sm sm:gap-x-6 sm:px-6">
@@ -59,7 +68,7 @@ export function Topbar() {
                     <span className="sr-only">Toggle sidebar</span>
                     <Menu className="h-5 w-5" aria-hidden="true" />
                 </button>
-                {!isProduction && !isEmployees && (
+                {!isProduction && !isEmployees && !isFinancials && (
                     <span className="hidden sm:block text-sm font-semibold text-gray-700 dark:text-gray-200">{pageTitle}</span>
                 )}
             </div>
@@ -91,6 +100,23 @@ export function Topbar() {
                                 onClick={() => setEmployeesTab(tab.id)}
                                 className={`relative px-4 py-1.5 text-sm font-medium rounded-full transition-all ${
                                     employeesTab === tab.id
+                                        ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
+                                        : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                }`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </nav>
+                ) : isFinancials ? (
+                    <nav className="flex items-center gap-0.5">
+                        {FINANCIALS_TABS.map((tab) => (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => setFinancialsTab(tab.id)}
+                                className={`relative px-4 py-1.5 text-sm font-medium rounded-full transition-all ${
+                                    financialsTab === tab.id
                                         ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
                                         : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                                 }`}
