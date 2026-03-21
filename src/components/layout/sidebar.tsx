@@ -30,7 +30,7 @@ const navSections: { label: string; items: { name: string; href: string; icon: L
         label: "Finance",
         items: [
             { name: "Financials", href: "/financials", icon: TrendingUp },
-            { name: "Cash & Assets", href: "/assets", icon: Briefcase },
+            { name: "Assets & Liabilities", href: "/assets", icon: Briefcase },
         ],
     },
     {

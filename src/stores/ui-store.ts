@@ -3,6 +3,8 @@ import { create } from 'zustand';
 export type ProductionTab = 'latex' | 'ammonia' | 'rubber';
 export type EmployeesTab = 'attendance' | 'payment';
 export type FinancialsTab = 'sales' | 'expenses' | 'stats';
+export type AssetsTab = 'assets' | 'liabilities' | 'stats';
+export type AssetsTimeframe = 'monthly' | 'quarterly' | 'annually';
 
 interface UiState {
     isSidebarOpen: boolean;
@@ -14,6 +16,10 @@ interface UiState {
     setEmployeesTab: (tab: EmployeesTab) => void;
     financialsTab: FinancialsTab;
     setFinancialsTab: (tab: FinancialsTab) => void;
+    assetsTab: AssetsTab;
+    setAssetsTab: (tab: AssetsTab) => void;
+    assetsTimeframe: AssetsTimeframe;
+    setAssetsTimeframe: (tf: AssetsTimeframe) => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -26,4 +32,8 @@ export const useUiStore = create<UiState>((set) => ({
     setEmployeesTab: (tab) => set({ employeesTab: tab }),
     financialsTab: 'sales',
     setFinancialsTab: (tab) => set({ financialsTab: tab }),
+    assetsTab: 'assets',
+    setAssetsTab: (tab) => set({ assetsTab: tab }),
+    assetsTimeframe: 'monthly',
+    setAssetsTimeframe: (tf) => set({ assetsTimeframe: tf }),
 }));
