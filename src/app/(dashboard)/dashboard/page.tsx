@@ -1,8 +1,8 @@
 import { KpiCards } from "@/features/overview/components/kpi-cards";
 import { WeatherWidget } from "@/features/overview/components/weather-widget";
-import { YieldTrendChart } from "@/features/overview/components/yield-trend-chart";
+import { CostsVsSalesChart } from "@/features/overview/components/costs-vs-sales-chart";
+import { WorkerTreesChart } from "@/features/overview/components/worker-trees-chart";
 import { FinancialHealth } from "@/features/overview/components/financial-health";
-import { WorkforceEngagement } from "@/features/overview/components/workforce-engagement";
 
 export default function DashboardPage() {
     return (
@@ -14,11 +14,11 @@ export default function DashboardPage() {
             <KpiCards />
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <WeatherWidget />
-                <YieldTrendChart />
+                <CostsVsSalesChart />
             </div>
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <FinancialHealth />
-                <WorkforceEngagement />
+                <WorkerTreesChart />
             </div>
         </div>
     );
