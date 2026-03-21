@@ -20,7 +20,7 @@ const PAGE_NAMES: Record<string, string> = {
     "/employees": "Employee Management",
     "/latex-production": "Latex Production",
     "/financials": "Financials",
-    "/assets": "Cash & Assets",
+    "/assets": "Assets & Liabilities",
     "/weather": "Climate & Forecasting",
 };
 
