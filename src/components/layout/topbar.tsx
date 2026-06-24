@@ -1,9 +1,11 @@
 "use client";
 
 import { Bell, Menu, ChevronDown, Moon, Sun } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useUiStore, type ProductionTab, type EmployeesTab, type FinancialsTab } from "@/stores/ui-store";
+import { useAuthStore } from "@/stores/auth-store";
+import { logoutUser } from "@/features/auth/services/auth-service";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -43,7 +45,15 @@ const FINANCIALS_TABS: { id: FinancialsTab; label: string }[] = [
 
 export function Topbar() {
     const pathname = usePathname();
+    const router = useRouter();
+    const clearUser = useAuthStore((s) => s.clearUser);
     const toggleSidebar = useUiStore((state) => state.toggleSidebar);
+
+    async function handleSignOut() {
+        await logoutUser();
+        clearUser();
+        router.push('/login');
+    }
     const productionTab = useUiStore((state) => state.productionTab);
     const setProductionTab = useUiStore((state) => state.setProductionTab);
     const employeesTab = useUiStore((state) => state.employeesTab);
@@ -177,7 +187,7 @@ export function Topbar() {
                             <DropdownMenuItem>Profile Settings</DropdownMenuItem>
                             <DropdownMenuItem>Activity Log</DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem variant="destructive">Sign Out</DropdownMenuItem>
+                            <DropdownMenuItem variant="destructive" onSelect={handleSignOut}>Sign Out</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>

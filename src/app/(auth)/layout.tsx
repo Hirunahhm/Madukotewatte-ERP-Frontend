@@ -1,11 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
+import { requireGuest } from "@/lib/proxy";
 
-export default function AuthLayout({
+export default async function AuthLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    await requireGuest();
+
     return (
         <div className="min-h-screen flex flex-col relative overflow-hidden bg-slate-50 dark:bg-[#060f09]">
 
