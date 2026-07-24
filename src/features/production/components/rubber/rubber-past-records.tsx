@@ -2,57 +2,47 @@
 
 import { useState } from "react";
 import { Card, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-const RECORDS = [
-    { date: "2026-03-19", mass: 5.2, loggedBy: "Ahmad K." },
-    { date: "2026-03-18", mass: 3.8, loggedBy: "Siti Aminah" },
-    { date: "2026-03-17", mass: 7.1, loggedBy: "Arjun Das" },
-    { date: "2026-03-16", mass: 4.5, loggedBy: "Ahmad K." },
-    { date: "2026-03-15", mass: 6.3, loggedBy: "Rajesh Kumar" },
-    { date: "2026-03-14", mass: 2.9, loggedBy: "Siti Aminah" },
-];
-
-const PAGE_SIZE = 5;
+import { Loader2 } from "lucide-react";
+import { useRubberSolidRecords } from "@/features/production/hooks/use-production";
 
 export function RubberPastRecords() {
-    const [filterDate, setFilterDate] = useState("");
     const [page, setPage] = useState(0);
 
-    const filtered = RECORDS.filter((r) => !filterDate || r.date === filterDate);
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-    const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+    const { data, isLoading } = useRubberSolidRecords({ page, size: 10 });
+    const records = data?.content ?? [];
+    const totalPages = data?.totalPages ?? 1;
 
     return (
         <Card className="shadow-sm gap-0 p-6">
             <CardTitle className="text-base font-semibold mb-4">Past Scrap Records</CardTitle>
 
-            <div className="mb-4">
-                <Input
-                    type="date"
-                    value={filterDate}
-                    onChange={(e) => { setFilterDate(e.target.value); setPage(0); }}
-                    className="max-w-xs bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                />
-            </div>
-
             <div className="overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Date</TableHead>
+                            <TableHead>Logged</TableHead>
+                            <TableHead>Load ID</TableHead>
                             <TableHead>Mass (kg)</TableHead>
-                            <TableHead>Logged By</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {paged.map((row, i) => (
-                            <TableRow key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <TableCell className="text-sm">{row.date}</TableCell>
-                                <TableCell className="text-sm font-medium text-amber-600 dark:text-amber-400">{row.mass}</TableCell>
-                                <TableCell className="text-sm text-gray-500 dark:text-gray-400">{row.loggedBy}</TableCell>
+                        {isLoading ? (
+                            <TableRow>
+                                <TableCell colSpan={3} className="text-center py-8">
+                                    <Loader2 className="w-5 h-5 animate-spin inline text-amber-500" />
+                                </TableCell>
+                            </TableRow>
+                        ) : records.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={3} className="text-center text-sm text-gray-400 py-6">No records found.</TableCell>
+                            </TableRow>
+                        ) : records.map((row) => (
+                            <TableRow key={row.recordId} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <TableCell className="text-sm">{new Date(row.createdAt).toLocaleDateString()}</TableCell>
+                                <TableCell className="text-sm font-mono text-xs">{row.loadId.slice(0, 8).toUpperCase()}</TableCell>
+                                <TableCell className="text-sm font-medium text-amber-600 dark:text-amber-400">{row.massKg} kg</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -60,9 +50,7 @@ export function RubberPastRecords() {
             </div>
 
             <div className="flex items-center justify-between pt-4">
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                    Page {page + 1} of {totalPages}
-                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">Page {page + 1} of {totalPages}</span>
                 <div className="flex gap-2">
                     <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Prev</Button>
                     <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>Next</Button>

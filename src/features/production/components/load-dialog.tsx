@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export interface LoadData {
     id: string;
@@ -22,11 +24,34 @@ interface LoadDialogProps {
 
 export function LoadDialog({ open, onOpenChange, initialData }: LoadDialogProps) {
     const isEdit = initialData !== null;
+    const queryClient = useQueryClient();
 
     const [startDate, setStartDate] = useState("");
     const [loadType, setLoadType] = useState("");
     const [loadId, setLoadId] = useState("");
     const [status, setStatus] = useState("");
+
+    const mutation = useMutation({
+        mutationFn: async ({ sDate, lType, lStatus }: { sDate: string; lType: string; lStatus: string }) => {
+            const payload = {
+                loadType: lType,
+                startDate: `${sDate}T00:00:00`,
+                status: lStatus,
+            };
+            const url = isEdit ? `/api/loads/${initialData!.id}` : "/api/loads";
+            const response = await fetch(url, {
+                method: isEdit ? "PUT" : "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            if (!response.ok) throw new Error("Failed to save load");
+            return response.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["loads"] });
+            onOpenChange(false);
+        }
+    });
 
     useEffect(() => {
         if (initialData) {
@@ -41,6 +66,10 @@ export function LoadDialog({ open, onOpenChange, initialData }: LoadDialogProps)
             setStatus("");
         }
     }, [initialData, open]);
+
+    const handleSubmit = () => {
+        mutation.mutate({ sDate: startDate, lType: loadType, lStatus: status });
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -82,8 +111,8 @@ export function LoadDialog({ open, onOpenChange, initialData }: LoadDialogProps)
                                 id="load-id"
                                 type="text"
                                 value={loadId}
-                                onChange={(e) => setLoadId(e.target.value)}
-                                className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                                disabled
+                                className="bg-gray-100 dark:bg-gray-900 border-gray-200 dark:border-gray-700 cursor-not-allowed"
                             />
                         </div>
                     )}
@@ -107,13 +136,16 @@ export function LoadDialog({ open, onOpenChange, initialData }: LoadDialogProps)
                             variant="outline"
                             className="flex-1"
                             onClick={() => onOpenChange(false)}
+                            disabled={mutation.isPending}
                         >
                             Cancel
                         </Button>
                         <Button
                             className="flex-1 bg-brand-500 hover:bg-brand-600 font-semibold"
-                            onClick={() => onOpenChange(false)}
+                            onClick={handleSubmit}
+                            disabled={mutation.isPending}
                         >
+                            {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {isEdit ? "Save Changes" : "Create Load"}
                         </Button>
                     </div>
