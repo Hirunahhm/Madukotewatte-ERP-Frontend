@@ -12,17 +12,19 @@ import { useCreateRubberSolidRecord, useLoads } from "@/features/production/hook
 export function RubberDataEntry() {
     const [loadId, setLoadId] = useState("");
     const [massKg, setMassKg] = useState("");
+    const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
 
-    const { data: loadsData } = useLoads({ size: 50 });
+    const { data: loadsData } = useLoads({ loadType: "scrap", size: 50 });
     const loads = loadsData?.content ?? [];
 
     const createMutation = useCreateRubberSolidRecord();
 
     async function handleSubmit() {
-        if (!loadId || !massKg) return;
+        if (!loadId || !massKg || !date) return;
         await createMutation.mutateAsync({
             loadId,
             massKg: parseFloat(massKg),
+            timestamp: `${date}T00:00:00`,
         });
         setLoadId("");
         setMassKg("");
@@ -67,10 +69,20 @@ export function RubberDataEntry() {
                         />
                     </div>
 
+                    <div className="flex-1 min-w-[130px] space-y-1.5">
+                        <Label>Date</Label>
+                        <Input
+                            type="date"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                            className="bg-gray-50 dark:bg-gray-800 border-0 rounded-lg focus-visible:ring-1 focus-visible:ring-amber-500"
+                        />
+                    </div>
+
                     <Button
                         className="bg-amber-500 hover:bg-amber-600 font-bold px-8 shadow-sm shrink-0 text-white"
                         onClick={handleSubmit}
-                        disabled={createMutation.isPending || !loadId || !massKg}
+                        disabled={createMutation.isPending || !loadId || !massKg || !date}
                     >
                         {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Log Collection"}
                     </Button>

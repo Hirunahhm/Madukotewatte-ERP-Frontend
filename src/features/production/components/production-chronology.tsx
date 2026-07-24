@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Calendar, Filter, Download } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -133,13 +133,6 @@ export function ProductionChronology() {
                                     7-Day
                                 </Button>
                             </div>
-
-                            <Button variant="outline" size="sm" className="gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300 h-7">
-                                <Filter className="w-3.5 h-3.5" /> Filter
-                            </Button>
-                            <Button variant="outline" size="sm" className="gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300 h-7">
-                                <Download className="w-3.5 h-3.5" /> Export
-                            </Button>
                         </div>
                     </div>
                 </div>

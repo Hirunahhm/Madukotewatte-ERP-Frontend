@@ -1,21 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { TrendingDown } from "lucide-react";
+import { TrendingDown, TrendingUp, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { chartColors } from "@/lib/theme";
-
-const AMMONIA_STOCK = 200;
-const CAPACITY = 1000;
-const fillPct = Math.round((AMMONIA_STOCK / CAPACITY) * 100);
+import { useAmmoniaBalance } from "@/features/production/hooks/use-production";
 
 export function AmmoniaKpis() {
+    const { data: balance, isLoading } = useAmmoniaBalance();
     const [ratio, setRatio] = useState(25);
     const [editing, setEditing] = useState(false);
     const [inputVal, setInputVal] = useState("25");
 
-    const maxTappable = AMMONIA_STOCK * ratio;
+    const currentStock = balance?.currentStock ?? 0;
+    const changePercent = balance?.changeVsLastWeekPercent ?? 0;
+    const maxTappable = currentStock * ratio;
 
     function commitEdit() {
         const parsed = parseInt(inputVal, 10);
@@ -30,39 +29,33 @@ export function AmmoniaKpis() {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Ammonia Stock */}
-            <Card className="shadow-sm p-5 gap-0">
+            <Card className="shadow-sm p-5 gap-0 relative">
+                {isLoading && <div className="absolute top-4 right-4"><Loader2 className="w-4 h-4 animate-spin text-cyan-500" /></div>}
                 <p className="text-[10px] uppercase font-bold tracking-wider text-gray-500 dark:text-gray-400 mb-1">
                     Ammonia Stock
                 </p>
                 <div className="flex items-end gap-3">
                     <span className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">
-                        {AMMONIA_STOCK} L
+                        {currentStock.toLocaleString()} L
                     </span>
-                    <span className="mb-1 flex items-center gap-1 text-xs font-bold text-red-500 dark:text-red-400">
-                        <TrendingDown className="w-3.5 h-3.5" />
-                        −3.1% vs last week
-                    </span>
+                    {changePercent !== 0 && (
+                        <span className={`mb-1 flex items-center gap-1 text-xs font-bold ${changePercent < 0 ? "text-red-500 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                            {changePercent < 0 ? <TrendingDown className="w-3.5 h-3.5" /> : <TrendingUp className="w-3.5 h-3.5" />}
+                            {changePercent > 0 ? "+" : ""}{changePercent}% vs last week
+                        </span>
+                    )}
                 </div>
             </Card>
 
-            {/* Total Capacity */}
+            {/* Last Updated */}
             <Card className="shadow-sm p-5 gap-0">
                 <p className="text-[10px] uppercase font-bold tracking-wider text-gray-500 dark:text-gray-400 mb-1">
-                    Total Capacity
+                    Last Updated
                 </p>
-                <div className="flex items-end gap-2 mb-3">
-                    <span className="text-3xl font-extrabold text-gray-900 dark:text-gray-100">
-                        {fillPct}%
+                <div className="flex items-end gap-2">
+                    <span className="text-lg font-extrabold text-gray-900 dark:text-gray-100">
+                        {balance?.lastUpdated ? new Date(balance.lastUpdated).toLocaleDateString() : "No records yet"}
                     </span>
-                    <span className="mb-1 text-xs text-gray-500 dark:text-gray-400 font-medium">
-                        {AMMONIA_STOCK} / {CAPACITY} L
-                    </span>
-                </div>
-                <div className="w-full h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${fillPct}%`, backgroundColor: chartColors.cyan }}
-                    />
                 </div>
             </Card>
 

@@ -28,6 +28,25 @@ export interface LoadRequest {
     status?: string;
 }
 
+/** Aggregated stats for a single load — returned by GET /api/v1/loads/{id}/summary */
+export interface LoadSummary {
+    loadId: string;
+    loadType: string;
+    status: string;
+    startDate: string;
+    totalLatexCollected: number;
+    totalAmmoniaUsed: number;
+    recordCount: number;
+    lastCollectionAt: string | null;
+}
+
+export interface VolumeTrend {
+    name: string;
+    actual: number;
+    target: number | null;
+}
+
+
 // ─── Latex Record ─────────────────────────────────────────────────────────────
 
 export interface LatexRecord {
@@ -57,6 +76,7 @@ export interface MetrolacReading {
     metrolacId: string;
     loadId: string;
     temperature: number;
+    reading: number | null;
     timestamp: string;
     createdAt: string;
 }
@@ -64,6 +84,7 @@ export interface MetrolacReading {
 export interface MetrolacReadingRequest {
     loadId: string;
     temperature: number;
+    reading?: number | null;
     timestamp: string;       // ISO date-time
 }
 
@@ -85,18 +106,45 @@ export interface AmmoniaRecordRequest {
     timestamp: string;       // ISO date-time
 }
 
+/** Current tank stock — returned by GET /api/v1/ammonia-records/balance */
+export interface AmmoniaBalance {
+    currentStock: number;
+    lastUpdated: string | null;
+    changeVsLastWeekPercent: number;
+}
+
+/** Daily refill/usage totals — returned by GET /api/v1/ammonia-records/usage */
+export interface AmmoniaUsagePoint {
+    name: string;
+    refill: number;
+    out: number;
+}
+
 // ─── Rubber Solid Record ──────────────────────────────────────────────────────
 
 export interface RubberSolidRecord {
     recordId: string;
     loadId: string;
     massKg: number;
+    timestamp: string;
     createdAt: string;
 }
 
 export interface RubberSolidRecordRequest {
     loadId: string;
     massKg: number;
+    timestamp: string;       // ISO date-time
+}
+
+/** Aggregated stats for a single load — returned by GET /api/v1/rubber-solid-records/load/{id}/summary */
+export interface RubberLoadSummary {
+    loadId: string;
+    loadType: string;
+    status: string;
+    startDate: string;
+    totalMassKg: number;
+    recordCount: number;
+    lastCollectionAt: string | null;
 }
 
 // ─── Calendar ─────────────────────────────────────────────────────────────────

@@ -17,7 +17,7 @@ export function MetrolacEntryForm() {
     const [date, setDate] = useState(today);
     const [temperature, setTemperature] = useState("");
 
-    const { data: loadsData } = useLoads({ size: 50 });
+    const { data: loadsData } = useLoads({ loadType: "field-latex", size: 50 });
     const loads = loadsData?.content ?? [];
 
     const createMutation = useCreateMetrolacReading();
@@ -27,6 +27,7 @@ export function MetrolacEntryForm() {
         await createMutation.mutateAsync({
             loadId,
             temperature: parseFloat(temperature),
+            reading: reading ? parseFloat(reading) : undefined,
             timestamp: `${date}T06:00:00`,
         });
         setTemperature("");

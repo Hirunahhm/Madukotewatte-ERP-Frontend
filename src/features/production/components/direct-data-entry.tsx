@@ -29,7 +29,7 @@ export function DirectDataEntry() {
     const { data: employeesData } = useEmployees({ size: 100 });
     const employees = employeesData?.content ?? [];
 
-    const { data: loadsData } = useLoads({ size: 50 });
+    const { data: loadsData } = useLoads({ loadType: "field-latex", size: 50 });
     const loads = loadsData?.content ?? [];
 
     const { data: historyData, isLoading: historyLoading } = useLatexRecords({ page: historyPage, size: PAGE_SIZE });

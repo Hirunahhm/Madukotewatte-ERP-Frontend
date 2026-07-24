@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDeleteLoad } from "@/features/production/hooks/use-production";
 
 export interface LoadData {
     id: string;
@@ -20,9 +21,10 @@ interface LoadDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     initialData: LoadData | null;
+    defaultLoadType?: string;
 }
 
-export function LoadDialog({ open, onOpenChange, initialData }: LoadDialogProps) {
+export function LoadDialog({ open, onOpenChange, initialData, defaultLoadType }: LoadDialogProps) {
     const isEdit = initialData !== null;
     const queryClient = useQueryClient();
 
@@ -53,6 +55,8 @@ export function LoadDialog({ open, onOpenChange, initialData }: LoadDialogProps)
         }
     });
 
+    const deleteMutation = useDeleteLoad();
+
     useEffect(() => {
         if (initialData) {
             setStartDate(initialData.startDate);
@@ -61,15 +65,22 @@ export function LoadDialog({ open, onOpenChange, initialData }: LoadDialogProps)
             setStatus(initialData.status);
         } else {
             setStartDate(new Date().toISOString().split("T")[0]);
-            setLoadType("");
+            setLoadType(defaultLoadType ?? "");
             setLoadId("");
             setStatus("");
         }
-    }, [initialData, open]);
+    }, [initialData, open, defaultLoadType]);
 
     const handleSubmit = () => {
         mutation.mutate({ sDate: startDate, lType: loadType, lStatus: status });
     };
+
+    async function handleDelete() {
+        if (!initialData) return;
+        if (!window.confirm(`Delete load ${initialData.id}? This cannot be undone.`)) return;
+        await deleteMutation.mutateAsync(initialData.id);
+        onOpenChange(false);
+    }
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -132,6 +143,16 @@ export function LoadDialog({ open, onOpenChange, initialData }: LoadDialogProps)
                     </div>
 
                     <div className="flex gap-2 pt-2">
+                        {isEdit && (
+                            <Button
+                                variant="outline"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-200 dark:border-red-800"
+                                onClick={handleDelete}
+                                disabled={mutation.isPending || deleteMutation.isPending}
+                            >
+                                {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                            </Button>
+                        )}
                         <Button
                             variant="outline"
                             className="flex-1"
