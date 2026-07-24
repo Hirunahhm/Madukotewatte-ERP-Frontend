@@ -1,7 +1,7 @@
 import type { PageResponse } from "@/features/employees/types/common.types";
 import type { Employee, EmployeeRequest, EmployeeSummary, PaymentSummary } from "@/features/employees/types/employee.types";
-import type { Attendance } from "@/features/employees/types/attendance.types";
-import type { EmployeeTransaction } from "@/features/employees/types/transaction.types";
+import type { Attendance, EmployeeAttendanceStats } from "@/features/employees/types/attendance.types";
+import type { EmployeeTransaction, EmployeeTransactionStats } from "@/features/employees/types/transaction.types";
 
 async function handleResponse<T>(res: Response): Promise<T> {
     if (res.status === 204) return undefined as T;
@@ -57,15 +57,56 @@ export async function getEmployee(id: string): Promise<Employee> {
     return handleResponse(res);
 }
 
-export async function getEmployeeAttendance(id: string, params: { page?: number; size?: number }): Promise<PageResponse<Attendance>> {
+export interface EmployeeAttendanceParams {
+    page?: number;
+    size?: number;
+    from?: string;
+    to?: string;
+    status?: string;
+}
+
+export async function getEmployeeAttendance(id: string, params: EmployeeAttendanceParams): Promise<PageResponse<Attendance>> {
     const qs = new URLSearchParams();
     if (params.page !== undefined) qs.set("page", String(params.page));
     if (params.size !== undefined) qs.set("size", String(params.size));
+    if (params.from) qs.set("from", params.from);
+    if (params.to) qs.set("to", params.to);
+    if (params.status) qs.set("status", params.status);
     const res = await fetch(`/api/employees/${id}/attendance?${qs.toString()}`);
     return handleResponse(res);
 }
 
-export async function getEmployeeTransactions(id: string): Promise<EmployeeTransaction[]> {
-    const res = await fetch(`/api/employees/${id}/transactions`);
+export async function getEmployeeAttendanceStats(id: string, params: { from?: string; to?: string }): Promise<EmployeeAttendanceStats> {
+    const qs = new URLSearchParams();
+    if (params.from) qs.set("from", params.from);
+    if (params.to) qs.set("to", params.to);
+    const res = await fetch(`/api/employees/${id}/attendance/stats?${qs.toString()}`);
+    return handleResponse(res);
+}
+
+export interface EmployeeTransactionParams {
+    page?: number;
+    size?: number;
+    from?: string;
+    to?: string;
+    type?: string;
+}
+
+export async function getEmployeeTransactions(id: string, params: EmployeeTransactionParams): Promise<PageResponse<EmployeeTransaction>> {
+    const qs = new URLSearchParams();
+    if (params.page !== undefined) qs.set("page", String(params.page));
+    if (params.size !== undefined) qs.set("size", String(params.size));
+    if (params.from) qs.set("from", params.from);
+    if (params.to) qs.set("to", params.to);
+    if (params.type) qs.set("type", params.type);
+    const res = await fetch(`/api/employees/${id}/transactions?${qs.toString()}`);
+    return handleResponse(res);
+}
+
+export async function getEmployeeTransactionStats(id: string, params: { from?: string; to?: string }): Promise<EmployeeTransactionStats> {
+    const qs = new URLSearchParams();
+    if (params.from) qs.set("from", params.from);
+    if (params.to) qs.set("to", params.to);
+    const res = await fetch(`/api/employees/${id}/transactions/stats?${qs.toString()}`);
     return handleResponse(res);
 }

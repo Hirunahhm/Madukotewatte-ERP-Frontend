@@ -5,7 +5,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const { id } = await params;
     try {
         const qs = req.nextUrl.searchParams.toString();
-        const data = await backendJson(`/employees/${id}/transactions${qs ? `?${qs}` : ""}`);
+        const data = await backendJson(`/employees/${id}/transactions/stats${qs ? `?${qs}` : ""}`);
         return NextResponse.json(data);
     } catch (err) {
         if (err instanceof BackendError) return NextResponse.json({ message: err.message }, { status: err.status });

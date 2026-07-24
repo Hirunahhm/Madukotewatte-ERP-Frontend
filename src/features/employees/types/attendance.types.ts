@@ -40,3 +40,12 @@ export interface AttendanceRequest {
 export interface AttendanceBulkRequest {
     attendances: AttendanceRequest[];
 }
+
+export interface EmployeeAttendanceStats {
+    totalDays: number;
+    presentDays: number;
+    absentDays: number;
+    totalTreesTapped: number;
+    avgTreesPerPresentDay: number;
+    attendanceRatePercent: number;
+}

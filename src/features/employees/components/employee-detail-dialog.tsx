@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +28,10 @@ const TRANSACTION_LABELS: Record<string, string> = {
     Latex_Tap: "Latex Tap Earnings",
 };
 
+const TRANSACTION_TYPES = ["Manual_Labor", "Advance", "Loan_Payment", "Latex_Tap"];
+
 type Tab = "attendance" | "transactions" | "loans";
+type LoanFilter = "all" | "active" | "closed";
 
 function reasonLabel(noWork: string) {
     return ABSENCE_REASONS.find((r) => r.value === noWork)?.label ?? noWork;
@@ -36,6 +39,23 @@ function reasonLabel(noWork: string) {
 
 function formatLkr(value: number) {
     return `LKR ${value.toLocaleString()}`;
+}
+
+function toIsoStart(date: string) {
+    return `${date}T00:00:00`;
+}
+
+function toIsoEnd(date: string) {
+    return `${date}T23:59:59`;
+}
+
+function StatCard({ label, value, accent }: { label: string; value: string | number; accent?: boolean }) {
+    return (
+        <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-gray-50/40 dark:bg-gray-800/30">
+            <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{label}</p>
+            <p className={cn("text-lg font-semibold mt-1", accent ? "text-brand-600" : "text-gray-900 dark:text-gray-100")}>{value}</p>
+        </div>
+    );
 }
 
 interface Props {
@@ -46,7 +66,6 @@ interface Props {
 
 export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) {
     const [tab, setTab] = useState<Tab>("attendance");
-    const [attendancePage, setAttendancePage] = useState(0);
     const [isEditing, setIsEditing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -56,11 +75,56 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
     const [joinedDate, setJoinedDate] = useState("");
     const [isActive, setIsActive] = useState(true);
 
+    // Attendance filters
+    const [attendancePage, setAttendancePage] = useState(0);
+    const [attendanceFrom, setAttendanceFrom] = useState("");
+    const [attendanceTo, setAttendanceTo] = useState("");
+    const [attendanceStatus, setAttendanceStatus] = useState("all");
+
+    // Transaction filters
+    const [transactionsPage, setTransactionsPage] = useState(0);
+    const [transactionsFrom, setTransactionsFrom] = useState("");
+    const [transactionsTo, setTransactionsTo] = useState("");
+    const [transactionsType, setTransactionsType] = useState("all");
+
+    // Loans filter (client-side)
+    const [loansFilter, setLoansFilter] = useState<LoanFilter>("all");
+
     const role = useAuthStore((s) => s.role);
     const isAdmin = role === "ROLE_ADMIN";
 
-    const { employee, attendance, transactions, loans } = useEmployeeDetail(employeeId, attendancePage);
+    const { employee, attendance, attendanceStats, transactions, transactionStats, loans } = useEmployeeDetail(
+        employeeId,
+        {
+            page: attendancePage,
+            from: attendanceFrom ? toIsoStart(attendanceFrom) : undefined,
+            to: attendanceTo ? toIsoEnd(attendanceTo) : undefined,
+            status: attendanceStatus !== "all" ? attendanceStatus : undefined,
+        },
+        {
+            page: transactionsPage,
+            from: transactionsFrom ? toIsoStart(transactionsFrom) : undefined,
+            to: transactionsTo ? toIsoEnd(transactionsTo) : undefined,
+            type: transactionsType !== "all" ? transactionsType : undefined,
+        },
+    );
     const updateEmployee = useUpdateEmployee();
+
+    const filteredLoans = useMemo(() => {
+        const all = loans.data ?? [];
+        if (loansFilter === "all") return all;
+        return all.filter((l) => (loansFilter === "active" ? l.isActive : !l.isActive));
+    }, [loans.data, loansFilter]);
+
+    const loanStats = useMemo(() => {
+        const all = loans.data ?? [];
+        return {
+            totalBorrowed: all.reduce((sum, l) => sum + l.principalAmount, 0),
+            totalOutstanding: all.filter((l) => l.isActive).reduce((sum, l) => sum + l.currentBalance, 0),
+            activeCount: all.filter((l) => l.isActive).length,
+            totalCount: all.length,
+        };
+    }, [loans.data]);
 
     useEffect(() => {
         if (employee.data) {
@@ -75,9 +139,17 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
     useEffect(() => {
         if (!open) {
             setTab("attendance");
-            setAttendancePage(0);
             setIsEditing(false);
             setError(null);
+            setAttendancePage(0);
+            setAttendanceFrom("");
+            setAttendanceTo("");
+            setAttendanceStatus("all");
+            setTransactionsPage(0);
+            setTransactionsFrom("");
+            setTransactionsTo("");
+            setTransactionsType("all");
+            setLoansFilter("all");
         }
     }, [open]);
 
@@ -116,6 +188,9 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
         setError(null);
         setIsEditing(false);
     }
+
+    const attendanceFiltersActive = attendanceFrom || attendanceTo || attendanceStatus !== "all";
+    const transactionFiltersActive = transactionsFrom || transactionsTo || transactionsType !== "all";
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -238,75 +313,149 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
 
                         {/* Attendance tab */}
                         {tab === "attendance" && (
-                            <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                                <Table>
-                                    <TableHeader className="bg-gray-50/50 dark:bg-gray-800/50">
-                                        <TableRow>
-                                            <TableHead>Date</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead className="text-right">Trees Tapped</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {attendance.isLoading && (
-                                            <TableRow><TableCell colSpan={3} className="text-center py-8 text-gray-400"><Loader2 className="w-5 h-5 animate-spin inline-block" /></TableCell></TableRow>
-                                        )}
-                                        {!attendance.isLoading && (attendance.data?.content.length ?? 0) === 0 && (
-                                            <TableRow><TableCell colSpan={3} className="text-center py-8 text-gray-400">No attendance records yet.</TableCell></TableRow>
-                                        )}
-                                        {attendance.data?.content.map((rec) => (
-                                            <TableRow key={rec.attendanceId}>
-                                                <TableCell className="text-sm">{new Date(rec.timestamp).toLocaleDateString()}</TableCell>
-                                                <TableCell>
-                                                    <Badge variant="outline" className={cn(
-                                                        "text-[10px] font-bold uppercase border-transparent",
-                                                        rec.noWork === "none" ? "bg-emerald-50 text-brand-600" : "bg-red-50 text-red-600"
-                                                    )}>
-                                                        {rec.noWork === "none" ? "Present" : reasonLabel(rec.noWork)}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-right text-sm font-medium">{rec.noOfTrees ?? 0}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                                {attendance.data && attendance.data.totalPages > 1 && (
-                                    <div className="flex items-center justify-end gap-2 p-2 border-t border-gray-100 dark:border-gray-700 text-xs">
-                                        <button disabled={attendancePage === 0} onClick={() => setAttendancePage((p) => Math.max(0, p - 1))} className="w-6 h-6 rounded flex items-center justify-center border border-gray-200 dark:border-gray-700 disabled:opacity-40">
-                                            <ChevronLeft className="w-3.5 h-3.5" />
-                                        </button>
-                                        <span>Page {attendancePage + 1} of {attendance.data.totalPages}</span>
-                                        <button disabled={attendance.data.last} onClick={() => setAttendancePage((p) => p + 1)} className="w-6 h-6 rounded flex items-center justify-center border border-gray-200 dark:border-gray-700 disabled:opacity-40">
-                                            <ChevronRight className="w-3.5 h-3.5" />
-                                        </button>
+                            <div className="space-y-3">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <StatCard label="Present Days" value={attendanceStats.data?.presentDays ?? "-"} accent />
+                                    <StatCard label="Absent Days" value={attendanceStats.data?.absentDays ?? "-"} />
+                                    <StatCard label="Attendance Rate" value={attendanceStats.data ? `${attendanceStats.data.attendanceRatePercent}%` : "-"} />
+                                    <StatCard label="Trees Tapped" value={attendanceStats.data?.totalTreesTapped ?? "-"} />
+                                </div>
+
+                                <div className="flex flex-wrap items-end gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs text-gray-500">From</Label>
+                                        <Input type="date" className="h-8 text-xs w-36" value={attendanceFrom}
+                                            onChange={(e) => { setAttendanceFrom(e.target.value); setAttendancePage(0); }} />
                                     </div>
-                                )}
+                                    <div className="space-y-1">
+                                        <Label className="text-xs text-gray-500">To</Label>
+                                        <Input type="date" className="h-8 text-xs w-36" value={attendanceTo}
+                                            onChange={(e) => { setAttendanceTo(e.target.value); setAttendancePage(0); }} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs text-gray-500">Status</Label>
+                                        <Select value={attendanceStatus} onValueChange={(v) => { if (v) { setAttendanceStatus(v); setAttendancePage(0); } }}>
+                                            <SelectTrigger className="h-8 text-xs w-40"><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All</SelectItem>
+                                                <SelectItem value="none">Present</SelectItem>
+                                                {ABSENCE_REASONS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    {attendanceFiltersActive && (
+                                        <Button size="sm" variant="ghost" className="h-8 gap-1 text-xs text-gray-500"
+                                            onClick={() => { setAttendanceFrom(""); setAttendanceTo(""); setAttendanceStatus("all"); setAttendancePage(0); }}>
+                                            <X className="w-3 h-3" /> Clear
+                                        </Button>
+                                    )}
+                                </div>
+
+                                <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                    <Table>
+                                        <TableHeader className="bg-gray-50/50 dark:bg-gray-800/50">
+                                            <TableRow>
+                                                <TableHead>Date</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead className="text-right">Trees Tapped</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {attendance.isLoading && (
+                                                <TableRow><TableCell colSpan={3} className="text-center py-8 text-gray-400"><Loader2 className="w-5 h-5 animate-spin inline-block" /></TableCell></TableRow>
+                                            )}
+                                            {!attendance.isLoading && (attendance.data?.content.length ?? 0) === 0 && (
+                                                <TableRow><TableCell colSpan={3} className="text-center py-8 text-gray-400">No attendance records match these filters.</TableCell></TableRow>
+                                            )}
+                                            {attendance.data?.content.map((rec) => (
+                                                <TableRow key={rec.attendanceId}>
+                                                    <TableCell className="text-sm">{new Date(rec.timestamp).toLocaleDateString()}</TableCell>
+                                                    <TableCell>
+                                                        <Badge variant="outline" className={cn(
+                                                            "text-[10px] font-bold uppercase border-transparent",
+                                                            rec.noWork === "none" ? "bg-emerald-50 text-brand-600" : "bg-red-50 text-red-600"
+                                                        )}>
+                                                            {rec.noWork === "none" ? "Present" : reasonLabel(rec.noWork)}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-right text-sm font-medium">{rec.noOfTrees ?? 0}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                    {attendance.data && attendance.data.totalPages > 1 && (
+                                        <div className="flex items-center justify-end gap-2 p-2 border-t border-gray-100 dark:border-gray-700 text-xs">
+                                            <button disabled={attendancePage === 0} onClick={() => setAttendancePage((p) => Math.max(0, p - 1))} className="w-6 h-6 rounded flex items-center justify-center border border-gray-200 dark:border-gray-700 disabled:opacity-40">
+                                                <ChevronLeft className="w-3.5 h-3.5" />
+                                            </button>
+                                            <span>Page {attendancePage + 1} of {attendance.data.totalPages}</span>
+                                            <button disabled={attendance.data.last} onClick={() => setAttendancePage((p) => p + 1)} className="w-6 h-6 rounded flex items-center justify-center border border-gray-200 dark:border-gray-700 disabled:opacity-40">
+                                                <ChevronRight className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
 
                         {/* Transactions tab */}
                         {tab === "transactions" && (
-                            <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                                <Table>
-                                    <TableHeader className="bg-gray-50/50 dark:bg-gray-800/50">
-                                        <TableRow>
-                                            <TableHead>Date</TableHead>
-                                            <TableHead>Type</TableHead>
-                                            <TableHead>Payment Method</TableHead>
-                                            <TableHead className="text-right">Amount</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {transactions.isLoading && (
-                                            <TableRow><TableCell colSpan={4} className="text-center py-8 text-gray-400"><Loader2 className="w-5 h-5 animate-spin inline-block" /></TableCell></TableRow>
-                                        )}
-                                        {!transactions.isLoading && (transactions.data?.length ?? 0) === 0 && (
-                                            <TableRow><TableCell colSpan={4} className="text-center py-8 text-gray-400">No transactions recorded yet.</TableCell></TableRow>
-                                        )}
-                                        {transactions.data
-                                            ?.slice()
-                                            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-                                            .map((tx) => (
+                            <div className="space-y-3">
+                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                    <StatCard label="Total Earned" value={transactionStats.data ? formatLkr(transactionStats.data.totalAmount) : "-"} accent />
+                                    <StatCard label="Latex Tap" value={transactionStats.data ? formatLkr(transactionStats.data.latexTap) : "-"} />
+                                    <StatCard label="Labour" value={transactionStats.data ? formatLkr(transactionStats.data.manualLabor) : "-"} />
+                                    <StatCard label="Advances" value={transactionStats.data ? formatLkr(transactionStats.data.advances) : "-"} />
+                                    <StatCard label="Loan Deductions" value={transactionStats.data ? formatLkr(transactionStats.data.loanPayments) : "-"} />
+                                </div>
+
+                                <div className="flex flex-wrap items-end gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs text-gray-500">From</Label>
+                                        <Input type="date" className="h-8 text-xs w-36" value={transactionsFrom}
+                                            onChange={(e) => { setTransactionsFrom(e.target.value); setTransactionsPage(0); }} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs text-gray-500">To</Label>
+                                        <Input type="date" className="h-8 text-xs w-36" value={transactionsTo}
+                                            onChange={(e) => { setTransactionsTo(e.target.value); setTransactionsPage(0); }} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs text-gray-500">Type</Label>
+                                        <Select value={transactionsType} onValueChange={(v) => { if (v) { setTransactionsType(v); setTransactionsPage(0); } }}>
+                                            <SelectTrigger className="h-8 text-xs w-44"><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All</SelectItem>
+                                                {TRANSACTION_TYPES.map((t) => <SelectItem key={t} value={t}>{TRANSACTION_LABELS[t]}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    {transactionFiltersActive && (
+                                        <Button size="sm" variant="ghost" className="h-8 gap-1 text-xs text-gray-500"
+                                            onClick={() => { setTransactionsFrom(""); setTransactionsTo(""); setTransactionsType("all"); setTransactionsPage(0); }}>
+                                            <X className="w-3 h-3" /> Clear
+                                        </Button>
+                                    )}
+                                </div>
+
+                                <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                    <Table>
+                                        <TableHeader className="bg-gray-50/50 dark:bg-gray-800/50">
+                                            <TableRow>
+                                                <TableHead>Date</TableHead>
+                                                <TableHead>Type</TableHead>
+                                                <TableHead>Payment Method</TableHead>
+                                                <TableHead className="text-right">Amount</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {transactions.isLoading && (
+                                                <TableRow><TableCell colSpan={4} className="text-center py-8 text-gray-400"><Loader2 className="w-5 h-5 animate-spin inline-block" /></TableCell></TableRow>
+                                            )}
+                                            {!transactions.isLoading && (transactions.data?.content.length ?? 0) === 0 && (
+                                                <TableRow><TableCell colSpan={4} className="text-center py-8 text-gray-400">No transactions match these filters.</TableCell></TableRow>
+                                            )}
+                                            {transactions.data?.content.map((tx) => (
                                                 <TableRow key={tx.transactionRecordId}>
                                                     <TableCell className="text-sm">{new Date(tx.timestamp).toLocaleDateString()}</TableCell>
                                                     <TableCell className="text-sm">{TRANSACTION_LABELS[tx.type] ?? tx.type}</TableCell>
@@ -314,49 +463,86 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
                                                     <TableCell className="text-right text-sm font-medium">{formatLkr(tx.amount)}</TableCell>
                                                 </TableRow>
                                             ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableBody>
+                                    </Table>
+                                    {transactions.data && transactions.data.totalPages > 1 && (
+                                        <div className="flex items-center justify-end gap-2 p-2 border-t border-gray-100 dark:border-gray-700 text-xs">
+                                            <button disabled={transactionsPage === 0} onClick={() => setTransactionsPage((p) => Math.max(0, p - 1))} className="w-6 h-6 rounded flex items-center justify-center border border-gray-200 dark:border-gray-700 disabled:opacity-40">
+                                                <ChevronLeft className="w-3.5 h-3.5" />
+                                            </button>
+                                            <span>Page {transactionsPage + 1} of {transactions.data.totalPages}</span>
+                                            <button disabled={transactions.data.last} onClick={() => setTransactionsPage((p) => p + 1)} className="w-6 h-6 rounded flex items-center justify-center border border-gray-200 dark:border-gray-700 disabled:opacity-40">
+                                                <ChevronRight className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
 
                         {/* Loans tab */}
                         {tab === "loans" && (
-                            <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                                <Table>
-                                    <TableHeader className="bg-gray-50/50 dark:bg-gray-800/50">
-                                        <TableRow>
-                                            <TableHead>Principal</TableHead>
-                                            <TableHead className="text-right">Installment</TableHead>
-                                            <TableHead className="text-right">Balance</TableHead>
-                                            <TableHead className="text-right">Interest</TableHead>
-                                            <TableHead>Status</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {loans.isLoading && (
-                                            <TableRow><TableCell colSpan={5} className="text-center py-8 text-gray-400"><Loader2 className="w-5 h-5 animate-spin inline-block" /></TableCell></TableRow>
-                                        )}
-                                        {!loans.isLoading && (loans.data?.length ?? 0) === 0 && (
-                                            <TableRow><TableCell colSpan={5} className="text-center py-8 text-gray-400">No loans recorded for this employee.</TableCell></TableRow>
-                                        )}
-                                        {loans.data?.map((loan) => (
-                                            <TableRow key={loan.loanId}>
-                                                <TableCell className="text-sm">{formatLkr(loan.principalAmount)}</TableCell>
-                                                <TableCell className="text-right text-sm">{formatLkr(loan.installment)}</TableCell>
-                                                <TableCell className="text-right text-sm font-medium">{formatLkr(loan.currentBalance)}</TableCell>
-                                                <TableCell className="text-right text-sm text-gray-500 dark:text-gray-400">{loan.interest}%</TableCell>
-                                                <TableCell>
-                                                    <Badge variant="outline" className={cn(
-                                                        "text-[10px] font-bold uppercase border-transparent",
-                                                        loan.isActive ? "bg-emerald-50 text-brand-600" : "bg-gray-100 text-gray-500"
-                                                    )}>
-                                                        {loan.isActive ? "Active" : "Closed"}
-                                                    </Badge>
-                                                </TableCell>
+                            <div className="space-y-3">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <StatCard label="Total Borrowed" value={formatLkr(loanStats.totalBorrowed)} />
+                                    <StatCard label="Total Outstanding" value={formatLkr(loanStats.totalOutstanding)} accent />
+                                    <StatCard label="Active Loans" value={loanStats.activeCount} />
+                                    <StatCard label="Total Loans" value={loanStats.totalCount} />
+                                </div>
+
+                                <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1 w-fit">
+                                    {([
+                                        { id: "all", label: "All" },
+                                        { id: "active", label: "Active" },
+                                        { id: "closed", label: "Closed" },
+                                    ] as { id: LoanFilter; label: string }[]).map((f) => (
+                                        <button
+                                            key={f.id}
+                                            onClick={() => setLoansFilter(f.id)}
+                                            className={`h-7 px-2.5 rounded-md text-xs font-medium transition-colors ${loansFilter === f.id ? "bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-gray-100" : "text-gray-500 hover:text-gray-700"}`}
+                                        >
+                                            {f.label}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                    <Table>
+                                        <TableHeader className="bg-gray-50/50 dark:bg-gray-800/50">
+                                            <TableRow>
+                                                <TableHead>Principal</TableHead>
+                                                <TableHead className="text-right">Installment</TableHead>
+                                                <TableHead className="text-right">Balance</TableHead>
+                                                <TableHead className="text-right">Interest</TableHead>
+                                                <TableHead>Status</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {loans.isLoading && (
+                                                <TableRow><TableCell colSpan={5} className="text-center py-8 text-gray-400"><Loader2 className="w-5 h-5 animate-spin inline-block" /></TableCell></TableRow>
+                                            )}
+                                            {!loans.isLoading && filteredLoans.length === 0 && (
+                                                <TableRow><TableCell colSpan={5} className="text-center py-8 text-gray-400">No loans match this filter.</TableCell></TableRow>
+                                            )}
+                                            {filteredLoans.map((loan) => (
+                                                <TableRow key={loan.loanId}>
+                                                    <TableCell className="text-sm">{formatLkr(loan.principalAmount)}</TableCell>
+                                                    <TableCell className="text-right text-sm">{formatLkr(loan.installment)}</TableCell>
+                                                    <TableCell className="text-right text-sm font-medium">{formatLkr(loan.currentBalance)}</TableCell>
+                                                    <TableCell className="text-right text-sm text-gray-500 dark:text-gray-400">{loan.interest}%</TableCell>
+                                                    <TableCell>
+                                                        <Badge variant="outline" className={cn(
+                                                            "text-[10px] font-bold uppercase border-transparent",
+                                                            loan.isActive ? "bg-emerald-50 text-brand-600" : "bg-gray-100 text-gray-500"
+                                                        )}>
+                                                            {loan.isActive ? "Active" : "Closed"}
+                                                        </Badge>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             </div>
                         )}
                     </div>

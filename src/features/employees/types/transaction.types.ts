@@ -10,3 +10,12 @@ export interface EmployeeTransaction {
     timestamp: string;
     createdAt: string;
 }
+
+export interface EmployeeTransactionStats {
+    totalAmount: number;
+    manualLabor: number;
+    advances: number;
+    loanPayments: number;
+    latexTap: number;
+    transactionCount: number;
+}
