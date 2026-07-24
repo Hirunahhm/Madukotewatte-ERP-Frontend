@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { AttendanceDialog } from "./attendance-dialog";
 import { AddEmployeeDialog } from "./add-employee-dialog";
+import { EmployeeDetailDialog } from "./employee-detail-dialog";
 import { useEmployees } from "@/features/employees/hooks/use-employees";
 import { getAttendanceByRange } from "@/features/employees/services/attendance-service";
 import { useAuthStore } from "@/stores/auth-store";
@@ -36,6 +37,7 @@ export function EmployeeTable() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState<{ employeeId: string; name: string } | null>(null);
     const [addDialogOpen, setAddDialogOpen] = useState(false);
+    const [detailEmployeeId, setDetailEmployeeId] = useState<string | null>(null);
     const [searchInput, setSearchInput] = useState("");
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(0);
@@ -126,13 +128,16 @@ export function EmployeeTable() {
                             return (
                                 <TableRow key={emp.employeeId} className="border-gray-50 dark:border-gray-700/30 hover:bg-gray-50/50 dark:hover:bg-gray-800/50">
                                     <TableCell className="px-6 py-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                                        <button
+                                            className="flex items-center gap-3 text-left group"
+                                            onClick={() => setDetailEmployeeId(emp.employeeId)}
+                                        >
+                                            <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0"></div>
                                             <div>
-                                                <p className="font-bold text-gray-900 dark:text-gray-100">{emp.name}</p>
+                                                <p className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-brand-600 group-hover:underline underline-offset-2 transition-colors">{emp.name}</p>
                                                 <p className="text-xs text-gray-500 dark:text-gray-400">{emp.employeeId.slice(0, 8)}</p>
                                             </div>
-                                        </div>
+                                        </button>
                                     </TableCell>
                                     <TableCell className="px-6 py-3 text-gray-600 dark:text-gray-300">{emp.position ?? "-"}</TableCell>
                                     <TableCell className="px-6 py-3">
@@ -204,6 +209,11 @@ export function EmployeeTable() {
                     onOpenChange={setAddDialogOpen}
                 />
             )}
+            <EmployeeDetailDialog
+                open={!!detailEmployeeId}
+                onOpenChange={(o) => { if (!o) setDetailEmployeeId(null); }}
+                employeeId={detailEmployeeId}
+            />
         </>
     );
 }

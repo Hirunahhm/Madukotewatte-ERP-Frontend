@@ -1,5 +1,7 @@
 import type { PageResponse } from "@/features/employees/types/common.types";
 import type { Employee, EmployeeRequest, EmployeeSummary, PaymentSummary } from "@/features/employees/types/employee.types";
+import type { Attendance } from "@/features/employees/types/attendance.types";
+import type { EmployeeTransaction } from "@/features/employees/types/transaction.types";
 
 async function handleResponse<T>(res: Response): Promise<T> {
     if (res.status === 204) return undefined as T;
@@ -47,5 +49,23 @@ export async function deleteEmployee(id: string): Promise<void> {
 
 export async function getPaymentSummary(): Promise<PaymentSummary> {
     const res = await fetch("/api/employees/payment-summary");
+    return handleResponse(res);
+}
+
+export async function getEmployee(id: string): Promise<Employee> {
+    const res = await fetch(`/api/employees/${id}`);
+    return handleResponse(res);
+}
+
+export async function getEmployeeAttendance(id: string, params: { page?: number; size?: number }): Promise<PageResponse<Attendance>> {
+    const qs = new URLSearchParams();
+    if (params.page !== undefined) qs.set("page", String(params.page));
+    if (params.size !== undefined) qs.set("size", String(params.size));
+    const res = await fetch(`/api/employees/${id}/attendance?${qs.toString()}`);
+    return handleResponse(res);
+}
+
+export async function getEmployeeTransactions(id: string): Promise<EmployeeTransaction[]> {
+    const res = await fetch(`/api/employees/${id}/transactions`);
     return handleResponse(res);
 }
