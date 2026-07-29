@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -18,78 +20,67 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { useMonetaryTransactions } from "@/features/assets/hooks/use-assets";
+import { ASSET_TYPES } from "@/features/assets/types/assets.types";
 
-type TransactionType = "Credit" | "Debit";
-type BankName = "BOC" | "Seylan" | "Peoples";
-
-interface BankTransaction {
-    date: string;
-    bank: BankName;
-    description: string;
-    lastAmount: number;
-    amount: number;
-    newAmount: number;
-    type: TransactionType;
+function formatLkr(value: number): string {
+    return `LKR ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 }
 
-const transactions: BankTransaction[] = [
-    { date: "2026-03-20", bank: "BOC", description: "Latex Sale Payment", lastAmount: 362400, amount: 21800, newAmount: 384200, type: "Credit" },
-    { date: "2026-03-18", bank: "Seylan", description: "Fertilizer Supplier", lastAmount: 298200, amount: 16800, newAmount: 281400, type: "Debit" },
-    { date: "2026-03-16", bank: "Peoples", description: "Labour Payroll", lastAmount: 198200, amount: 21500, newAmount: 176700, type: "Debit" },
-    { date: "2026-03-14", bank: "BOC", description: "Rubber Solid Sale", lastAmount: 344600, amount: 17800, newAmount: 362400, type: "Credit" },
-    { date: "2026-03-12", bank: "Seylan", description: "Equipment Purchase", lastAmount: 312400, amount: 14200, newAmount: 298200, type: "Debit" },
-    { date: "2026-03-10", bank: "Peoples", description: "Grant Deposit", lastAmount: 168400, amount: 29800, newAmount: 198200, type: "Credit" },
-    { date: "2026-03-08", bank: "BOC", description: "Maintenance Costs", lastAmount: 351200, amount: 6600, newAmount: 344600, type: "Debit" },
-    { date: "2026-03-05", bank: "Seylan", description: "Ammonia Sale", lastAmount: 294600, amount: 17800, newAmount: 312400, type: "Credit" },
-];
-
 export function BankTransactionsTable() {
-    const [selectedBank, setSelectedBank] = useState<string>("all");
-    const [selectedType, setSelectedType] = useState<string>("all");
+    const [assetType, setAssetType] = useState<string>("");
+    const [transactionType, setTransactionType] = useState<string>("");
+    const [from, setFrom] = useState("");
+    const [to, setTo] = useState("");
+    const [page, setPage] = useState(0);
 
-    function handleBankChange(value: string | null) { setSelectedBank(value ?? "all"); }
-    function handleTypeChange(value: string | null) { setSelectedType(value ?? "all"); }
-
-    const filtered = transactions.filter((t) => {
-        const bankMatch = selectedBank === "all" || t.bank === selectedBank;
-        const typeMatch = selectedType === "all" || t.type === selectedType;
-        return bankMatch && typeMatch;
+    const { data, isLoading } = useMonetaryTransactions({
+        assetType: assetType || undefined,
+        transactionType: (transactionType || undefined) as "money in" | "money out" | undefined,
+        from: from || undefined,
+        to: to || undefined,
+        page,
+        size: 10,
     });
+    const rows = data?.content ?? [];
+    const totalPages = data?.totalPages ?? 1;
 
     return (
         <Card className="shadow-sm gap-0">
             <div className="p-6 pb-4 flex items-center justify-between gap-4 flex-wrap">
-                <CardTitle className="text-base font-semibold">Bank Transactions</CardTitle>
-                <div className="flex items-center gap-3">
-                    <Select value={selectedBank} onValueChange={handleBankChange}>
+                <CardTitle className="text-base font-semibold">Account Transactions</CardTitle>
+                <div className="flex items-center gap-3 flex-wrap">
+                    <Select value={assetType || "all"} onValueChange={(v) => { if (v !== null) setAssetType(v === "all" ? "" : v); setPage(0); }}>
                         <SelectTrigger className="w-36 h-8 text-xs">
-                            <SelectValue placeholder="Select Bank" />
+                            <SelectValue placeholder="All Accounts" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All Banks</SelectItem>
-                            <SelectItem value="BOC">BOC</SelectItem>
-                            <SelectItem value="Seylan">Seylan</SelectItem>
-                            <SelectItem value="Peoples">Peoples</SelectItem>
+                            <SelectItem value="all">All Accounts</SelectItem>
+                            {ASSET_TYPES.map((type) => (
+                                <SelectItem key={type} value={type}>{type}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
-                    <Select value={selectedType} onValueChange={handleTypeChange}>
+                    <Select value={transactionType || "all"} onValueChange={(v) => { if (v !== null) setTransactionType(v === "all" ? "" : v); setPage(0); }}>
                         <SelectTrigger className="w-32 h-8 text-xs">
                             <SelectValue placeholder="Select Type" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Types</SelectItem>
-                            <SelectItem value="Credit">Credit</SelectItem>
-                            <SelectItem value="Debit">Debit</SelectItem>
+                            <SelectItem value="money in">Credit</SelectItem>
+                            <SelectItem value="money out">Debit</SelectItem>
                         </SelectContent>
                     </Select>
+                    <Input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(0); }} className="h-8 text-xs w-36" />
+                    <Input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} className="h-8 text-xs w-36" />
                 </div>
             </div>
             <Table>
                 <TableHeader>
                     <TableRow className="dark:border-gray-700/40">
                         <TableHead className="text-xs">Date</TableHead>
-                        <TableHead className="text-xs">Bank</TableHead>
-                        <TableHead className="text-xs">Description</TableHead>
+                        <TableHead className="text-xs">Account</TableHead>
                         <TableHead className="text-xs text-right">Last Amount</TableHead>
                         <TableHead className="text-xs text-right">Amount</TableHead>
                         <TableHead className="text-xs text-right">New Amount</TableHead>
@@ -97,16 +88,27 @@ export function BankTransactionsTable() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {filtered.map((t, i) => (
-                        <TableRow key={i} className="dark:border-gray-700/40">
-                            <TableCell className="text-sm text-gray-500 dark:text-gray-400">{t.date}</TableCell>
-                            <TableCell className="text-sm font-medium text-gray-800 dark:text-gray-200">{t.bank}</TableCell>
-                            <TableCell className="text-sm text-gray-700 dark:text-gray-300">{t.description}</TableCell>
-                            <TableCell className="text-sm text-right text-gray-500 dark:text-gray-400">LKR {t.lastAmount.toLocaleString()}</TableCell>
-                            <TableCell className="text-sm text-right font-medium text-gray-800 dark:text-gray-200">LKR {t.amount.toLocaleString()}</TableCell>
-                            <TableCell className="text-sm text-right text-gray-700 dark:text-gray-300">LKR {t.newAmount.toLocaleString()}</TableCell>
+                    {isLoading ? (
+                        <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8">
+                                <Loader2 className="w-5 h-5 animate-spin inline text-brand-500" />
+                            </TableCell>
+                        </TableRow>
+                    ) : rows.length === 0 ? (
+                        <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8 text-sm text-gray-400">No transactions found.</TableCell>
+                        </TableRow>
+                    ) : rows.map((t) => (
+                        <TableRow key={t.id} className="dark:border-gray-700/40">
+                            <TableCell className="text-sm text-gray-500 dark:text-gray-400">{new Date(t.createdAt).toLocaleDateString()}</TableCell>
+                            <TableCell className="text-sm font-medium text-gray-800 dark:text-gray-200">{t.assetType}</TableCell>
+                            <TableCell className="text-sm text-right text-gray-500 dark:text-gray-400">{formatLkr(t.lastAmount)}</TableCell>
+                            <TableCell className="text-sm text-right font-medium text-gray-800 dark:text-gray-200">
+                                {formatLkr(Math.abs(t.newAmount - t.lastAmount))}
+                            </TableCell>
+                            <TableCell className="text-sm text-right text-gray-700 dark:text-gray-300">{formatLkr(t.newAmount)}</TableCell>
                             <TableCell className="text-center">
-                                {t.type === "Credit" ? (
+                                {t.transactionType === "money in" ? (
                                     <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs font-medium">Credit</Badge>
                                 ) : (
                                     <Badge className="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 text-xs font-medium">Debit</Badge>
@@ -116,6 +118,13 @@ export function BankTransactionsTable() {
                     ))}
                 </TableBody>
             </Table>
+            <div className="flex items-center justify-between p-6 pt-4">
+                <span className="text-xs text-gray-500 dark:text-gray-400">Page {page + 1} of {Math.max(totalPages, 1)}</span>
+                <div className="flex gap-2">
+                    <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Prev</Button>
+                    <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>Next</Button>
+                </div>
+            </div>
         </Card>
     );
 }

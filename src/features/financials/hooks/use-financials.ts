@@ -196,7 +196,7 @@ export function useSettlePayment() {
             const tx = await createMonetaryTx.mutateAsync({ transactionType: direction === "in" ? "money in" : "money out", assetType: mapping.ledgerType, amount });
             return { monetaryTransactionId: tx.id };
         }
-        const tx = await createLoanTx.mutateAsync({ loanType: mapping.ledgerType, amount });
+        const tx = await createLoanTx.mutateAsync({ loanType: mapping.ledgerType, transactionType: "borrow", amount });
         return { estateLoanTransactionId: tx.id };
     }
 

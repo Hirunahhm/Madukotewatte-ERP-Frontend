@@ -169,12 +169,14 @@ export interface MonetaryAssetTransactionResponse {
 
 export interface EstateLoanTransactionRequest {
     loanType: string;
+    transactionType: "borrow" | "repay";
     amount: number;
 }
 
 export interface EstateLoanTransactionResponse {
     id: string;
     loanType: string;
+    transactionType: string;
     lastAmount: number;
     newAmount: number;
     createdAt: string;
