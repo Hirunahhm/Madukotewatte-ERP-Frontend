@@ -76,13 +76,21 @@ export async function getSalesLedger(params?: { category?: string; status?: stri
     return handleResponse(res);
 }
 
-export async function getSalesSummary(): Promise<SalesSummary> {
-    const res = await fetch("/api/finance/sales/summary");
+export async function getSalesSummary(range?: { from?: string; to?: string }): Promise<SalesSummary> {
+    const qs = new URLSearchParams();
+    if (range?.from) qs.set("from", range.from);
+    if (range?.to) qs.set("to", range.to);
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    const res = await fetch(`/api/finance/sales/summary${suffix}`);
     return handleResponse(res);
 }
 
-export async function getSalesDistribution(): Promise<CategoryTotal[]> {
-    const res = await fetch("/api/finance/sales/distribution");
+export async function getSalesDistribution(range?: { from?: string; to?: string }): Promise<CategoryTotal[]> {
+    const qs = new URLSearchParams();
+    if (range?.from) qs.set("from", range.from);
+    if (range?.to) qs.set("to", range.to);
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    const res = await fetch(`/api/finance/sales/distribution${suffix}`);
     return handleResponse(res);
 }
 
@@ -137,13 +145,21 @@ export async function markExpensePaid(id: string, payload: ExpenseMarkPaidReques
     return handleResponse(res);
 }
 
-export async function getExpenseSummary(): Promise<ExpenseSummary> {
-    const res = await fetch("/api/expenses/summary");
+export async function getExpenseSummary(range?: { from?: string; to?: string }): Promise<ExpenseSummary> {
+    const qs = new URLSearchParams();
+    if (range?.from) qs.set("from", range.from);
+    if (range?.to) qs.set("to", range.to);
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    const res = await fetch(`/api/expenses/summary${suffix}`);
     return handleResponse(res);
 }
 
-export async function getExpenseDistribution(): Promise<CategoryTotal[]> {
-    const res = await fetch("/api/expenses/distribution");
+export async function getExpenseDistribution(range?: { from?: string; to?: string }): Promise<CategoryTotal[]> {
+    const qs = new URLSearchParams();
+    if (range?.from) qs.set("from", range.from);
+    if (range?.to) qs.set("to", range.to);
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    const res = await fetch(`/api/expenses/distribution${suffix}`);
     return handleResponse(res);
 }
 

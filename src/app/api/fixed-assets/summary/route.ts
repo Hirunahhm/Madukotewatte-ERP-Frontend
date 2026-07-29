@@ -1,10 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { backendJson, BackendError } from "@/lib/backend-fetch";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     try {
-        const qs = req.nextUrl.searchParams.toString();
-        const data = await backendJson(`/estate-loans/balances${qs ? `?${qs}` : ""}`);
+        const data = await backendJson("/fixed-assets/summary");
         return NextResponse.json(data);
     } catch (err) {
         if (err instanceof BackendError) return NextResponse.json({ message: err.message }, { status: err.status });

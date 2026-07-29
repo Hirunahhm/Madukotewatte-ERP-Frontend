@@ -69,3 +69,56 @@ export interface UpdateCreditCardLimitRequest {
     loanType: string;
     creditLimit: number;
 }
+
+export const FIXED_ASSET_CATEGORIES = ["Vehicle", "Land", "Building", "Equipment", "Other"] as const;
+export type FixedAssetCategory = (typeof FIXED_ASSET_CATEGORIES)[number];
+
+export interface FixedAsset {
+    assetId: string;
+    category: string;
+    name: string;
+    acquisitionDate: string;
+    acquisitionValue: number;
+    currentValue: number;
+    status: "active" | "disposed";
+    location: string | null;
+    notes: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface FixedAssetRequest {
+    category: string;
+    name: string;
+    acquisitionDate: string;
+    acquisitionValue: number;
+    currentValue?: number;
+    location?: string;
+    notes?: string;
+}
+
+export interface FixedAssetUpdateRequest {
+    currentValue?: number;
+    status?: string;
+    location?: string;
+    notes?: string;
+}
+
+export interface FixedAssetFilters {
+    category?: string;
+    status?: string;
+    page?: number;
+    size?: number;
+}
+
+export interface CategoryTotal {
+    category: string;
+    total: number;
+}
+
+export interface FixedAssetSummary {
+    totalCount: number;
+    totalAcquisitionValue: number;
+    totalCurrentValue: number;
+    byCategory: CategoryTotal[];
+}

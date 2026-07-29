@@ -7,7 +7,7 @@ import { BorrowsCard } from "./borrows-card";
 import { RecurringPaymentForm } from "./recurring-payment-form";
 import { CreditCardTable } from "./credit-card-table";
 
-export function LiabilitiesScreen() {
+export function DebtScreen() {
     return (
         <div className="space-y-6">
             <LiabilityKpis />

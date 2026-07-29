@@ -7,7 +7,7 @@ import { BankBalances } from "./bank-balances";
 import { CashWithdrawalForm } from "./cash-withdrawal-form";
 import { BankTransactionsTable } from "./bank-transactions-table";
 
-export function AssetsScreen() {
+export function CashScreen() {
     return (
         <div className="space-y-6">
             <AssetKpis />

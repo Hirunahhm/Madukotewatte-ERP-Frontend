@@ -4,22 +4,10 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { chartColors } from "@/lib/theme";
 import { useMonetaryTransactions } from "@/features/assets/hooks/use-assets";
-import { useUiStore } from "@/stores/ui-store";
-
-const TIMEFRAME_DAYS: Record<string, number> = { monthly: 30, quarterly: 90, annually: 365 };
-
-function lookbackFrom(timeframe: string): string {
-    const days = TIMEFRAME_DAYS[timeframe] ?? 30;
-    const date = new Date();
-    date.setDate(date.getDate() - days);
-    return date.toISOString().slice(0, 10);
-}
 
 export function OutflowsCard() {
-    const timeframe = useUiStore((state) => state.assetsTimeframe);
     const { data, isLoading } = useMonetaryTransactions({
         transactionType: "money out",
-        from: lookbackFrom(timeframe),
         page: 0,
         size: 5,
     });

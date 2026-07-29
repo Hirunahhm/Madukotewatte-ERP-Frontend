@@ -5,10 +5,12 @@ import {
     getAssetBalances, getMonetaryTrend, getMonetaryTransactions,
     getLoanBalances, getLoanTrend, getLoanTransactions,
     getCreditCardStatement, getCreditCardLimits, updateCreditCardLimit,
+    getFixedAssets, createFixedAsset, updateFixedAsset, getFixedAssetSummary,
 } from "@/features/assets/services/assets-service";
 import { useCreateMonetaryTransaction, useCreateEstateLoanTransaction } from "@/features/financials/hooks/use-financials";
 import type {
     TrendScale, MonetaryTransactionFilters, LoanTransactionFilters, UpdateCreditCardLimitRequest,
+    FixedAssetFilters, FixedAssetRequest, FixedAssetUpdateRequest,
 } from "@/features/assets/types/assets.types";
 
 function invalidateAssets(qc: ReturnType<typeof useQueryClient>) {
@@ -27,10 +29,10 @@ function invalidateLoans(qc: ReturnType<typeof useQueryClient>) {
 
 // ─── Monetary Assets ────────────────────────────────────────────────────────
 
-export function useAssetBalances() {
+export function useAssetBalances(asOf?: string) {
     return useQuery({
-        queryKey: ["asset-balances"],
-        queryFn: () => getAssetBalances(),
+        queryKey: ["asset-balances", asOf ?? null],
+        queryFn: () => getAssetBalances(asOf),
     });
 }
 
@@ -50,10 +52,10 @@ export function useMonetaryTransactions(params?: MonetaryTransactionFilters) {
 
 // ─── Estate Loans ───────────────────────────────────────────────────────────
 
-export function useLoanBalances() {
+export function useLoanBalances(asOf?: string) {
     return useQuery({
-        queryKey: ["loan-balances"],
-        queryFn: () => getLoanBalances(),
+        queryKey: ["loan-balances", asOf ?? null],
+        queryFn: () => getLoanBalances(asOf),
     });
 }
 
@@ -138,4 +140,41 @@ export function useRecordRepayment() {
     }
 
     return { recordRepayment, isPending: createLoanTx.isPending || createMonetaryTx.isPending };
+}
+
+// ─── Fixed Assets ───────────────────────────────────────────────────────────
+
+export function useFixedAssets(params?: FixedAssetFilters) {
+    return useQuery({
+        queryKey: ["fixed-assets", params],
+        queryFn: () => getFixedAssets(params),
+    });
+}
+
+export function useFixedAssetSummary() {
+    return useQuery({
+        queryKey: ["fixed-asset-summary"],
+        queryFn: () => getFixedAssetSummary(),
+    });
+}
+
+function invalidateFixedAssets(qc: ReturnType<typeof useQueryClient>) {
+    qc.invalidateQueries({ queryKey: ["fixed-assets"] });
+    qc.invalidateQueries({ queryKey: ["fixed-asset-summary"] });
+}
+
+export function useCreateFixedAsset() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: FixedAssetRequest) => createFixedAsset(payload),
+        onSuccess: () => invalidateFixedAssets(qc),
+    });
+}
+
+export function useUpdateFixedAsset() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, payload }: { id: string; payload: FixedAssetUpdateRequest }) => updateFixedAsset(id, payload),
+        onSuccess: () => invalidateFixedAssets(qc),
+    });
 }

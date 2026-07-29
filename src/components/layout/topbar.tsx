@@ -3,7 +3,7 @@
 import { Bell, Menu, ChevronDown, Moon, Sun } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { useUiStore, type ProductionTab, type EmployeesTab, type FinancialsTab } from "@/stores/ui-store";
+import { useUiStore, type ProductionTab, type EmployeesTab, type FinancialsTab, type AssetsTab } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { logoutUser } from "@/features/auth/services/auth-service";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ const PAGE_NAMES: Record<string, string> = {
     "/employees": "Employee Management",
     "/latex-production": "Latex Production",
     "/financials": "Financials",
-    "/assets": "Assets & Liabilities",
+    "/assets": "Cash & Debt",
     "/weather": "Climate & Forecasting",
 };
 
@@ -43,6 +43,13 @@ const FINANCIALS_TABS: { id: FinancialsTab; label: string }[] = [
     { id: "stats", label: "Stats" },
 ];
 
+const CASH_DEBT_TABS: { id: AssetsTab; label: string }[] = [
+    { id: "cash", label: "Cash" },
+    { id: "debt", label: "Debt" },
+    { id: "assets", label: "Assets" },
+    { id: "stats", label: "Stats" },
+];
+
 export function Topbar() {
     const pathname = usePathname();
     const router = useRouter();
@@ -60,11 +67,14 @@ export function Topbar() {
     const setEmployeesTab = useUiStore((state) => state.setEmployeesTab);
     const financialsTab = useUiStore((state) => state.financialsTab);
     const setFinancialsTab = useUiStore((state) => state.setFinancialsTab);
+    const assetsTab = useUiStore((state) => state.assetsTab);
+    const setAssetsTab = useUiStore((state) => state.setAssetsTab);
     const pageTitle = PAGE_NAMES[pathname] ?? "Dashboard";
     const { theme, setTheme } = useTheme();
     const isProduction = pathname === "/latex-production";
     const isEmployees = pathname === "/employees";
     const isFinancials = pathname === "/financials";
+    const isCashDebt = pathname === "/assets";
 
     return (
         <header className="flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 px-4 shadow-sm sm:gap-x-6 sm:px-6">
@@ -78,7 +88,7 @@ export function Topbar() {
                     <span className="sr-only">Toggle sidebar</span>
                     <Menu className="h-5 w-5" aria-hidden="true" />
                 </button>
-                {!isProduction && !isEmployees && !isFinancials && (
+                {!isProduction && !isEmployees && !isFinancials && !isCashDebt && (
                     <span className="hidden sm:block text-sm font-semibold text-gray-700 dark:text-gray-200">{pageTitle}</span>
                 )}
             </div>
@@ -127,6 +137,23 @@ export function Topbar() {
                                 onClick={() => setFinancialsTab(tab.id)}
                                 className={`relative px-4 py-1.5 text-sm font-medium rounded-full transition-all ${
                                     financialsTab === tab.id
+                                        ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
+                                        : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                }`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </nav>
+                ) : isCashDebt ? (
+                    <nav className="flex items-center gap-0.5">
+                        {CASH_DEBT_TABS.map((tab) => (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => setAssetsTab(tab.id)}
+                                className={`relative px-4 py-1.5 text-sm font-medium rounded-full transition-all ${
+                                    assetsTab === tab.id
                                         ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
                                         : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                                 }`}
