@@ -5,14 +5,15 @@ import { SalesKpis } from "./sales-kpis";
 import { SalesTrendChart } from "./sales-trend-chart";
 import { RevenueDistribution } from "./revenue-distribution";
 import { RecordSaleForm } from "./record-sale-form";
-import { SalesTable, type SaleRow } from "./sales-table";
+import { SalesTable } from "./sales-table";
 import { MarkPaymentDialog } from "./mark-payment-dialog";
+import type { SalesLedgerRow } from "@/features/financials/types/financials.types";
 
 export function SalesScreen() {
     const [markPaymentOpen, setMarkPaymentOpen] = useState(false);
-    const [, setSelectedSale] = useState<SaleRow | null>(null);
+    const [selectedSale, setSelectedSale] = useState<SalesLedgerRow | null>(null);
 
-    function handleMarkPayment(row: SaleRow) {
+    function handleMarkPayment(row: SalesLedgerRow) {
         setSelectedSale(row);
         setMarkPaymentOpen(true);
     }
@@ -34,6 +35,7 @@ export function SalesScreen() {
                     setMarkPaymentOpen(open);
                     if (!open) setSelectedSale(null);
                 }}
+                row={selectedSale}
             />
         </div>
     );

@@ -18,46 +18,43 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { useMarkSaleLatexPaid, useMarkSaleCropPaid, useSettlePayment } from "@/features/financials/hooks/use-financials";
-import { SALE_PAYMENT_TYPES, type SalesLedgerRow } from "@/features/financials/types/financials.types";
+import { useMarkExpensePaid, useSettlePayment } from "@/features/financials/hooks/use-financials";
+import { PAYMENT_TYPES, type Expense } from "@/features/financials/types/financials.types";
 
-interface MarkPaymentDialogProps {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    row: SalesLedgerRow | null;
+interface MarkExpensePaymentDialogProps {
+    expense: Expense | null;
+    onClose: () => void;
 }
 
-export function MarkPaymentDialog({ open, onOpenChange, row }: MarkPaymentDialogProps) {
+export function MarkExpensePaymentDialog({ expense, onClose }: MarkExpensePaymentDialogProps) {
     const [paymentType, setPaymentType] = useState("");
 
-    const markLatexPaid = useMarkSaleLatexPaid();
-    const markCropPaid = useMarkSaleCropPaid();
+    const markPaid = useMarkExpensePaid();
     const { settle, isPending: isSettling } = useSettlePayment();
+    const isSubmitting = markPaid.isPending || isSettling;
 
-    const isSubmitting = markLatexPaid.isPending || markCropPaid.isPending || isSettling;
+    function handleClose() {
+        setPaymentType("");
+        onClose();
+    }
 
     async function handleConfirm() {
-        if (!row || !paymentType) return;
-        const { monetaryTransactionId } = await settle(paymentType, row.amount, "in");
-        if (row.category === "latex") {
-            await markLatexPaid.mutateAsync({ id: row.saleId, payload: { monetaryTransactionId } });
-        } else {
-            await markCropPaid.mutateAsync({ category: row.category, id: row.saleId, payload: { paymentType } });
-        }
-        setPaymentType("");
-        onOpenChange(false);
+        if (!expense || !paymentType) return;
+        const { monetaryTransactionId, estateLoanTransactionId } = await settle(paymentType, expense.amount, "out");
+        await markPaid.mutateAsync({ id: expense.expenseId, payload: { paymentType, monetaryTransactionId, estateLoanTransactionId } });
+        handleClose();
     }
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={expense !== null} onOpenChange={(open) => { if (!open) handleClose(); }}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Mark Payment Received</DialogTitle>
+                    <DialogTitle>Mark Expense as Paid</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 py-2">
-                    {row && (
+                    {expense && (
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Load <span className="font-mono">{row.loadId.slice(0, 8).toUpperCase()}</span> — LKR {row.amount.toLocaleString()}
+                            {expense.type} — LKR {expense.amount.toLocaleString()}
                         </p>
                     )}
                     <div className="space-y-1.5">
@@ -67,7 +64,7 @@ export function MarkPaymentDialog({ open, onOpenChange, row }: MarkPaymentDialog
                                 <SelectValue placeholder="Select payment type" />
                             </SelectTrigger>
                             <SelectContent>
-                                {SALE_PAYMENT_TYPES.map((pt) => (
+                                {PAYMENT_TYPES.map((pt) => (
                                     <SelectItem key={pt} value={pt}>{pt}</SelectItem>
                                 ))}
                             </SelectContent>
@@ -75,7 +72,7 @@ export function MarkPaymentDialog({ open, onOpenChange, row }: MarkPaymentDialog
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>Cancel</Button>
+                    <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>Cancel</Button>
                     <Button
                         className="bg-brand-500 hover:bg-brand-600 text-white"
                         onClick={handleConfirm}

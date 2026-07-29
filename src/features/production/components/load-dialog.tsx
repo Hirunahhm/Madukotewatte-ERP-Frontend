@@ -111,6 +111,9 @@ export function LoadDialog({ open, onOpenChange, initialData, defaultLoadType }:
                                 <SelectItem value="field-latex">Field Latex</SelectItem>
                                 <SelectItem value="processed">Processed</SelectItem>
                                 <SelectItem value="scrap">Scrap</SelectItem>
+                                <SelectItem value="manioc">Manioc</SelectItem>
+                                <SelectItem value="coconut">Coconut</SelectItem>
+                                <SelectItem value="banana">Banana</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
