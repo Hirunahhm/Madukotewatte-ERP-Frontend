@@ -1,64 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Card } from "@/components/ui/card";
 import { chartColors } from "@/lib/theme";
 import { NoSSR } from "@/components/ui/no-ssr";
-
-type Range = "week" | "month" | "year";
-
-const weekData = [
-    { name: "Mon", sales: 72000, costs: 28000 },
-    { name: "Tue", sales: 58000, costs: 23000 },
-    { name: "Wed", sales: 91000, costs: 35000 },
-    { name: "Thu", sales: 84000, costs: 31000 },
-    { name: "Fri", sales: 98000, costs: 33000 },
-    { name: "Sat", sales: 42000, costs: 18000 },
-    { name: "Sun", sales: 55000, costs: 21000 },
-];
-
-const monthData = [
-    { name: "W1", sales: 386000, costs: 202000 },
-    { name: "W2", sales: 341000, costs: 175000 },
-    { name: "W3", sales: 312000, costs: 162000 },
-    { name: "W4", sales: 284000, costs: 148000 },
-];
-
-const yearData = [
-    { name: "Jan", sales: 1285000, costs: 621000 },
-    { name: "Feb", sales: 1142000, costs: 574000 },
-    { name: "Mar", sales: 1198000, costs: 591000 },
-    { name: "Apr", sales: 1074000, costs: 532000 },
-    { name: "May", sales: 1231000, costs: 608000 },
-    { name: "Jun", sales: 1156000, costs: 567000 },
-    { name: "Jul", sales: 1089000, costs: 519000 },
-    { name: "Aug", sales: 1312000, costs: 614000 },
-    { name: "Sep", sales: 1178000, costs: 583000 },
-    { name: "Oct", sales: 1095000, costs: 541000 },
-    { name: "Nov", sales: 912000, costs: 491000 },
-    { name: "Dec", sales: 1264000, costs: 597000 },
-];
-
-const dataMap: Record<Range, typeof weekData> = {
-    week: weekData,
-    month: monthData,
-    year: yearData,
-};
+import { Loader2 } from "lucide-react";
+import { useSalesTrend, useExpenseTrend } from "@/features/financials/hooks/use-financials";
+import type { TrendScale } from "@/features/financials/types/financials.types";
 
 export function CostsVsSalesChart() {
-    const [range, setRange] = useState<Range>("week");
-    const data = dataMap[range];
+    const [range, setRange] = useState<TrendScale>("week");
+
+    const { data: salesTrend, isLoading: isLoadingSales } = useSalesTrend(range);
+    const { data: expenseTrend, isLoading: isLoadingExpenses } = useExpenseTrend(range);
+    const isLoading = isLoadingSales || isLoadingExpenses;
+
+    const data = useMemo(() => {
+        const sales = salesTrend ?? [];
+        const costs = expenseTrend ?? [];
+        return sales.map((point, i) => ({
+            name: point.name,
+            sales: point.total,
+            costs: costs[i]?.total ?? 0,
+        }));
+    }, [salesTrend, expenseTrend]);
 
     return (
-        <Card className="shadow-sm gap-0 p-6">
+        <Card className="shadow-sm gap-0 p-6 relative">
+            {isLoading && <div className="absolute top-4 right-4"><Loader2 className="w-4 h-4 animate-spin text-brand-500" /></div>}
             <div className="flex items-start justify-between mb-6">
                 <div>
                     <h2 className="text-base font-semibold leading-6 text-gray-900 dark:text-gray-100">Costs vs Sales</h2>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Financial health overview (LKR)</p>
                 </div>
                 <div className="flex items-center gap-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
-                    {(["week", "month", "year"] as Range[]).map((r) => (
+                    {(["week", "month", "year"] as TrendScale[]).map((r) => (
                         <button
                             key={r}
                             onClick={() => setRange(r)}

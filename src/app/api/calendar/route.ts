@@ -4,7 +4,7 @@ import { backendJson, BackendError } from "@/lib/backend-fetch";
 export async function GET(req: NextRequest) {
     try {
         const qs = req.nextUrl.searchParams.toString();
-        const data = await backendJson(`/calendar${qs ? `?${qs}` : ""}`);
+        const data = await backendJson(`/api/v1/calendar${qs ? `?${qs}` : ""}`);
         return NextResponse.json(data);
     } catch (err) {
         if (err instanceof BackendError) return NextResponse.json({ message: err.message }, { status: err.status });
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const data = await backendJson("/calendar", { method: "POST", body: JSON.stringify(body) });
+        const data = await backendJson("/api/v1/calendar", { method: "POST", body: JSON.stringify(body) });
         return NextResponse.json(data);
     } catch (err) {
         if (err instanceof BackendError) return NextResponse.json({ message: err.message }, { status: err.status });

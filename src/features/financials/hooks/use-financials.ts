@@ -77,10 +77,10 @@ export function useSalesLedger(params?: { category?: string; status?: string; fr
     });
 }
 
-export function useSalesSummary() {
+export function useSalesSummary(range?: { from?: string; to?: string }) {
     return useQuery({
-        queryKey: ["sales-summary"],
-        queryFn: () => getSalesSummary(),
+        queryKey: ["sales-summary", range ?? null],
+        queryFn: () => getSalesSummary(range),
     });
 }
 
@@ -139,10 +139,10 @@ export function useMarkExpensePaid() {
     });
 }
 
-export function useExpenseSummary() {
+export function useExpenseSummary(range?: { from?: string; to?: string }) {
     return useQuery({
-        queryKey: ["expense-summary"],
-        queryFn: () => getExpenseSummary(),
+        queryKey: ["expense-summary", range ?? null],
+        queryFn: () => getExpenseSummary(range),
     });
 }
 
