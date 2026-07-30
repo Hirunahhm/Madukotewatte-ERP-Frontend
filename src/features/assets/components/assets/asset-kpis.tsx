@@ -1,28 +1,29 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { Wallet, Building2, Clock } from "lucide-react";
-import { useUiStore, type AssetsTimeframe } from "@/stores/ui-store";
+import { Wallet, Building2, Clock, Loader2 } from "lucide-react";
+import { useAssetBalances } from "@/features/assets/hooks/use-assets";
+import { useSalesSummary, useExpenseSummary } from "@/features/financials/hooks/use-financials";
 
-const cashInHand: Record<AssetsTimeframe, string> = {
-    monthly: "LKR 48,200",
-    quarterly: "LKR 156,800",
-    annually: "LKR 624,000",
-};
-
-const pendingCashFlows: Record<AssetsTimeframe, string> = {
-    monthly: "LKR 124,500",
-    quarterly: "LKR 318,200",
-    annually: "LKR 1,248,000",
-};
+function formatLkr(value: number): string {
+    return `LKR ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+}
 
 export function AssetKpis() {
-    const timeframe = useUiStore((state) => state.assetsTimeframe);
+    const { data: balances, isLoading } = useAssetBalances();
+    const { data: salesSummary } = useSalesSummary();
+    const { data: expenseSummary } = useExpenseSummary();
+
+    const cashInHand = balances?.find((b) => b.assetType === "Cash")?.balance ?? 0;
+    const bankBalance = (balances ?? [])
+        .filter((b) => b.assetType !== "Cash")
+        .reduce((sum, b) => sum + b.balance, 0);
+    const pendingCashFlows = (salesSummary?.pending ?? 0) - (expenseSummary?.pending ?? 0);
 
     const kpis = [
         {
             label: "Cash In Hand",
-            value: cashInHand[timeframe],
+            value: formatLkr(cashInHand),
             icon: Wallet,
             iconClass: "text-gray-500 dark:text-gray-400",
             valueClass: "text-gray-900 dark:text-gray-100",
@@ -30,7 +31,7 @@ export function AssetKpis() {
         },
         {
             label: "Bank Balance",
-            value: "LKR 842,300",
+            value: formatLkr(bankBalance),
             icon: Building2,
             iconClass: "text-emerald-600 dark:text-emerald-400",
             valueClass: "text-emerald-600 dark:text-emerald-400",
@@ -38,7 +39,7 @@ export function AssetKpis() {
         },
         {
             label: "Pending Cash Flows",
-            value: pendingCashFlows[timeframe],
+            value: formatLkr(pendingCashFlows),
             icon: Clock,
             iconClass: "text-amber-600 dark:text-amber-400",
             valueClass: "text-amber-600 dark:text-amber-400",
@@ -58,7 +59,11 @@ export function AssetKpis() {
                                 <Icon className={`w-4 h-4 ${kpi.iconClass}`} />
                             </div>
                         </div>
-                        <p className={`text-xl font-bold ${kpi.valueClass}`}>{kpi.value}</p>
+                        {isLoading ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-brand-500" />
+                        ) : (
+                            <p className={`text-xl font-bold ${kpi.valueClass}`}>{kpi.value}</p>
+                        )}
                     </Card>
                 );
             })}

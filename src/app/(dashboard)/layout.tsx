@@ -1,11 +1,14 @@
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { requireAuth } from "@/lib/proxy";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    await requireAuth();
+
     return (
         <div className="flex h-screen bg-slate-50 dark:bg-gray-950">
             <Sidebar />

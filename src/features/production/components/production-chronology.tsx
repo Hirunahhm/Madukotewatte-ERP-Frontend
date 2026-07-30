@@ -1,28 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { Calendar, Filter, Download } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useCalendarDays } from "@/features/production/hooks/use-production";
+import type { CalendarDay } from "@/features/production/types/production.types";
 
 const MONTHS = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December",
 ];
 
-const YEARS = ["2024", "2025", "2026"];
+const YEARS = ["2024", "2025", "2026", "2027"];
 
 type DayState = "public-holiday" | "rain" | "leave" | "no-tapping" | "normal";
-
-function getDayState(index: number): DayState {
-    if (index % 13 === 0) return "public-holiday";
-    if (index % 7 === 0) return "rain";
-    if (index % 11 === 0) return "leave";
-    if (index % 5 === 0) return "no-tapping";
-    return "normal";
-}
 
 const DAY_STATE_STYLES: Record<DayState, string> = {
     "public-holiday": "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/40",
@@ -40,8 +34,13 @@ const DAY_STATE_TAG: Record<DayState, { label: string; style: string } | null> =
     "normal": null,
 };
 
-const TAPPER_DATA = "Siti: 12L · Arjun: 14L · Rajesh: 10L";
-const HAS_COLLECTION = (index: number) => getDayState(index) === "normal" && index % 2 === 0;
+function getDayStateFromCalendar(day: CalendarDay | undefined): DayState {
+    if (!day) return "normal";
+    if (day.isHoliday) return "public-holiday";
+    if (day.rained) return "rain";
+    if (!day.isWorking) return "no-tapping";
+    return "normal";
+}
 
 export function ProductionChronology() {
     const now = new Date();
@@ -49,9 +48,24 @@ export function ProductionChronology() {
     const [year, setYear] = useState(String(now.getFullYear()));
     const [view, setView] = useState<"30" | "7">("30");
 
-    const cellCount = view === "30" ? 28 : 7;
-    const gridRows = view === "30" ? "grid-rows-4" : "grid-rows-1";
-    const cellHeight = view === "30" ? "auto-rows-[120px]" : "auto-rows-[160px]";
+    // Fetch all calendar data for the month (up to 31 days)
+    const { data } = useCalendarDays({ size: 400 });
+    const allCalendarDays = data?.content ?? [];
+
+    // Build a lookup map: "YYYY-MM-DD" -> CalendarDay
+    const calendarMap = useMemo(() => {
+        const map = new Map<string, CalendarDay>();
+        for (const day of allCalendarDays) {
+            map.set(day.calendarDate, day);
+        }
+        return map;
+    }, [allCalendarDays]);
+
+    // Calculate days in the selected month
+    const daysInMonth = new Date(parseInt(year), parseInt(month) + 1, 0).getDate();
+    const cellCount = view === "30" ? daysInMonth : 7;
+    const gridRows = view === "30" ? "grid-rows-5" : "grid-rows-1";
+    const cellHeight = view === "30" ? "auto-rows-[100px]" : "auto-rows-[160px]";
 
     return (
         <TooltipProvider>
@@ -119,13 +133,6 @@ export function ProductionChronology() {
                                     7-Day
                                 </Button>
                             </div>
-
-                            <Button variant="outline" size="sm" className="gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300 h-7">
-                                <Filter className="w-3.5 h-3.5" /> Filter
-                            </Button>
-                            <Button variant="outline" size="sm" className="gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300 h-7">
-                                <Download className="w-3.5 h-3.5" /> Export
-                            </Button>
                         </div>
                     </div>
                 </div>
@@ -142,14 +149,19 @@ export function ProductionChronology() {
                 {/* Calendar grid */}
                 <div className={`grid grid-cols-7 ${gridRows} ${cellHeight}`}>
                     {Array.from({ length: cellCount }).map((_, i) => {
-                        const state = getDayState(i);
+                        const dayNum = i + 1;
+                        const mm = String(parseInt(month) + 1).padStart(2, "0");
+                        const dd = String(dayNum).padStart(2, "0");
+                        const dateKey = `${year}-${mm}-${dd}`;
+                        const calDay = calendarMap.get(dateKey);
+                        const state = getDayStateFromCalendar(calDay);
                         const tag = DAY_STATE_TAG[state];
-                        const hasCollection = HAS_COLLECTION(i);
+                        const hasCollection = state === "normal" && calDay !== undefined;
 
                         const cellContent = (
                             <>
                                 <div className="flex items-start justify-between">
-                                    <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{i + 1}</span>
+                                    <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{dayNum}</span>
                                     {hasCollection && (
                                         <div className="w-2 h-2 rounded-full bg-brand-500 mt-0.5 shrink-0" />
                                     )}
@@ -160,8 +172,8 @@ export function ProductionChronology() {
                                             {tag.label}
                                         </div>
                                     ) : (
-                                        hasCollection && (
-                                            <div className="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-900/40 border border-brand-200 dark:border-brand-700/40" />
+                                        calDay?.description && (
+                                            <p className="text-[10px] text-gray-400 dark:text-gray-500 truncate">{calDay.description}</p>
                                         )
                                     )}
                                 </div>
@@ -172,19 +184,19 @@ export function ProductionChronology() {
 
                         if (hasCollection) {
                             return (
-                                <Tooltip key={i}>
+                                <Tooltip key={dateKey}>
                                     <TooltipTrigger className={cellClass}>
                                         {cellContent}
                                     </TooltipTrigger>
                                     <TooltipContent className="bg-gray-900 dark:bg-gray-100 text-gray-100 dark:text-gray-900 text-xs font-medium">
-                                        {TAPPER_DATA}
+                                        {calDay?.description ?? "Working day"}
                                     </TooltipContent>
                                 </Tooltip>
                             );
                         }
 
                         return (
-                            <div key={i} className={cellClass}>
+                            <div key={dateKey} className={cellClass}>
                                 {cellContent}
                             </div>
                         );

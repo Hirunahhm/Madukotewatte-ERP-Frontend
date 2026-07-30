@@ -6,14 +6,8 @@ import {
 import {
     Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
-
-const loans = [
-    { employee: "Arjun Das", date: "2026-01-10", amount: 25000, installment: 5000, balance: 15000, rate: 8, status: "Active" },
-    { employee: "Siti Aminah", date: "2025-11-05", amount: 18000, installment: 3000, balance: 0, rate: 6, status: "Not Active" },
-    { employee: "Karthik Raja", date: "2026-02-20", amount: 12000, installment: 2000, balance: 10000, rate: 5, status: "Active" },
-    { employee: "Linh Pham", date: "2025-09-15", amount: 20000, installment: 4000, balance: 4000, rate: 7, status: "Active" },
-    { employee: "Marcus Tan", date: "2025-07-01", amount: 30000, installment: 6000, balance: 0, rate: 9, status: "Not Active" },
-];
+import { Loader2 } from "lucide-react";
+import { useActiveLoans } from "@/features/employees/hooks/use-loan-mutations";
 
 interface Props {
     open: boolean;
@@ -21,6 +15,8 @@ interface Props {
 }
 
 export function ActiveLoansDialog({ open, onOpenChange }: Props) {
+    const { data: loans, isLoading } = useActiveLoans();
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-3xl">
@@ -32,7 +28,6 @@ export function ActiveLoansDialog({ open, onOpenChange }: Props) {
                         <TableHeader className="bg-gray-50/50 dark:bg-gray-800/50">
                             <TableRow className="border-gray-100 dark:border-gray-700/40">
                                 <TableHead className="text-gray-500 dark:text-gray-400 font-semibold">Employee</TableHead>
-                                <TableHead className="text-gray-500 dark:text-gray-400 font-semibold">Date</TableHead>
                                 <TableHead className="text-gray-500 dark:text-gray-400 font-semibold text-right">Loan Amount</TableHead>
                                 <TableHead className="text-gray-500 dark:text-gray-400 font-semibold text-right">Installment</TableHead>
                                 <TableHead className="text-gray-500 dark:text-gray-400 font-semibold text-right">Balance</TableHead>
@@ -41,21 +36,34 @@ export function ActiveLoansDialog({ open, onOpenChange }: Props) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {loans.map((loan, i) => (
-                                <TableRow key={i} className="border-gray-50 dark:border-gray-700/30 hover:bg-gray-50/50 dark:hover:bg-gray-800/50">
-                                    <TableCell className="font-medium text-gray-900 dark:text-gray-100">{loan.employee}</TableCell>
-                                    <TableCell className="text-gray-500 dark:text-gray-400 text-sm">{loan.date}</TableCell>
-                                    <TableCell className="text-right text-gray-700 dark:text-gray-300">LKR {loan.amount.toLocaleString()}</TableCell>
+                            {isLoading && (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="text-center py-8 text-gray-400">
+                                        <Loader2 className="w-5 h-5 animate-spin inline-block" />
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                            {!isLoading && (loans?.length ?? 0) === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="text-center py-8 text-gray-400">
+                                        No active loans.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                            {loans?.map((loan) => (
+                                <TableRow key={loan.loanId} className="border-gray-50 dark:border-gray-700/30 hover:bg-gray-50/50 dark:hover:bg-gray-800/50">
+                                    <TableCell className="font-medium text-gray-900 dark:text-gray-100">{loan.employeeName}</TableCell>
+                                    <TableCell className="text-right text-gray-700 dark:text-gray-300">LKR {loan.principalAmount.toLocaleString()}</TableCell>
                                     <TableCell className="text-right text-gray-700 dark:text-gray-300">LKR {loan.installment.toLocaleString()}</TableCell>
-                                    <TableCell className="text-right font-semibold text-gray-900 dark:text-gray-100">LKR {loan.balance.toLocaleString()}</TableCell>
-                                    <TableCell className="text-right text-gray-500 dark:text-gray-400">{loan.rate}%</TableCell>
+                                    <TableCell className="text-right font-semibold text-gray-900 dark:text-gray-100">LKR {loan.currentBalance.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right text-gray-500 dark:text-gray-400">{loan.interest}%</TableCell>
                                     <TableCell>
                                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
-                                            loan.status === "Active"
+                                            loan.isActive
                                                 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
                                                 : "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
                                         }`}>
-                                            {loan.status}
+                                            {loan.isActive ? "Active" : "Not Active"}
                                         </span>
                                     </TableCell>
                                 </TableRow>

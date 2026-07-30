@@ -14,55 +14,25 @@ import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { chartColors } from "@/lib/theme";
 import { NoSSR } from "@/components/ui/no-ssr";
-
-const weekData = [
-    { name: "Mon", total: 198400 },
-    { name: "Tue", total: 204200 },
-    { name: "Wed", total: 208600 },
-    { name: "Thu", total: 211800 },
-    { name: "Fri", total: 215400 },
-    { name: "Sat", total: 215400 },
-    { name: "Sun", total: 215400 },
-];
-
-const monthData = [
-    { name: "W1", total: 184000 },
-    { name: "W2", total: 194800 },
-    { name: "W3", total: 207200 },
-    { name: "W4", total: 215400 },
-];
-
-const yearData = [
-    { name: "Jan", total: 82000 },
-    { name: "Feb", total: 98400 },
-    { name: "Mar", total: 118600 },
-    { name: "Apr", total: 134200 },
-    { name: "May", total: 148800 },
-    { name: "Jun", total: 161400 },
-    { name: "Jul", total: 172000 },
-    { name: "Aug", total: 181200 },
-    { name: "Sep", total: 191800 },
-    { name: "Oct", total: 200400 },
-    { name: "Nov", total: 208600 },
-    { name: "Dec", total: 215400 },
-];
-
-type TimeScale = "week" | "month" | "year";
+import { Loader2 } from "lucide-react";
+import { useLoanTrend } from "@/features/assets/hooks/use-assets";
+import type { TrendScale } from "@/features/assets/types/assets.types";
 
 export function CreditGrowthChart() {
-    const [timeScale, setTimeScale] = useState<TimeScale>("month");
-
-    const data = timeScale === "week" ? weekData : timeScale === "month" ? monthData : yearData;
+    const [timeScale, setTimeScale] = useState<TrendScale>("month");
+    const { data, isLoading } = useLoanTrend(timeScale);
+    const chartData = (data ?? []).map((p) => ({ name: p.name, total: p.total }));
 
     return (
-        <Card className="shadow-sm gap-0 p-6">
+        <Card className="shadow-sm gap-0 p-6 relative">
+            {isLoading && <div className="absolute top-4 right-4"><Loader2 className="w-4 h-4 animate-spin text-brand-500" /></div>}
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <CardTitle className="text-base font-semibold">Credit Growth</CardTitle>
                     <CardDescription>Outstanding liabilities over time (LKR)</CardDescription>
                 </div>
                 <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1">
-                    {(["week", "month", "year"] as TimeScale[]).map((scale) => (
+                    {(["week", "month", "year"] as TrendScale[]).map((scale) => (
                         <Button
                             key={scale}
                             size="sm"
@@ -78,7 +48,7 @@ export function CreditGrowthChart() {
             <div className="h-64 w-full">
                 <NoSSR>
                     <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                        <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="creditGradient" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor={chartColors.danger} stopOpacity={0.3} />

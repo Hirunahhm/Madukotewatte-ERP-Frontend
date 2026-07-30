@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
     LayoutDashboard,
     Users,
@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/stores/ui-store";
+import { useAuthStore } from "@/stores/auth-store";
+import { logoutUser } from "@/features/auth/services/auth-service";
 import type { LucideIcon } from "lucide-react";
 
 const navSections: { label: string; items: { name: string; href: string; icon: LucideIcon }[] }[] = [
@@ -30,7 +32,7 @@ const navSections: { label: string; items: { name: string; href: string; icon: L
         label: "Finance",
         items: [
             { name: "Financials", href: "/financials", icon: TrendingUp },
-            { name: "Assets & Liabilities", href: "/assets", icon: Briefcase },
+            { name: "Cash & Debt", href: "/assets", icon: Briefcase },
         ],
     },
     {
@@ -43,7 +45,15 @@ const navSections: { label: string; items: { name: string; href: string; icon: L
 
 export function Sidebar() {
     const pathname = usePathname();
+    const router = useRouter();
     const isSidebarOpen = useUiStore((state) => state.isSidebarOpen);
+    const clearUser = useAuthStore((state) => state.clearUser);
+
+    async function handleSignOut() {
+        await logoutUser();
+        clearUser();
+        router.push('/login');
+    }
 
     if (!isSidebarOpen) return null;
 
@@ -126,7 +136,7 @@ export function Sidebar() {
 
                 {/* Sign out */}
                 <button
-                    onClick={() => console.log("Sign Out")}
+                    onClick={handleSignOut}
                     className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-150 text-gray-600 hover:bg-gray-100 dark:text-[#86a898] dark:hover:bg-brand-950/60"
                 >
                     <LogOut className="h-4 w-4 shrink-0" />

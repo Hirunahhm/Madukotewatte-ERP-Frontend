@@ -1,34 +1,26 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { Landmark, CreditCard, AlertCircle } from "lucide-react";
-import { useUiStore, type AssetsTimeframe } from "@/stores/ui-store";
+import { Landmark, CreditCard, AlertCircle, Loader2 } from "lucide-react";
+import { useLoanBalances } from "@/features/assets/hooks/use-assets";
 
-const loanValues: Record<AssetsTimeframe, string> = {
-    monthly: "LKR 124,800",
-    quarterly: "LKR 374,400",
-    annually: "LKR 1,497,600",
-};
-
-const peoplesCardValues: Record<AssetsTimeframe, string> = {
-    monthly: "LKR 38,200",
-    quarterly: "LKR 114,600",
-    annually: "LKR 458,400",
-};
-
-const sampathCardValues: Record<AssetsTimeframe, string> = {
-    monthly: "LKR 52,400",
-    quarterly: "LKR 157,200",
-    annually: "LKR 628,800",
-};
+function formatLkr(value: number): string {
+    return `LKR ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+}
 
 export function LiabilityKpis() {
-    const timeframe = useUiStore((state) => state.assetsTimeframe);
+    const { data: balances, isLoading } = useLoanBalances();
+
+    const currentLoans = (balances ?? [])
+        .filter((b) => b.loanType === "Loan-mom" || b.loanType === "Loan-other")
+        .reduce((sum, b) => sum + b.balance, 0);
+    const peoplesCard = balances?.find((b) => b.loanType === "credit-card - Peoples")?.balance ?? 0;
+    const sampathCard = balances?.find((b) => b.loanType === "credit-card - Sampath")?.balance ?? 0;
 
     const kpis = [
         {
             label: "Current Loans",
-            value: loanValues[timeframe],
+            value: formatLkr(currentLoans),
             icon: Landmark,
             iconClass: "text-gray-500 dark:text-gray-400",
             valueClass: "text-gray-900 dark:text-gray-100",
@@ -36,7 +28,7 @@ export function LiabilityKpis() {
         },
         {
             label: "Peoples Credit Card",
-            value: peoplesCardValues[timeframe],
+            value: formatLkr(peoplesCard),
             icon: CreditCard,
             iconClass: "text-amber-600 dark:text-amber-400",
             valueClass: "text-amber-600 dark:text-amber-400",
@@ -44,7 +36,7 @@ export function LiabilityKpis() {
         },
         {
             label: "Sampath Credit Card",
-            value: sampathCardValues[timeframe],
+            value: formatLkr(sampathCard),
             icon: AlertCircle,
             iconClass: "text-red-500 dark:text-red-400",
             valueClass: "text-red-500 dark:text-red-400",
@@ -64,7 +56,11 @@ export function LiabilityKpis() {
                                 <Icon className={`w-4 h-4 ${kpi.iconClass}`} />
                             </div>
                         </div>
-                        <p className={`text-xl font-bold ${kpi.valueClass}`}>{kpi.value}</p>
+                        {isLoading ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-brand-500" />
+                        ) : (
+                            <p className={`text-xl font-bold ${kpi.valueClass}`}>{kpi.value}</p>
+                        )}
                     </Card>
                 );
             })}

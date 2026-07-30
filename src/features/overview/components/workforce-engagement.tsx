@@ -1,17 +1,30 @@
 "use client";
 
-import { TreeDeciduous } from "lucide-react";
+import { TreeDeciduous, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { useWorkforceEngagement } from "@/features/overview/hooks/use-overview";
 
-const workforceData = Array.from({ length: 28 }).map((_, i) => ({
-    day: i + 1,
-    attendance: i % 4,
-}));
+const LEVEL_COLORS = [
+    "bg-gray-100 dark:bg-gray-700",
+    "bg-green-200 dark:bg-green-800",
+    "bg-brand-400",
+    "bg-brand-500",
+];
+
+function formatShortDate(dateStr: string): string {
+    if (!dateStr) return "—";
+    return new Date(`${dateStr}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
 export function WorkforceEngagement() {
+    const { days, highestDay, rainDays, totalActiveTappers, isLoading } = useWorkforceEngagement();
+    const today = days[days.length - 1];
+    const deploymentPct = totalActiveTappers > 0 && today ? Math.round((today.presentCount / totalActiveTappers) * 100) : 0;
+
     return (
-        <Card className="shadow-sm gap-0 p-6">
+        <Card className="shadow-sm gap-0 p-6 relative">
+            {isLoading && <div className="absolute top-4 right-4"><Loader2 className="w-4 h-4 animate-spin text-brand-500" /></div>}
             <div className="flex items-start justify-between mb-6">
                 <div>
                     <h2 className="text-base font-semibold leading-6 text-gray-900 dark:text-gray-100">Workforce Engagement</h2>
@@ -22,33 +35,25 @@ export function WorkforceEngagement() {
                         <TreeDeciduous className="w-4 h-4" />
                     </div>
                     <div>
-                        <p className="text-sm font-bold text-gray-900 dark:text-gray-100">128 Tappers Active</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Current deployment: 92% capacity</p>
+                        <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{totalActiveTappers} Tappers Active</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Today&apos;s deployment: {deploymentPct}% capacity</p>
                     </div>
                 </div>
             </div>
 
             <div className="grid grid-cols-7 gap-2 mb-6">
-                {workforceData.map((d, i) => {
-                    const bgColors = [
-                        'bg-gray-100 dark:bg-gray-700',
-                        'bg-green-200 dark:bg-green-800',
-                        'bg-brand-400',
-                        'bg-brand-500',
-                    ];
-                    return (
-                        <div
-                            key={i}
-                            className={cn("w-full aspect-square rounded-sm", bgColors[d.attendance])}
-                            title={`Day ${d.day} - Level ${d.attendance}`}
-                        />
-                    );
-                })}
+                {days.map((d) => (
+                    <div
+                        key={d.date}
+                        className={cn("w-full aspect-square rounded-sm", LEVEL_COLORS[d.level])}
+                        title={`${d.date} — ${d.presentCount} present${d.rained ? " (rain)" : ""}`}
+                    />
+                ))}
             </div>
 
             <div className="flex items-center justify-between text-xs font-medium text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-50 dark:border-gray-700/30">
-                <span>Highest Attendance: <span className="text-brand-600 font-bold">May 14th</span></span>
-                <span>Rain Disruption: <span className="text-red-500 font-bold">6 Days</span></span>
+                <span>Highest Attendance: <span className="text-brand-600 font-bold">{formatShortDate(highestDay.date)}</span></span>
+                <span>Rain Disruption: <span className="text-red-500 font-bold">{rainDays} Days</span></span>
             </div>
         </Card>
     );

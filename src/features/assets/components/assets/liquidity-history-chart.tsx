@@ -14,55 +14,25 @@ import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { chartColors } from "@/lib/theme";
 import { NoSSR } from "@/components/ui/no-ssr";
-
-const weekData = [
-    { name: "Mon", total: 824000 },
-    { name: "Tue", total: 831200 },
-    { name: "Wed", total: 818600 },
-    { name: "Thu", total: 842300 },
-    { name: "Fri", total: 856100 },
-    { name: "Sat", total: 849800 },
-    { name: "Sun", total: 842300 },
-];
-
-const monthData = [
-    { name: "W1", total: 796000 },
-    { name: "W2", total: 812400 },
-    { name: "W3", total: 828900 },
-    { name: "W4", total: 842300 },
-];
-
-const yearData = [
-    { name: "Jan", total: 624000 },
-    { name: "Feb", total: 658000 },
-    { name: "Mar", total: 692000 },
-    { name: "Apr", total: 714000 },
-    { name: "May", total: 738000 },
-    { name: "Jun", total: 761000 },
-    { name: "Jul", total: 784000 },
-    { name: "Aug", total: 802000 },
-    { name: "Sep", total: 818000 },
-    { name: "Oct", total: 826000 },
-    { name: "Nov", total: 835000 },
-    { name: "Dec", total: 842300 },
-];
-
-type TimeScale = "week" | "month" | "year";
+import { Loader2 } from "lucide-react";
+import { useMonetaryTrend } from "@/features/assets/hooks/use-assets";
+import type { TrendScale } from "@/features/assets/types/assets.types";
 
 export function LiquidityHistoryChart() {
-    const [timeScale, setTimeScale] = useState<TimeScale>("month");
-
-    const data = timeScale === "week" ? weekData : timeScale === "month" ? monthData : yearData;
+    const [timeScale, setTimeScale] = useState<TrendScale>("month");
+    const { data, isLoading } = useMonetaryTrend(timeScale);
+    const chartData = (data ?? []).map((p) => ({ name: p.name, total: p.total }));
 
     return (
-        <Card className="shadow-sm gap-0 p-6">
+        <Card className="shadow-sm gap-0 p-6 relative">
+            {isLoading && <div className="absolute top-4 right-4"><Loader2 className="w-4 h-4 animate-spin text-brand-500" /></div>}
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <CardTitle className="text-base font-semibold">Liquidity History</CardTitle>
-                    <CardDescription>Total bank balance over time (LKR)</CardDescription>
+                    <CardDescription>Total bank + cash balance over time (LKR)</CardDescription>
                 </div>
                 <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1">
-                    {(["week", "month", "year"] as TimeScale[]).map((scale) => (
+                    {(["week", "month", "year"] as TrendScale[]).map((scale) => (
                         <Button
                             key={scale}
                             size="sm"
@@ -78,7 +48,7 @@ export function LiquidityHistoryChart() {
             <div className="h-64 w-full">
                 <NoSSR>
                     <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                        <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="liquidityGradient" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor={chartColors.primary} stopOpacity={0.3} />

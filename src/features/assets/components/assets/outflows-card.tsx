@@ -1,29 +1,36 @@
 "use client";
 
 import { Card, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 import { chartColors } from "@/lib/theme";
-
-const outflows = [
-    { date: "2026-03-18", description: "Fertilizer Purchase", amount: 48200 },
-    { date: "2026-03-15", description: "Labour Payment — March W2", amount: 32400 },
-    { date: "2026-03-12", description: "Equipment Maintenance", amount: 18600 },
-    { date: "2026-03-08", description: "Utilities — Electricity", amount: 9800 },
-    { date: "2026-03-05", description: "Vehicle Fuel & Service", amount: 7200 },
-];
+import { useMonetaryTransactions } from "@/features/assets/hooks/use-assets";
 
 export function OutflowsCard() {
+    const { data, isLoading } = useMonetaryTransactions({
+        transactionType: "money out",
+        page: 0,
+        size: 5,
+    });
+    const outflows = data?.content ?? [];
+
     return (
         <Card className="p-6 shadow-sm gap-0 flex flex-col h-full">
             <CardTitle className="text-base font-semibold mb-4">Recent Cash Outflows</CardTitle>
             <div className="flex-1 space-y-3">
-                {outflows.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                {isLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-5 h-5 animate-spin text-brand-500" />
+                    </div>
+                ) : outflows.length === 0 ? (
+                    <p className="text-sm text-gray-400 text-center py-8">No outflows recorded.</p>
+                ) : outflows.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
                         <div className="min-w-0">
-                            <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{item.description}</p>
-                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{item.date}</p>
+                            <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{item.assetType}</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{new Date(item.createdAt).toLocaleDateString()}</p>
                         </div>
                         <p className="text-sm font-semibold ml-4 shrink-0" style={{ color: chartColors.danger }}>
-                            − LKR {item.amount.toLocaleString()}
+                            − LKR {(item.lastAmount - item.newAmount).toLocaleString()}
                         </p>
                     </div>
                 ))}
