@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Thermometer, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateMetrolacReading, useLoads } from "@/features/production/hooks/use-production";
+import { toLocalDateInputValue } from "@/lib/utils";
 
 export function MetrolacEntryForm() {
-    const today = new Date().toISOString().split("T")[0];
+    const today = toLocalDateInputValue();
 
     const [loadId, setLoadId] = useState("");
     const [reading, setReading] = useState("");

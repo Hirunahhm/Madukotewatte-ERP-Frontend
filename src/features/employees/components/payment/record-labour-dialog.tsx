@@ -15,6 +15,7 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { getEmployeesSummary } from "@/features/employees/services/employee-service";
 import { useCreateLabour } from "@/features/employees/hooks/use-labour-mutations";
 import type { PaymentType } from "@/features/employees/types/labour.types";
+import { toLocalDateInputValue } from "@/lib/utils";
 
 const WORK_TYPES = ["Weeding", "Clearing", "Spraying", "Maintenance", "Other"];
 
@@ -30,7 +31,7 @@ interface Props {
 
 export function RecordLabourDialog({ open, onOpenChange }: Props) {
     const [employeeId, setEmployeeId] = useState("");
-    const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+    const [date, setDate] = useState(toLocalDateInputValue());
     const [workedHours, setWorkedHours] = useState("");
     const [hourlyRate, setHourlyRate] = useState("");
     const [workType, setWorkType] = useState("");
@@ -50,7 +51,7 @@ export function RecordLabourDialog({ open, onOpenChange }: Props) {
 
     function handleClose() {
         setEmployeeId("");
-        setDate(new Date().toISOString().split("T")[0]);
+        setDate(toLocalDateInputValue());
         setWorkedHours("");
         setHourlyRate("");
         setWorkType("");

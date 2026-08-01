@@ -13,6 +13,7 @@ import { useBulkAttendance } from "@/features/employees/hooks/use-attendance-mut
 import { getEmployeesSummary } from "@/features/employees/services/employee-service";
 import { ABSENCE_REASONS, type NoWorkReason } from "@/features/employees/types/attendance.types";
 import type { TimeScale } from "@/features/employees/utils/date-buckets";
+import { toLocalDateInputValue } from "@/lib/utils";
 
 export function ProductivityChart() {
     const [timeScale, setTimeScale] = useState<TimeScale>("week");
@@ -29,7 +30,7 @@ export function ProductivityChart() {
     async function handleRecordNoWork() {
         if (!noWorkReason || !employeesSummary) return;
         const activeEmployees = employeesSummary.filter((e) => e.isActive);
-        const today = new Date().toISOString().split("T")[0];
+        const today = toLocalDateInputValue();
         await bulkAttendance.mutateAsync({
             attendances: activeEmployees.map((emp) => ({
                 employeeId: emp.employeeId,

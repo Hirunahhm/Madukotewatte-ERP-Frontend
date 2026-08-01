@@ -15,10 +15,11 @@ import {
 } from "@/components/ui/select";
 import { useCreateExpense, useSettlePayment } from "@/features/financials/hooks/use-financials";
 import { PAYMENT_TYPES } from "@/features/financials/types/financials.types";
+import { toLocalDateInputValue } from "@/lib/utils";
 
 const EXPENSE_TYPES = ["Fertilizer", "Labor", "Maintenance", "Chemicals", "Utilities", "Logistics", "Other"];
 
-const today = () => new Date().toISOString().split("T")[0];
+const today = () => toLocalDateInputValue();
 
 export function RecordExpenseForm() {
     const [date, setDate] = useState(today());

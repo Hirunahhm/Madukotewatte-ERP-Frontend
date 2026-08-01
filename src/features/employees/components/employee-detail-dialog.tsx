@@ -72,6 +72,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
     const [name, setName] = useState("");
     const [position, setPosition] = useState("");
     const [salary, setSalary] = useState("");
+    const [ratePerTree, setRatePerTree] = useState("");
     const [joinedDate, setJoinedDate] = useState("");
     const [isActive, setIsActive] = useState(true);
 
@@ -131,6 +132,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
             setName(employee.data.name);
             setPosition(employee.data.position ?? "");
             setSalary(String(employee.data.salary ?? ""));
+            setRatePerTree(String(employee.data.ratePerTree ?? "0"));
             setJoinedDate(employee.data.joinedDate ?? "");
             setIsActive(employee.data.isActive);
         }
@@ -167,6 +169,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
                     name: name.trim(),
                     joinedDate,
                     salary: Number(salary),
+                    ratePerTree: ratePerTree ? Number(ratePerTree) : 0,
                     position: position || undefined,
                     isActive,
                 },
@@ -182,6 +185,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
             setName(employee.data.name);
             setPosition(employee.data.position ?? "");
             setSalary(String(employee.data.salary ?? ""));
+            setRatePerTree(String(employee.data.ratePerTree ?? "0"));
             setJoinedDate(employee.data.joinedDate ?? "");
             setIsActive(employee.data.isActive);
         }
@@ -243,6 +247,10 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
                                         <Input type="number" value={salary} onChange={(e) => setSalary(e.target.value)} />
                                     </div>
                                     <div className="space-y-1.5">
+                                        <Label>Rate per Tree (LKR)</Label>
+                                        <Input type="number" min={0} step="0.01" value={ratePerTree} onChange={(e) => setRatePerTree(e.target.value)} />
+                                    </div>
+                                    <div className="space-y-1.5">
                                         <Label>Date of Joining</Label>
                                         <Input type="date" value={joinedDate} onChange={(e) => setJoinedDate(e.target.value)} />
                                     </div>
@@ -277,6 +285,10 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
                                 <div>
                                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Salary</p>
                                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.salary != null ? formatLkr(employee.data.salary) : "-"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Rate per Tree</p>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.ratePerTree ? formatLkr(employee.data.ratePerTree) : "Not set"}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Joined</p>

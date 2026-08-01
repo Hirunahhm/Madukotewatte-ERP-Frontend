@@ -3,6 +3,7 @@ export interface Employee {
     name: string;
     joinedDate: string | null;
     salary: number | null;
+    ratePerTree: number | null;
     position: string | null;
     isActive: boolean;
     createdAt: string;
@@ -21,6 +22,7 @@ export interface EmployeeRequest {
     name: string;
     joinedDate: string;
     salary: number;
+    ratePerTree?: number;
     position?: string;
     isActive?: boolean;
 }

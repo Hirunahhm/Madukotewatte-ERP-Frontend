@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { SessionHydrator } from "@/components/layout/session-hydrator";
 import { requireAuth } from "@/lib/proxy";
 
 export default async function DashboardLayout({
@@ -11,6 +12,7 @@ export default async function DashboardLayout({
 
     return (
         <div className="flex h-screen bg-slate-50 dark:bg-gray-950">
+            <SessionHydrator />
             <Sidebar />
             <div className="flex flex-1 flex-col overflow-hidden">
                 <Topbar />
