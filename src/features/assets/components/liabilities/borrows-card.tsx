@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardTitle } from "@/components/ui/card";
-import { useLoanBalances, useLoanTransactions } from "@/features/assets/hooks/use-assets";
+import { useLoanBalances, useLoanTransactions, useEstateLoans } from "@/features/assets/hooks/use-assets";
 import { toLocalDateInputValue } from "@/lib/utils";
 
 function formatLkr(value: number): string {
@@ -15,10 +15,12 @@ function monthStart(): string {
 
 export function BorrowsCard() {
     const { data: balances } = useLoanBalances();
+    const { data: loans } = useEstateLoans();
     const { data: borrowsThisMonth } = useLoanTransactions({ transactionType: "borrow", from: monthStart(), size: 200 });
     const { data: repaysThisMonth } = useLoanTransactions({ transactionType: "repay", from: monthStart(), size: 200 });
 
-    const totalOutstanding = (balances ?? []).reduce((sum, b) => sum + b.balance, 0);
+    const totalOutstanding = (balances ?? []).reduce((sum, b) => sum + b.balance, 0)
+        + (loans ?? []).filter((l) => l.isActive).reduce((sum, l) => sum + l.currentBalance, 0);
     const borrowedSum = (borrowsThisMonth?.content ?? []).reduce((sum, t) => sum + (t.newAmount - t.lastAmount), 0);
     const repaidSum = (repaysThisMonth?.content ?? []).reduce((sum, t) => sum + (t.lastAmount - t.newAmount), 0);
     const netChange = borrowedSum - repaidSum;

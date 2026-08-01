@@ -10,43 +10,54 @@ import {
 } from "@/components/ui/select";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useCreateEmployee } from "@/features/employees/hooks/use-employee-mutations";
+import { POSITIONS, isTapperPosition } from "@/features/employees/utils/positions";
 
 interface AddEmployeeDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
 
-const POSITIONS = ["Tapper", "Lead Tapper", "Senior Tapper", "Junior Tapper", "General Labour", "Assistant Manager"];
-
 export function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDialogProps) {
     const [name, setName] = useState("");
     const [dateOfJoining, setDateOfJoining] = useState("");
     const [salary, setSalary] = useState("");
     const [position, setPosition] = useState("");
+    const [ratePerTree, setRatePerTree] = useState("");
     const [error, setError] = useState<string | null>(null);
 
     const createEmployee = useCreateEmployee();
+    const isTapper = isTapperPosition(position);
 
     function handleClose() {
         setName("");
         setDateOfJoining("");
         setSalary("");
         setPosition("");
+        setRatePerTree("");
         setError(null);
         onOpenChange(false);
     }
 
     async function handleSubmit() {
         setError(null);
-        if (!name.trim() || !dateOfJoining || !salary) {
-            setError("Name, date of joining, and salary are required.");
+        if (!name.trim() || !dateOfJoining) {
+            setError("Name and date of joining are required.");
+            return;
+        }
+        if (isTapper && !ratePerTree) {
+            setError("Rate per tree is required for tapper positions.");
+            return;
+        }
+        if (!isTapper && !salary) {
+            setError("Salary is required.");
             return;
         }
         try {
             await createEmployee.mutateAsync({
                 name: name.trim(),
                 joinedDate: dateOfJoining,
-                salary: Number(salary),
+                salary: salary ? Number(salary) : undefined,
+                ratePerTree: isTapper && ratePerTree ? Number(ratePerTree) : undefined,
                 position: position || undefined,
             });
             handleClose();
@@ -93,18 +104,6 @@ export function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDialogProps
                     </div>
 
                     <div className="space-y-1.5">
-                        <Label htmlFor="emp-salary">Salary</Label>
-                        <Input
-                            id="emp-salary"
-                            type="number"
-                            placeholder="e.g. 45000"
-                            value={salary}
-                            onChange={(e) => setSalary(e.target.value)}
-                            className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                        />
-                    </div>
-
-                    <div className="space-y-1.5">
                         <Label>Position</Label>
                         <Select value={position} onValueChange={(v) => { if (v !== null) setPosition(v); }}>
                             <SelectTrigger className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
@@ -117,6 +116,32 @@ export function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDialogProps
                             </SelectContent>
                         </Select>
                     </div>
+
+                    {isTapper ? (
+                        <div className="space-y-1.5">
+                            <Label htmlFor="emp-rate-per-tree">Rate per Tree (LKR)</Label>
+                            <Input
+                                id="emp-rate-per-tree"
+                                type="number"
+                                placeholder="e.g. 5.00"
+                                value={ratePerTree}
+                                onChange={(e) => setRatePerTree(e.target.value)}
+                                className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                            />
+                        </div>
+                    ) : (
+                        <div className="space-y-1.5">
+                            <Label htmlFor="emp-salary">Salary</Label>
+                            <Input
+                                id="emp-salary"
+                                type="number"
+                                placeholder="e.g. 45000"
+                                value={salary}
+                                onChange={(e) => setSalary(e.target.value)}
+                                className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                            />
+                        </div>
+                    )}
 
                     <div className="flex gap-3 pt-2">
                         <Button variant="outline" className="flex-1" onClick={handleClose}>Cancel</Button>

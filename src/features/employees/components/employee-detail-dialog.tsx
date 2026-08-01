@@ -12,26 +12,23 @@ import {
 import {
     Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
-import { Pencil, X, Check, Loader2, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Pencil, X, Check, Loader2, AlertCircle, ChevronLeft, ChevronRight, Wallet } from "lucide-react";
+import { cn, toLocalDateInputValue } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmployeeDetail } from "@/features/employees/hooks/use-employee-detail";
-import { useUpdateEmployee } from "@/features/employees/hooks/use-employee-mutations";
+import { useUpdateEmployee, useRecordSalaryPayment } from "@/features/employees/hooks/use-employee-mutations";
 import { ABSENCE_REASONS } from "@/features/employees/types/attendance.types";
-
-const POSITIONS = ["Tapper", "Lead Tapper", "Senior Tapper", "Junior Tapper", "General Labour", "Assistant Manager", "Supervisor", "Operations Assistant"];
+import { POSITIONS, isTapperPosition } from "@/features/employees/utils/positions";
 
 const TRANSACTION_LABELS: Record<string, string> = {
     Manual_Labor: "Labour Payment",
     Advance: "Advance",
     Loan_Payment: "Loan Payment",
     Latex_Tap: "Latex Tap Earnings",
-    Banana_Harvest: "Banana Harvest Earnings",
-    Coconut_Harvest: "Coconut Harvest Earnings",
-    Manioc_Harvest: "Manioc Harvest Earnings",
+    Salary_Payment: "Salary Payment",
 };
 
-const TRANSACTION_TYPES = ["Manual_Labor", "Advance", "Loan_Payment", "Latex_Tap", "Banana_Harvest", "Coconut_Harvest", "Manioc_Harvest"];
+const TRANSACTION_TYPES = ["Manual_Labor", "Advance", "Loan_Payment", "Latex_Tap", "Salary_Payment"];
 
 type Tab = "attendance" | "transactions" | "loans";
 type LoanFilter = "all" | "active" | "closed";
@@ -76,9 +73,6 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
     const [position, setPosition] = useState("");
     const [salary, setSalary] = useState("");
     const [ratePerTree, setRatePerTree] = useState("");
-    const [ratePerBunch, setRatePerBunch] = useState("");
-    const [ratePerNut, setRatePerNut] = useState("");
-    const [ratePerKgManioc, setRatePerKgManioc] = useState("");
     const [joinedDate, setJoinedDate] = useState("");
     const [isActive, setIsActive] = useState(true);
 
@@ -96,6 +90,14 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
 
     // Loans filter (client-side)
     const [loansFilter, setLoansFilter] = useState<LoanFilter>("all");
+
+    // Salary payment dialog
+    const [salaryPaymentOpen, setSalaryPaymentOpen] = useState(false);
+    const [salaryPaymentAmount, setSalaryPaymentAmount] = useState("");
+    const [salaryPaymentType, setSalaryPaymentType] = useState<"cash" | "bank_transfer">("cash");
+    const [salaryPaymentDate, setSalaryPaymentDate] = useState(toLocalDateInputValue());
+    const [salaryPaymentError, setSalaryPaymentError] = useState<string | null>(null);
+    const recordSalaryPayment = useRecordSalaryPayment();
 
     const role = useAuthStore((s) => s.role);
     const isAdmin = role === "ROLE_ADMIN";
@@ -139,9 +141,6 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
             setPosition(employee.data.position ?? "");
             setSalary(String(employee.data.salary ?? ""));
             setRatePerTree(String(employee.data.ratePerTree ?? "0"));
-            setRatePerBunch(String(employee.data.ratePerBunch ?? "0"));
-            setRatePerNut(String(employee.data.ratePerNut ?? "0"));
-            setRatePerKgManioc(String(employee.data.ratePerKgManioc ?? "0"));
             setJoinedDate(employee.data.joinedDate ?? "");
             setIsActive(employee.data.isActive);
         }
@@ -164,11 +163,21 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
         }
     }, [open]);
 
+    const isTapper = isTapperPosition(position);
+
     async function handleSave() {
         if (!employeeId) return;
         setError(null);
-        if (!name.trim() || !joinedDate || !salary) {
-            setError("Name, date of joining, and salary are required.");
+        if (!name.trim() || !joinedDate) {
+            setError("Name and date of joining are required.");
+            return;
+        }
+        if (isTapper && !ratePerTree) {
+            setError("Rate per tree is required for tapper positions.");
+            return;
+        }
+        if (!isTapper && !salary) {
+            setError("Salary is required.");
             return;
         }
         try {
@@ -177,11 +186,8 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
                 payload: {
                     name: name.trim(),
                     joinedDate,
-                    salary: Number(salary),
+                    salary: salary ? Number(salary) : undefined,
                     ratePerTree: ratePerTree ? Number(ratePerTree) : 0,
-                    ratePerBunch: ratePerBunch ? Number(ratePerBunch) : 0,
-                    ratePerNut: ratePerNut ? Number(ratePerNut) : 0,
-                    ratePerKgManioc: ratePerKgManioc ? Number(ratePerKgManioc) : 0,
                     position: position || undefined,
                     isActive,
                 },
@@ -198,9 +204,6 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
             setPosition(employee.data.position ?? "");
             setSalary(String(employee.data.salary ?? ""));
             setRatePerTree(String(employee.data.ratePerTree ?? "0"));
-            setRatePerBunch(String(employee.data.ratePerBunch ?? "0"));
-            setRatePerNut(String(employee.data.ratePerNut ?? "0"));
-            setRatePerKgManioc(String(employee.data.ratePerKgManioc ?? "0"));
             setJoinedDate(employee.data.joinedDate ?? "");
             setIsActive(employee.data.isActive);
         }
@@ -208,10 +211,39 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
         setIsEditing(false);
     }
 
+    function openSalaryPaymentDialog() {
+        setSalaryPaymentAmount(employee.data?.salary ? String(employee.data.salary) : "");
+        setSalaryPaymentType("cash");
+        setSalaryPaymentDate(toLocalDateInputValue());
+        setSalaryPaymentError(null);
+        setSalaryPaymentOpen(true);
+    }
+
+    async function handleRecordSalaryPayment() {
+        if (!employeeId) return;
+        setSalaryPaymentError(null);
+        if (!salaryPaymentAmount || Number(salaryPaymentAmount) <= 0) {
+            setSalaryPaymentError("Enter a valid amount.");
+            return;
+        }
+        try {
+            await recordSalaryPayment.mutateAsync({
+                employeeId,
+                paymentType: salaryPaymentType,
+                amount: Number(salaryPaymentAmount),
+                timestamp: `${salaryPaymentDate}T00:00:00`,
+            });
+            setSalaryPaymentOpen(false);
+        } catch (err) {
+            setSalaryPaymentError(err instanceof Error ? err.message : "Failed to record salary payment.");
+        }
+    }
+
     const attendanceFiltersActive = attendanceFrom || attendanceTo || attendanceStatus !== "all";
     const transactionFiltersActive = transactionsFrom || transactionsTo || transactionsType !== "all";
 
     return (
+        <>
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
@@ -257,26 +289,17 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <Label>Salary (LKR)</Label>
-                                        <Input type="number" value={salary} onChange={(e) => setSalary(e.target.value)} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label>Rate per Tree (LKR)</Label>
-                                        <Input type="number" min={0} step="0.01" value={ratePerTree} onChange={(e) => setRatePerTree(e.target.value)} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label>Rate per Banana Bunch (LKR)</Label>
-                                        <Input type="number" min={0} step="0.01" value={ratePerBunch} onChange={(e) => setRatePerBunch(e.target.value)} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label>Rate per Coconut (LKR)</Label>
-                                        <Input type="number" min={0} step="0.01" value={ratePerNut} onChange={(e) => setRatePerNut(e.target.value)} />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label>Rate per kg Manioc (LKR)</Label>
-                                        <Input type="number" min={0} step="0.01" value={ratePerKgManioc} onChange={(e) => setRatePerKgManioc(e.target.value)} />
-                                    </div>
+                                    {isTapper ? (
+                                        <div className="space-y-1.5">
+                                            <Label>Rate per Tree (LKR)</Label>
+                                            <Input type="number" min={0} step="0.01" value={ratePerTree} onChange={(e) => setRatePerTree(e.target.value)} />
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-1.5">
+                                            <Label>Salary (LKR)</Label>
+                                            <Input type="number" value={salary} onChange={(e) => setSalary(e.target.value)} />
+                                        </div>
+                                    )}
                                     <div className="space-y-1.5">
                                         <Label>Date of Joining</Label>
                                         <Input type="date" value={joinedDate} onChange={(e) => setJoinedDate(e.target.value)} />
@@ -309,26 +332,17 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
                                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Position</p>
                                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.position ?? "-"}</p>
                                 </div>
-                                <div>
-                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Salary</p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.salary != null ? formatLkr(employee.data.salary) : "-"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Rate per Tree</p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.ratePerTree ? formatLkr(employee.data.ratePerTree) : "Not set"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Rate per Banana Bunch</p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.ratePerBunch ? formatLkr(employee.data.ratePerBunch) : "Not set"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Rate per Coconut</p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.ratePerNut ? formatLkr(employee.data.ratePerNut) : "Not set"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Rate per kg Manioc</p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.ratePerKgManioc ? formatLkr(employee.data.ratePerKgManioc) : "Not set"}</p>
-                                </div>
+                                {isTapperPosition(employee.data.position) ? (
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Rate per Tree</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.ratePerTree ? formatLkr(employee.data.ratePerTree) : "Not set"}</p>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Salary</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.salary != null ? formatLkr(employee.data.salary) : "-"}</p>
+                                    </div>
+                                )}
                                 <div>
                                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Joined</p>
                                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.joinedDate ?? "-"}</p>
@@ -452,10 +466,17 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
                         {/* Transactions tab */}
                         {tab === "transactions" && (
                             <div className="space-y-3">
+                                {isAdmin && (
+                                    <div className="flex justify-end">
+                                        <Button size="sm" className="gap-1.5 bg-brand-500 hover:bg-brand-600" onClick={openSalaryPaymentDialog}>
+                                            <Wallet className="w-3.5 h-3.5" /> Record Salary Payment
+                                        </Button>
+                                    </div>
+                                )}
                                 <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
                                     <StatCard label="Total Earned" value={transactionStats.data ? formatLkr(transactionStats.data.totalAmount) : "-"} accent />
                                     <StatCard label="Latex Tap" value={transactionStats.data ? formatLkr(transactionStats.data.latexTap) : "-"} />
-                                    <StatCard label="Harvest Earnings" value={transactionStats.data ? formatLkr(transactionStats.data.harvestEarnings) : "-"} />
+                                    <StatCard label="Salary Payments" value={transactionStats.data ? formatLkr(transactionStats.data.salaryPayments) : "-"} />
                                     <StatCard label="Labour" value={transactionStats.data ? formatLkr(transactionStats.data.manualLabor) : "-"} />
                                     <StatCard label="Advances" value={transactionStats.data ? formatLkr(transactionStats.data.advances) : "-"} />
                                     <StatCard label="Loan Deductions" value={transactionStats.data ? formatLkr(transactionStats.data.loanPayments) : "-"} />
@@ -601,5 +622,51 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Props) 
                 )}
             </DialogContent>
         </Dialog>
+
+        <Dialog open={salaryPaymentOpen} onOpenChange={setSalaryPaymentOpen}>
+            <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                    <DialogTitle>Record Salary Payment</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3 pt-2">
+                    {salaryPaymentError && (
+                        <div role="alert" className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/30 px-3 py-2 text-xs text-red-600 dark:text-red-400">
+                            <AlertCircle className="w-4 h-4 shrink-0" />
+                            {salaryPaymentError}
+                        </div>
+                    )}
+                    <div className="space-y-1.5">
+                        <Label>Amount (LKR)</Label>
+                        <Input type="number" min={0} value={salaryPaymentAmount} onChange={(e) => setSalaryPaymentAmount(e.target.value)} />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label>Payment Type</Label>
+                        <Select value={salaryPaymentType} onValueChange={(v) => { if (v) setSalaryPaymentType(v as "cash" | "bank_transfer"); }}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="cash">Cash</SelectItem>
+                                <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label>Date</Label>
+                        <Input type="date" value={salaryPaymentDate} onChange={(e) => setSalaryPaymentDate(e.target.value)} />
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                        <Button variant="outline" className="flex-1" onClick={() => setSalaryPaymentOpen(false)}>Cancel</Button>
+                        <Button
+                            className="flex-1 bg-brand-500 hover:bg-brand-600"
+                            disabled={recordSalaryPayment.isPending}
+                            onClick={handleRecordSalaryPayment}
+                        >
+                            {recordSalaryPayment.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                            Record Payment
+                        </Button>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+        </>
     );
 }

@@ -13,11 +13,37 @@ export type {
 export const ASSET_TYPES = ["Cash", "Bank-BOC", "Bank-Seylan", "Bank-Peoples"] as const;
 export type AssetType = (typeof ASSET_TYPES)[number];
 
-export const LOAN_TYPES = ["credit-card - Peoples", "credit-card - Sampath", "Loan-mom", "Loan-other"] as const;
-export type LoanType = (typeof LOAN_TYPES)[number];
-
 export const CREDIT_CARD_TYPES = ["credit-card - Peoples", "credit-card - Sampath"] as const;
 export type CreditCardType = (typeof CREDIT_CARD_TYPES)[number];
+
+// Credit cards are the only remaining fixed-bucket loan type — personal/other loans are
+// now tracked as named EstateLoan records instead (see below).
+export const LOAN_TYPES = CREDIT_CARD_TYPES;
+export type LoanType = (typeof LOAN_TYPES)[number];
+
+export interface EstateLoan {
+    loanId: string;
+    name: string;
+    principalAmount: number;
+    currentBalance: number;
+    issuedDate: string;
+    interestRate: number | null;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface EstateLoanRequest {
+    name: string;
+    principalAmount: number;
+    issuedDate: string;
+    interestRate?: number;
+}
+
+export interface EstateLoanPaymentRequest {
+    amount: number;
+    paymentType: AssetType;
+}
 
 export interface AssetBalance {
     assetType: string;

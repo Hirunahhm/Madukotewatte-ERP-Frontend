@@ -1,8 +1,9 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createEmployee, updateEmployee } from "@/features/employees/services/employee-service";
+import { createEmployee, updateEmployee, recordSalaryPayment } from "@/features/employees/services/employee-service";
 import type { EmployeeRequest } from "@/features/employees/types/employee.types";
+import type { EmployeeSalaryPaymentRequest } from "@/features/employees/types/transaction.types";
 
 export function useCreateEmployee() {
     const queryClient = useQueryClient();
@@ -21,6 +22,16 @@ export function useUpdateEmployee() {
         onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ["employees"] });
             queryClient.invalidateQueries({ queryKey: ["employee", variables.id] });
+        },
+    });
+}
+
+export function useRecordSalaryPayment() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: EmployeeSalaryPaymentRequest) => recordSalaryPayment(payload),
+        onSuccess: (_data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["employee", variables.employeeId] });
         },
     });
 }

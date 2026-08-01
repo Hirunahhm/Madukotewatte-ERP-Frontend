@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Landmark, CreditCard, AlertCircle, Loader2 } from "lucide-react";
-import { useLoanBalances } from "@/features/assets/hooks/use-assets";
+import { useLoanBalances, useEstateLoans } from "@/features/assets/hooks/use-assets";
 
 function formatLkr(value: number): string {
     return `LKR ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
@@ -10,10 +10,11 @@ function formatLkr(value: number): string {
 
 export function LiabilityKpis() {
     const { data: balances, isLoading } = useLoanBalances();
+    const { data: loans, isLoading: loansLoading } = useEstateLoans();
 
-    const currentLoans = (balances ?? [])
-        .filter((b) => b.loanType === "Loan-mom" || b.loanType === "Loan-other")
-        .reduce((sum, b) => sum + b.balance, 0);
+    const currentLoans = (loans ?? [])
+        .filter((l) => l.isActive)
+        .reduce((sum, l) => sum + l.currentBalance, 0);
     const peoplesCard = balances?.find((b) => b.loanType === "credit-card - Peoples")?.balance ?? 0;
     const sampathCard = balances?.find((b) => b.loanType === "credit-card - Sampath")?.balance ?? 0;
 
@@ -56,7 +57,7 @@ export function LiabilityKpis() {
                                 <Icon className={`w-4 h-4 ${kpi.iconClass}`} />
                             </div>
                         </div>
-                        {isLoading ? (
+                        {isLoading || loansLoading ? (
                             <Loader2 className="w-4 h-4 animate-spin text-brand-500" />
                         ) : (
                             <p className={`text-xl font-bold ${kpi.valueClass}`}>{kpi.value}</p>

@@ -69,6 +69,7 @@ export function MetrolacEntryForm() {
                         type="number"
                         placeholder="e.g. 32.4"
                         step="0.1"
+                        max={150}
                         value={reading}
                         onChange={(e) => setReading(e.target.value)}
                         className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus-visible:ring-brand-500"

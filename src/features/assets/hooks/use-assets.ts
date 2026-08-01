@@ -5,11 +5,13 @@ import {
     getAssetBalances, getMonetaryTrend, getMonetaryTransactions,
     getLoanBalances, getLoanTrend, getLoanTransactions,
     getCreditCardStatement, getCreditCardLimits, updateCreditCardLimit,
+    getEstateLoans, createEstateLoan, recordEstateLoanPayment,
     getFixedAssets, createFixedAsset, updateFixedAsset, getFixedAssetSummary,
 } from "@/features/assets/services/assets-service";
 import { useCreateMonetaryTransaction, useCreateEstateLoanTransaction } from "@/features/financials/hooks/use-financials";
 import type {
     TrendScale, MonetaryTransactionFilters, LoanTransactionFilters, UpdateCreditCardLimitRequest,
+    EstateLoanRequest, EstateLoanPaymentRequest,
     FixedAssetFilters, FixedAssetRequest, FixedAssetUpdateRequest,
 } from "@/features/assets/types/assets.types";
 
@@ -140,6 +142,35 @@ export function useRecordRepayment() {
     }
 
     return { recordRepayment, isPending: createLoanTx.isPending || createMonetaryTx.isPending };
+}
+
+// ─── Named Estate Loans ─────────────────────────────────────────────────────
+
+export function useEstateLoans() {
+    return useQuery({
+        queryKey: ["estate-loans"],
+        queryFn: () => getEstateLoans(),
+    });
+}
+
+export function useCreateEstateLoanRecord() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: EstateLoanRequest) => createEstateLoan(payload),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["estate-loans"] }),
+    });
+}
+
+export function useRecordEstateLoanPayment() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ loanId, payload }: { loanId: string; payload: EstateLoanPaymentRequest }) =>
+            recordEstateLoanPayment(loanId, payload),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ["estate-loans"] });
+            invalidateAssets(qc);
+        },
+    });
 }
 
 // ─── Fixed Assets ───────────────────────────────────────────────────────────

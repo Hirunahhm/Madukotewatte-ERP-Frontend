@@ -1,4 +1,4 @@
-export type TransactionType = "Manual_Labor" | "Advance" | "Loan_Payment" | "Latex_Tap" | "Banana_Harvest" | "Coconut_Harvest" | "Manioc_Harvest";
+export type TransactionType = "Manual_Labor" | "Advance" | "Loan_Payment" | "Latex_Tap" | "Salary_Payment";
 
 export interface EmployeeTransaction {
     transactionRecordId: string;
@@ -11,12 +11,19 @@ export interface EmployeeTransaction {
     createdAt: string;
 }
 
+export interface EmployeeSalaryPaymentRequest {
+    employeeId: string;
+    paymentType: "cash" | "bank_transfer";
+    amount: number;
+    timestamp: string;
+}
+
 export interface EmployeeTransactionStats {
     totalAmount: number;
     manualLabor: number;
     advances: number;
     loanPayments: number;
     latexTap: number;
-    harvestEarnings: number;
+    salaryPayments: number;
     transactionCount: number;
 }

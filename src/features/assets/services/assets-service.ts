@@ -4,6 +4,7 @@ import type {
     MonetaryTransactionFilters, LoanTransactionFilters,
     MonetaryAssetTransactionResponse, EstateLoanTransactionResponse,
     CreditCardStatement, CreditCardLimit, UpdateCreditCardLimitRequest,
+    EstateLoan, EstateLoanRequest, EstateLoanPaymentRequest,
     FixedAsset, FixedAssetRequest, FixedAssetUpdateRequest, FixedAssetFilters, FixedAssetSummary,
 } from "@/features/assets/types/assets.types";
 
@@ -61,6 +62,29 @@ export async function getLoanTransactions(params?: LoanTransactionFilters): Prom
     if (params?.page !== undefined) qs.set("page", String(params.page));
     if (params?.size !== undefined) qs.set("size", String(params.size));
     const res = await fetch(`/api/estate-loans/transactions?${qs.toString()}`);
+    return handleResponse(res);
+}
+
+export async function getEstateLoans(): Promise<EstateLoan[]> {
+    const res = await fetch("/api/estate-loans/loans");
+    return handleResponse(res);
+}
+
+export async function createEstateLoan(payload: EstateLoanRequest): Promise<EstateLoan> {
+    const res = await fetch("/api/estate-loans/loans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+    return handleResponse(res);
+}
+
+export async function recordEstateLoanPayment(loanId: string, payload: EstateLoanPaymentRequest): Promise<EstateLoan> {
+    const res = await fetch(`/api/estate-loans/loans/${loanId}/payments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
     return handleResponse(res);
 }
 

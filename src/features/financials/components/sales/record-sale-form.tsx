@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, PlusCircle, Loader2, Plus } from "lucide-react";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import {
     useSettlePayment,
 } from "@/features/financials/hooks/use-financials";
 import { SALE_PAYMENT_TYPES, type SaleCategory } from "@/features/financials/types/financials.types";
+import { metrolacToMassFactor } from "@/features/financials/utils/latex-conversion";
 import { toLocalDateInputValue } from "@/lib/utils";
 
 const CATEGORIES: { id: SaleCategory; label: string }[] = [
@@ -65,6 +66,13 @@ export function RecordSaleForm() {
     const createCrop = useCreateSaleCrop();
     const markCropPaid = useMarkSaleCropPaid();
     const { settle, isPending: isSettling } = useSettlePayment();
+
+    useEffect(() => {
+        if (category === "latex" && litres && metrolacReading) {
+            const factor = metrolacToMassFactor(parseFloat(metrolacReading));
+            setMass((parseFloat(litres) * factor).toFixed(2));
+        }
+    }, [litres, metrolacReading, category]);
 
     const needsType = category === "manioc" || category === "coconut" || category === "banana";
     const isSubmitting = createLatex.isPending || createCrop.isPending || markLatexPaid.isPending
@@ -194,7 +202,7 @@ export function RecordSaleForm() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
                                     <Label>Metrolac Reading</Label>
-                                    <Input type="number" placeholder="0.00" value={metrolacReading} onChange={(e) => setMetrolacReading(e.target.value)} />
+                                    <Input type="number" max={150} placeholder="0.00" value={metrolacReading} onChange={(e) => setMetrolacReading(e.target.value)} />
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label>Unit Price (LKR/kg)</Label>

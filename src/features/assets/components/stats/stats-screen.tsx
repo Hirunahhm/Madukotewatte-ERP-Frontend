@@ -17,7 +17,7 @@ import { NoSSR } from "@/components/ui/no-ssr";
 import { chartColors } from "@/lib/theme";
 import { Wallet, TrendingDown, Landmark, Loader2 } from "lucide-react";
 import {
-    useAssetBalances, useLoanBalances, useMonetaryTrend, useLoanTrend, useFixedAssetSummary,
+    useAssetBalances, useLoanBalances, useMonetaryTrend, useLoanTrend, useFixedAssetSummary, useEstateLoans,
 } from "@/features/assets/hooks/use-assets";
 import { ReportGeneratorPanel } from "@/features/reports/components/report-generator-panel";
 import type { TrendScale } from "@/features/assets/types/assets.types";
@@ -31,12 +31,14 @@ export function StatsScreen() {
 
     const { data: assetBalances } = useAssetBalances();
     const { data: loanBalances } = useLoanBalances();
+    const { data: estateLoans } = useEstateLoans();
     const { data: fixedAssetSummary } = useFixedAssetSummary();
     const { data: assetTrend, isLoading: isLoadingAssetTrend } = useMonetaryTrend(scale);
     const { data: loanTrend, isLoading: isLoadingLoanTrend } = useLoanTrend(scale);
 
     const totalCash = (assetBalances ?? []).reduce((sum, b) => sum + b.balance, 0);
-    const totalDebt = (loanBalances ?? []).reduce((sum, b) => sum + b.balance, 0);
+    const totalDebt = (loanBalances ?? []).reduce((sum, b) => sum + b.balance, 0)
+        + (estateLoans ?? []).filter((l) => l.isActive).reduce((sum, l) => sum + l.currentBalance, 0);
     const totalFixedAssets = fixedAssetSummary?.totalCurrentValue ?? 0;
     const netWorth = totalCash + totalFixedAssets - totalDebt;
 
