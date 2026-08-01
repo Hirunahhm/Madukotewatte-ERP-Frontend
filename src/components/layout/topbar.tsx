@@ -3,7 +3,7 @@
 import { Bell, Menu, ChevronDown, Moon, Sun } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { useUiStore, type ProductionTab, type EmployeesTab, type FinancialsTab, type AssetsTab } from "@/stores/ui-store";
+import { useUiStore, type ProductionTab, type CropProductionTab, type EmployeesTab, type FinancialsTab, type AssetsTab } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { logoutUser } from "@/features/auth/services/auth-service";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ const PAGE_NAMES: Record<string, string> = {
     "/dashboard": "Dashboard",
     "/employees": "Employee Management",
     "/latex-production": "Latex Production",
+    "/crop-production": "Crop Production",
     "/financials": "Financials",
     "/assets": "Cash & Debt",
     "/weather": "Climate & Forecasting",
@@ -30,6 +31,12 @@ const PRODUCTION_TABS: { id: ProductionTab; label: string }[] = [
     { id: "latex", label: "Latex Production" },
     { id: "ammonia", label: "Ammonia Tracking" },
     { id: "rubber", label: "Rubber Solid Collection" },
+];
+
+const CROP_PRODUCTION_TABS: { id: CropProductionTab; label: string }[] = [
+    { id: "banana", label: "Banana" },
+    { id: "coconut", label: "Coconut" },
+    { id: "manioc", label: "Manioc" },
 ];
 
 const EMPLOYEES_TABS: { id: EmployeesTab; label: string }[] = [
@@ -63,6 +70,8 @@ export function Topbar() {
     }
     const productionTab = useUiStore((state) => state.productionTab);
     const setProductionTab = useUiStore((state) => state.setProductionTab);
+    const cropProductionTab = useUiStore((state) => state.cropProductionTab);
+    const setCropProductionTab = useUiStore((state) => state.setCropProductionTab);
     const employeesTab = useUiStore((state) => state.employeesTab);
     const setEmployeesTab = useUiStore((state) => state.setEmployeesTab);
     const financialsTab = useUiStore((state) => state.financialsTab);
@@ -72,6 +81,7 @@ export function Topbar() {
     const pageTitle = PAGE_NAMES[pathname] ?? "Dashboard";
     const { theme, setTheme } = useTheme();
     const isProduction = pathname === "/latex-production";
+    const isCropProduction = pathname === "/crop-production";
     const isEmployees = pathname === "/employees";
     const isFinancials = pathname === "/financials";
     const isCashDebt = pathname === "/assets";
@@ -88,7 +98,7 @@ export function Topbar() {
                     <span className="sr-only">Toggle sidebar</span>
                     <Menu className="h-5 w-5" aria-hidden="true" />
                 </button>
-                {!isProduction && !isEmployees && !isFinancials && !isCashDebt && (
+                {!isProduction && !isCropProduction && !isEmployees && !isFinancials && !isCashDebt && (
                     <span className="hidden sm:block text-sm font-semibold text-gray-700 dark:text-gray-200">{pageTitle}</span>
                 )}
             </div>
@@ -103,6 +113,23 @@ export function Topbar() {
                                 onClick={() => setProductionTab(tab.id)}
                                 className={`relative px-4 py-1.5 text-sm font-medium rounded-full transition-all ${
                                     productionTab === tab.id
+                                        ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
+                                        : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                }`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </nav>
+                ) : isCropProduction ? (
+                    <nav className="flex items-center gap-0.5">
+                        {CROP_PRODUCTION_TABS.map((tab) => (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => setCropProductionTab(tab.id)}
+                                className={`relative px-4 py-1.5 text-sm font-medium rounded-full transition-all ${
+                                    cropProductionTab === tab.id
                                         ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
                                         : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                                 }`}
