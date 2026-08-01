@@ -1,3 +1,5 @@
+import { toLocalDateTimeString } from "@/lib/utils";
+
 export type TimeScale = "week" | "month" | "year";
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -20,5 +22,5 @@ export function bucketLabel(date: Date, scale: TimeScale): string {
 }
 
 function toIso(date: Date): string {
-    return date.toISOString().slice(0, 19);
+    return toLocalDateTimeString(date);
 }

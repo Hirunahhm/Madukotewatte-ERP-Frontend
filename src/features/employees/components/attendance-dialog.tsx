@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, AlertCircle } from "lucide-react";
 import { ABSENCE_REASONS, type NoWorkReason } from "@/features/employees/types/attendance.types";
 import { useRecordAttendance } from "@/features/employees/hooks/use-attendance-mutations";
+import { toLocalDateInputValue } from "@/lib/utils";
 
 interface AttendanceDialogProps {
     open: boolean;
@@ -16,7 +17,7 @@ interface AttendanceDialogProps {
 }
 
 export function AttendanceDialog({ open, onOpenChange, employee }: AttendanceDialogProps) {
-    const today = new Date().toISOString().split("T")[0];
+    const today = toLocalDateInputValue();
     const [date, setDate] = useState(today);
     const [treesTapped, setTreesTapped] = useState("");
     const [isAbsent, setIsAbsent] = useState(false);

@@ -10,11 +10,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEmployees } from "@/features/employees/hooks/use-employees";
 import { useCreateLatexRecord, useLatexRecords, useLoads } from "@/features/production/hooks/use-production";
+import { toLocalDateInputValue } from "@/lib/utils";
 
 const PAGE_SIZE = 10;
 
 export function DirectDataEntry() {
-    const today = new Date().toISOString().split("T")[0];
+    const today = toLocalDateInputValue();
 
     const [loadId, setLoadId] = useState("");
     const [employeeId, setEmployeeId] = useState("");

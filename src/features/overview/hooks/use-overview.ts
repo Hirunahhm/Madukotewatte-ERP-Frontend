@@ -8,9 +8,10 @@ import { getEmployeesSummary } from "@/features/employees/services/employee-serv
 import { getRangeForScale } from "@/features/employees/utils/date-buckets";
 import { useSalesSummary, useExpenseSummary } from "@/features/financials/hooks/use-financials";
 import { useAssetBalances, useLoanBalances } from "@/features/assets/hooks/use-assets";
+import { toLocalDateInputValue, toLocalDateTimeString } from "@/lib/utils";
 
 function toIso(date: Date): string {
-    return date.toISOString().slice(0, 19);
+    return toLocalDateTimeString(date);
 }
 
 function todayRange(): { from: string; to: string } {
@@ -33,7 +34,7 @@ function monthRange(monthsAgo: number): { from: string; to: string } {
     const now = new Date();
     const first = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
     const last = monthsAgo === 0 ? now : new Date(now.getFullYear(), now.getMonth() - monthsAgo + 1, 0);
-    return { from: first.toISOString().slice(0, 10), to: last.toISOString().slice(0, 10) };
+    return { from: toLocalDateInputValue(first), to: toLocalDateInputValue(last) };
 }
 
 // ─── KPI Cards ────────────────────────────────────────────────────────────────
@@ -134,7 +135,7 @@ export function useWorkforceEngagement() {
         for (let i = 0; i < 28; i++) {
             const d = new Date();
             d.setDate(d.getDate() - (27 - i));
-            byDate.set(d.toISOString().slice(0, 10), { present: new Set(), rained: false });
+            byDate.set(toLocalDateInputValue(d), { present: new Set(), rained: false });
         }
 
         (query.data ?? []).forEach((record) => {

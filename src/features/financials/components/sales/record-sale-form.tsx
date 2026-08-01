@@ -21,6 +21,7 @@ import {
     useSettlePayment,
 } from "@/features/financials/hooks/use-financials";
 import { SALE_PAYMENT_TYPES, type SaleCategory } from "@/features/financials/types/financials.types";
+import { toLocalDateInputValue } from "@/lib/utils";
 
 const CATEGORIES: { id: SaleCategory; label: string }[] = [
     { id: "latex", label: "Latex" },
@@ -38,7 +39,7 @@ const CATEGORY_LOAD_TYPE: Record<SaleCategory, string> = {
     "banana": "banana",
 };
 
-const today = () => new Date().toISOString().split("T")[0];
+const today = () => toLocalDateInputValue();
 
 export function RecordSaleForm() {
     const [isOpen, setIsOpen] = useState(false);

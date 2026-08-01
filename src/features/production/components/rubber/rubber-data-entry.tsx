@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateRubberSolidRecord, useLoads } from "@/features/production/hooks/use-production";
+import { toLocalDateInputValue } from "@/lib/utils";
 
 export function RubberDataEntry() {
     const [loadId, setLoadId] = useState("");
     const [massKg, setMassKg] = useState("");
-    const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
+    const [date, setDate] = useState(() => toLocalDateInputValue());
 
     const { data: loadsData } = useLoads({ loadType: "scrap", size: 50 });
     const loads = loadsData?.content ?? [];

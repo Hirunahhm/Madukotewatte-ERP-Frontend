@@ -18,6 +18,7 @@ import { useEmployees } from "@/features/employees/hooks/use-employees";
 import { getAttendanceByRange } from "@/features/employees/services/attendance-service";
 import { useAuthStore } from "@/stores/auth-store";
 import { ABSENCE_REASONS } from "@/features/employees/types/attendance.types";
+import { toLocalDateTimeString } from "@/lib/utils";
 
 const PAGE_SIZE = 8;
 
@@ -26,7 +27,7 @@ function todayRange() {
     start.setHours(0, 0, 0, 0);
     const end = new Date();
     end.setHours(23, 59, 59, 0);
-    return { from: start.toISOString().slice(0, 19), to: end.toISOString().slice(0, 19) };
+    return { from: toLocalDateTimeString(start), to: toLocalDateTimeString(end) };
 }
 
 function reasonLabel(noWork: string) {

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateAmmoniaRecord } from "@/features/production/hooks/use-production";
+import { toLocalDateInputValue } from "@/lib/utils";
 
 const AMMONIA_TYPES = [
     { value: "refill", label: "Refill" },
@@ -16,7 +17,7 @@ const AMMONIA_TYPES = [
 ];
 
 export function AmmoniaDataEntry() {
-    const today = new Date().toISOString().split("T")[0];
+    const today = toLocalDateInputValue();
     const [date, setDate] = useState(today);
     const [type, setType] = useState("refill");
     const [previousAmount, setPreviousAmount] = useState("");

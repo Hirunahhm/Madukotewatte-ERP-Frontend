@@ -7,6 +7,7 @@ import {
     LayoutDashboard,
     Users,
     Droplets,
+    Sprout,
     TrendingUp,
     Briefcase,
     LogOut,
@@ -26,6 +27,7 @@ const navSections: { label: string; items: { name: string; href: string; icon: L
             { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
             { name: "Employees", href: "/employees", icon: Users },
             { name: "Latex Production", href: "/latex-production", icon: Droplets },
+            { name: "Crop Production", href: "/crop-production", icon: Sprout },
         ],
     },
     {

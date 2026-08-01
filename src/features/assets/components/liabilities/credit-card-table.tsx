@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { useCreditCardStatement, useCreditCardLimits, useUpdateCreditCardLimit } from "@/features/assets/hooks/use-assets";
 import { CREDIT_CARD_TYPES } from "@/features/assets/types/assets.types";
+import { toLocalDateInputValue } from "@/lib/utils";
 
 function formatLkr(value: number): string {
     return `LKR ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
@@ -31,11 +32,11 @@ function formatLkr(value: number): string {
 
 function monthStart(): string {
     const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+    return toLocalDateInputValue(new Date(now.getFullYear(), now.getMonth(), 1));
 }
 
 function today(): string {
-    return new Date().toISOString().slice(0, 10);
+    return toLocalDateInputValue();
 }
 
 function CreditCardLimitsRow() {

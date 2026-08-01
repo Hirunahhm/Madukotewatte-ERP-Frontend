@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Trash2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDeleteLoad } from "@/features/production/hooks/use-production";
+import { toLocalDateInputValue } from "@/lib/utils";
 
 export interface LoadData {
     id: string;
@@ -64,7 +65,7 @@ export function LoadDialog({ open, onOpenChange, initialData, defaultLoadType }:
             setLoadId(initialData.id);
             setStatus(initialData.status);
         } else {
-            setStartDate(new Date().toISOString().split("T")[0]);
+            setStartDate(toLocalDateInputValue());
             setLoadType(defaultLoadType ?? "");
             setLoadId("");
             setStatus("");

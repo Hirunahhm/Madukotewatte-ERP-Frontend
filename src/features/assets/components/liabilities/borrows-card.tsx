@@ -2,6 +2,7 @@
 
 import { Card, CardTitle } from "@/components/ui/card";
 import { useLoanBalances, useLoanTransactions } from "@/features/assets/hooks/use-assets";
+import { toLocalDateInputValue } from "@/lib/utils";
 
 function formatLkr(value: number): string {
     return `LKR ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
@@ -9,7 +10,7 @@ function formatLkr(value: number): string {
 
 function monthStart(): string {
     const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+    return toLocalDateInputValue(new Date(now.getFullYear(), now.getMonth(), 1));
 }
 
 export function BorrowsCard() {
