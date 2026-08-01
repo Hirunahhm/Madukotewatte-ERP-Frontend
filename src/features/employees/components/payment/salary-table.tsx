@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import {
@@ -12,11 +12,13 @@ import {
 import { Info, Loader2 } from "lucide-react";
 import { useSalaryTable } from "@/features/employees/hooks/use-salary-table";
 import { getEmployeesSummary } from "@/features/employees/services/employee-service";
+import { EmployeePaymentDialog } from "./employee-payment-dialog";
 
 export function SalaryTable() {
     const now = new Date();
     const { data: payroll, isLoading } = useSalaryTable(now.getMonth() + 1, now.getFullYear());
     const { data: employees } = useQuery({ queryKey: ["employees", "summary"], queryFn: getEmployeesSummary });
+    const [detailEmployeeId, setDetailEmployeeId] = useState<string | null>(null);
 
     const positionByEmployeeId = useMemo(() => {
         const map = new Map<string, string>();
@@ -25,6 +27,7 @@ export function SalaryTable() {
     }, [employees]);
 
     return (
+        <>
         <TooltipProvider>
             <Card className="shadow-sm gap-0 overflow-hidden p-0">
                 <div className="p-4 border-b border-gray-100 dark:border-gray-700/40">
@@ -53,13 +56,16 @@ export function SalaryTable() {
                         {!isLoading && payroll?.entries.map((emp) => (
                             <TableRow key={emp.employeeId} className="border-gray-50 dark:border-gray-700/30 hover:bg-gray-50/50 dark:hover:bg-gray-800/50">
                                 <TableCell className="px-6 py-3">
-                                    <div className="flex items-center gap-3">
+                                    <button
+                                        className="flex items-center gap-3 text-left group"
+                                        onClick={() => setDetailEmployeeId(emp.employeeId)}
+                                    >
                                         <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
                                         <div>
-                                            <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{emp.employeeName}</p>
+                                            <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm group-hover:text-brand-600 group-hover:underline underline-offset-2 transition-colors">{emp.employeeName}</p>
                                             <p className="text-xs text-gray-400">{emp.employeeId.slice(0, 8)}</p>
                                         </div>
-                                    </div>
+                                    </button>
                                 </TableCell>
                                 <TableCell className="px-6 py-3 text-gray-600 dark:text-gray-300 text-sm">
                                     {positionByEmployeeId.get(emp.employeeId) ?? "-"}
@@ -94,5 +100,11 @@ export function SalaryTable() {
                 </Table>
             </Card>
         </TooltipProvider>
+        <EmployeePaymentDialog
+            open={!!detailEmployeeId}
+            onOpenChange={(o) => { if (!o) setDetailEmployeeId(null); }}
+            employeeId={detailEmployeeId}
+        />
+        </>
     );
 }

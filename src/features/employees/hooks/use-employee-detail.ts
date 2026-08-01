@@ -24,16 +24,19 @@ export interface TransactionFilters {
     type?: string;
 }
 
-export function useEmployeeDetail(
-    employeeId: string | null,
-    attendanceFilters: AttendanceFilters,
-    transactionFilters: TransactionFilters,
-) {
-    const employee = useQuery({
+function useEmployeeQuery(employeeId: string | null) {
+    return useQuery({
         queryKey: ["employee", employeeId],
         queryFn: () => getEmployee(employeeId as string),
         enabled: !!employeeId,
     });
+}
+
+export function useEmployeeAttendanceDetail(
+    employeeId: string | null,
+    attendanceFilters: AttendanceFilters,
+) {
+    const employee = useEmployeeQuery(employeeId);
 
     const attendance = useQuery({
         queryKey: ["employee", employeeId, "attendance", attendanceFilters],
@@ -46,6 +49,15 @@ export function useEmployeeDetail(
         queryFn: () => getEmployeeAttendanceStats(employeeId as string, { from: attendanceFilters.from, to: attendanceFilters.to }),
         enabled: !!employeeId,
     });
+
+    return { employee, attendance, attendanceStats };
+}
+
+export function useEmployeePaymentDetail(
+    employeeId: string | null,
+    transactionFilters: TransactionFilters,
+) {
+    const employee = useEmployeeQuery(employeeId);
 
     const transactions = useQuery({
         queryKey: ["employee", employeeId, "transactions", transactionFilters],
@@ -65,5 +77,5 @@ export function useEmployeeDetail(
         enabled: !!employeeId,
     });
 
-    return { employee, attendance, attendanceStats, transactions, transactionStats, loans };
+    return { employee, transactions, transactionStats, loans };
 }

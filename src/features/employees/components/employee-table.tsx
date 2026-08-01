@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { AttendanceDialog } from "./attendance-dialog";
 import { AddEmployeeDialog } from "./add-employee-dialog";
-import { EmployeeDetailDialog } from "./employee-detail-dialog";
+import { EmployeeProfileDialog } from "./employee-profile-dialog";
 import { useEmployees } from "@/features/employees/hooks/use-employees";
 import { getAttendanceByRange } from "@/features/employees/services/attendance-service";
 import { useAuthStore } from "@/stores/auth-store";
@@ -210,7 +210,7 @@ export function EmployeeTable() {
                     onOpenChange={setAddDialogOpen}
                 />
             )}
-            <EmployeeDetailDialog
+            <EmployeeProfileDialog
                 open={!!detailEmployeeId}
                 onOpenChange={(o) => { if (!o) setDetailEmployeeId(null); }}
                 employeeId={detailEmployeeId}
