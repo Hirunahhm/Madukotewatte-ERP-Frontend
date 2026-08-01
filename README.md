@@ -1,37 +1,83 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Madukotewatta Estates — Dashboard Frontend
+
+Industrial-grade estate management ERP frontend for a rubber plantation in Sri Lanka. Built with **Next.js 15 (App Router)**, **React 19**, TypeScript, Tailwind CSS, Zustand, TanStack React Query, React Hook Form + Zod, and Recharts.
+
+The app never talks to the Java backend directly — every request goes through a Next.js API route acting as a Backend-for-Frontend (BFF), so the auth token stays server-side in an httpOnly cookie.
+
+## Tech Stack
+
+- **Framework:** Next.js 15 (App Router), React 19, TypeScript (strict)
+- **Styling:** Tailwind CSS v3.4 + [shadcn/ui](https://ui.shadcn.com/) (`@base-ui/react` primitives)
+- **Client state:** Zustand
+- **Server state:** TanStack React Query
+- **Forms:** React Hook Form + Zod
+- **Charts:** Recharts
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev       # start the dev server at http://localhost:3000
+npm run build     # production build
+npm run start     # start the production server
+npm run lint       # ESLint check
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create `.env.local` (never committed) with:
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+```
+# Server-only — no NEXT_PUBLIC_ prefix, so it's never exposed to the browser
+AUTH_API_URL=http://localhost:<backend-port>/api/v1
+```
 
-## Learn More
+Point `AUTH_API_URL` at wherever the [Java backend](../estate-erp-service-java) is running locally.
 
-To learn more about Next.js, take a look at the following resources:
+## Architecture
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Backend-for-Frontend (BFF)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+```
+Client → /api/<service>/<action>  (Next.js route)
+              ↓
+         AUTH_API_URL (Java backend, server-side only)
+```
 
-## Deploy on Vercel
+The JWT issued by the backend is set as an httpOnly cookie by the Next.js route and is never visible to client-side JS.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Route protection
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
-  
+`src/lib/proxy.ts` provides server-side auth guards (`requireAuth()`, `requireGuest()`) called from Server Component layouts — not Next.js `middleware.ts`. Because these layouts read cookies, all dashboard routes render dynamically (per-request).
+
+### Feature-Sliced Design
+
+Each domain lives under `src/features/<domain>/` with `components/`, `hooks/`, `services/`, `types/`, and `utils/` subfolders as needed.
+
+| Feature | Route | Description |
+|---|---|---|
+| `auth` | `/login` | Login/session handling |
+| `overview` | `/dashboard` | Financial health, workforce engagement, weather summary |
+| `employees` | `/employees` | Attendance, payroll, loans, transactions |
+| `production` | `/latex-production` | Latex, ammonia, and rubber solid collection |
+| `production` | `/crop-production` | Banana, coconut, and manioc harvest tracking |
+| `financials` | `/financials` | Sales, expenses, financial stats |
+| `assets` | `/assets` | Cash & debt, fixed asset register, reports |
+| `weather` | `/weather` | Climate & forecasting |
+
+### Page pattern
+
+Every dashboard route is a thin Server Component that renders a `"use client"` page component reading the relevant Zustand tab state, e.g.:
+
+```tsx
+// app/(dashboard)/employees/page.tsx
+export default function EmployeesPage() {
+    return <EmployeesPageClient />;
+}
+```
+
+## Contributing
+
+See [`CLAUDE.md`](./CLAUDE.md) for full architectural conventions, naming rules, and coding standards.
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/): `feat(scope):`, `fix(scope):`, `refactor(scope):`, `docs(scope):`.
