@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Pencil, Trash2, X } from "lucide-react";
+import { Loader2, Pencil, Trash2, Undo2, X } from "lucide-react";
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -16,79 +16,103 @@ import {
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { useExpenses, useUpdateExpense, useDeleteExpense } from "@/features/financials/hooks/use-financials";
+import {
+    useExpenses, useUpdateExpense, useDeleteExpense, useUndoExpensePayment, useExpenseCategories,
+} from "@/features/financials/hooks/use-financials";
+import { useAccounts } from "@/features/accounts/hooks/use-accounts";
 import { MarkExpensePaymentDialog } from "./mark-expense-payment-dialog";
 import type { Expense } from "@/features/financials/types/financials.types";
-
-const EXPENSE_TYPES = ["Fertilizer", "Labour", "Maintenance", "Chemicals", "Utilities", "Logistics", "Other"];
 
 function formatLkr(value: number): string {
     return `LKR ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 }
 
-function EditExpenseDialog({ expense, onClose }: { expense: Expense | null; onClose: () => void }) {
-    const [type, setType] = useState("");
-    const [amount, setAmount] = useState("");
-    const [date, setDate] = useState("");
+function EditExpenseForm({ expense, onClose }: { expense: Expense; onClose: () => void }) {
+    const [type, setType] = useState(expense.type);
+    const [amount, setAmount] = useState(String(expense.amount));
+    const [date, setDate] = useState(expense.timestamp.split("T")[0]);
+    const [payee, setPayee] = useState(expense.payee ?? "");
+    const [description, setDescription] = useState(expense.description ?? "");
+    const [dueDate, setDueDate] = useState(expense.dueDate ?? "");
+    const [error, setError] = useState<string | null>(null);
+    const { data: categories } = useExpenseCategories();
     const updateMutation = useUpdateExpense();
 
-    useEffect(() => {
-        if (expense) {
-            setType(expense.type);
-            setAmount(String(expense.amount));
-            setDate(expense.timestamp.split("T")[0]);
-        }
-    }, [expense]);
-
-    function handleClose() {
-        setType("");
-        setAmount("");
-        setDate("");
-        onClose();
-    }
-
     async function handleSave() {
-        if (!expense || !type || !amount || !date) return;
-        await updateMutation.mutateAsync({
-            id: expense.expenseId,
-            payload: { type, amount: parseFloat(amount), timestamp: `${date}T00:00:00` },
-        });
-        handleClose();
+        if (!type || !amount || !date) return;
+        setError(null);
+        try {
+            await updateMutation.mutateAsync({
+                id: expense.expenseId,
+                payload: {
+                    type,
+                    amount: parseFloat(amount),
+                    timestamp: `${date}T00:00:00`,
+                    payee: payee.trim() || undefined,
+                    description: description.trim() || undefined,
+                    dueDate: dueDate || undefined,
+                },
+            });
+            onClose();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to save the expense.");
+        }
     }
 
     return (
-        <Dialog open={expense !== null} onOpenChange={(open) => { if (!open) handleClose(); }}>
-            <DialogContent className="sm:max-w-sm">
+        <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+                <Label>Category</Label>
+                <Select value={type} onValueChange={(v) => { if (v) setType(v); }}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        {(categories ?? [type]).map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                    <Label>Amount (LKR)</Label>
+                    <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                    <Label>Date</Label>
+                    <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                </div>
+            </div>
+            <div className="space-y-1.5">
+                <Label>Payee</Label>
+                <Input value={payee} onChange={(e) => setPayee(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+                <Label>Description</Label>
+                <Input value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+                <Label>Payment due date</Label>
+                <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            </div>
+            {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
+            <div className="flex gap-2 pt-2">
+                <Button variant="outline" className="flex-1" onClick={onClose}>
+                    <X className="w-3.5 h-3.5 mr-1.5" /> Cancel
+                </Button>
+                <Button className="flex-1 bg-brand-500 hover:bg-brand-600 text-white" onClick={handleSave} disabled={updateMutation.isPending}>
+                    {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                </Button>
+            </div>
+        </div>
+    );
+}
+
+function EditExpenseDialog({ expense, onClose }: { expense: Expense | null; onClose: () => void }) {
+    return (
+        <Dialog open={expense !== null} onOpenChange={(open) => { if (!open) onClose(); }}>
+            <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Edit Expense</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-3 py-2">
-                    <div className="space-y-1.5">
-                        <Label>Expense Type</Label>
-                        <Select value={type} onValueChange={(v) => { if (v) setType(v); }}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                {EXPENSE_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label>Amount (LKR)</Label>
-                        <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label>Date</Label>
-                        <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-                    </div>
-                    <div className="flex gap-2 pt-2">
-                        <Button variant="outline" className="flex-1" onClick={handleClose}>
-                            <X className="w-3.5 h-3.5 mr-1.5" /> Cancel
-                        </Button>
-                        <Button className="flex-1 bg-brand-500 hover:bg-brand-600 text-white" onClick={handleSave} disabled={updateMutation.isPending}>
-                            {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
-                        </Button>
-                    </div>
-                </div>
+                {expense && <EditExpenseForm key={expense.expenseId} expense={expense} onClose={onClose} />}
             </DialogContent>
         </Dialog>
     );
@@ -96,15 +120,22 @@ function EditExpenseDialog({ expense, onClose }: { expense: Expense | null; onCl
 
 export function ExpensesTable() {
     const [type, setType] = useState("");
+    const [payee, setPayee] = useState("");
     const [isPaid, setIsPaid] = useState<string>("");
     const [from, setFrom] = useState("");
     const [to, setTo] = useState("");
     const [page, setPage] = useState(0);
     const [editing, setEditing] = useState<Expense | null>(null);
     const [markingPaid, setMarkingPaid] = useState<Expense | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
+
+    const { data: categories } = useExpenseCategories();
+    const { data: accounts } = useAccounts();
+    const accountName = (code: string | null) => accounts?.find((a) => a.code === code)?.name ?? code ?? "";
 
     const { data, isLoading } = useExpenses({
         type: type || undefined,
+        payee: payee.trim() || undefined,
         isPaid: isPaid === "" ? undefined : isPaid === "true",
         from: from ? `${from}T00:00:00` : undefined,
         to: to ? `${to}T23:59:59` : undefined,
@@ -115,10 +146,26 @@ export function ExpensesTable() {
     const totalPages = data?.totalPages ?? 1;
 
     const deleteMutation = useDeleteExpense();
+    const undoMutation = useUndoExpensePayment();
 
     async function handleDelete(row: Expense) {
-        if (!window.confirm("Delete this expense? This cannot be undone.")) return;
-        await deleteMutation.mutateAsync(row.expenseId);
+        if (!window.confirm("Delete this expense? Any payment already made will be reversed in the ledger.")) return;
+        setActionError(null);
+        try {
+            await deleteMutation.mutateAsync(row.expenseId);
+        } catch (err) {
+            setActionError(err instanceof Error ? err.message : "Failed to delete the expense.");
+        }
+    }
+
+    async function handleUndo(row: Expense) {
+        if (!window.confirm("Undo this payment? The money returns to the account and the expense becomes payable again.")) return;
+        setActionError(null);
+        try {
+            await undoMutation.mutateAsync(row.expenseId);
+        } catch (err) {
+            setActionError(err instanceof Error ? err.message : "Failed to undo the payment.");
+        }
     }
 
     return (
@@ -127,12 +174,13 @@ export function ExpensesTable() {
                 <CardTitle className="text-base font-semibold">Expense Ledger</CardTitle>
                 <div className="flex items-center gap-2 flex-wrap">
                     <Select value={type || "all"} onValueChange={(v) => { if (v !== null) setType(v === "all" ? "" : v); setPage(0); }}>
-                        <SelectTrigger className="h-8 text-xs w-32"><SelectValue placeholder="Type" /></SelectTrigger>
+                        <SelectTrigger className="h-8 text-xs w-40"><SelectValue placeholder="Category" /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All Types</SelectItem>
-                            {EXPENSE_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                            <SelectItem value="all">All Categories</SelectItem>
+                            {(categories ?? []).map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                         </SelectContent>
                     </Select>
+                    <Input placeholder="Payee" value={payee} onChange={(e) => { setPayee(e.target.value); setPage(0); }} className="h-8 text-xs w-32" />
                     <Select value={isPaid || "all"} onValueChange={(v) => { if (v !== null) setIsPaid(v === "all" ? "" : v); setPage(0); }}>
                         <SelectTrigger className="h-8 text-xs w-32"><SelectValue placeholder="Status" /></SelectTrigger>
                         <SelectContent>
@@ -145,13 +193,16 @@ export function ExpensesTable() {
                     <Input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} className="h-8 text-xs w-36" />
                 </div>
             </div>
+            {actionError && <p role="alert" className="text-sm text-red-500 mb-3">{actionError}</p>}
             <div className="overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Date</TableHead>
-                            <TableHead>Type</TableHead>
+                            <TableHead>Category</TableHead>
+                            <TableHead>Payee</TableHead>
                             <TableHead>Amount</TableHead>
+                            <TableHead>Due</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -159,44 +210,70 @@ export function ExpensesTable() {
                     <TableBody>
                         {isLoading ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8">
+                                <TableCell colSpan={7} className="text-center py-8">
                                     <Loader2 className="w-5 h-5 animate-spin inline text-brand-500" />
                                 </TableCell>
                             </TableRow>
                         ) : rows.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 text-sm text-gray-400">No expenses found.</TableCell>
+                                <TableCell colSpan={7} className="text-center py-8 text-sm text-gray-400">No expenses found.</TableCell>
                             </TableRow>
                         ) : rows.map((row) => (
                             <TableRow key={row.expenseId}>
                                 <TableCell className="text-sm text-gray-600 dark:text-gray-400">{new Date(row.timestamp).toLocaleDateString()}</TableCell>
-                                <TableCell className="text-sm font-medium">{row.type}</TableCell>
+                                <TableCell className="text-sm font-medium">
+                                    {row.type}
+                                    {row.description && <span className="block text-[11px] font-normal text-gray-500">{row.description}</span>}
+                                </TableCell>
+                                <TableCell className="text-sm text-gray-600 dark:text-gray-400">{row.payee ?? "-"}</TableCell>
                                 <TableCell className="text-sm font-medium">{formatLkr(row.amount)}</TableCell>
+                                <TableCell className="text-sm text-gray-600 dark:text-gray-400">{row.dueDate ?? "-"}</TableCell>
                                 <TableCell>
-                                    <Badge
-                                        variant="outline"
-                                        className={row.isPaid
-                                            ? "text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-900/20 dark:border-emerald-800"
-                                            : "text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-900/20 dark:border-amber-800"
-                                        }
-                                    >
-                                        {row.isPaid ? "Paid" : "Pending"}
-                                    </Badge>
+                                    <div className="flex flex-col gap-1 items-start">
+                                        <Badge
+                                            variant="outline"
+                                            className={row.isPaid
+                                                ? "text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-900/20 dark:border-emerald-800"
+                                                : "text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-900/20 dark:border-amber-800"
+                                            }
+                                        >
+                                            {row.isPaid ? "Paid" : "Pending"}
+                                        </Badge>
+                                        {!row.isPaid && row.overdue && (
+                                            <Badge variant="outline" className="text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-900/20 dark:border-red-800">Overdue</Badge>
+                                        )}
+                                        {row.systemManaged && (
+                                            <Badge variant="outline" className="text-gray-600 dark:text-gray-300">System ({row.referenceType})</Badge>
+                                        )}
+                                        {row.isPaid && (
+                                            <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                                                {row.paymentDate ?? ""}{row.accountCode ? ` · ${accountName(row.accountCode)}` : ""}
+                                            </span>
+                                        )}
+                                    </div>
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <div className="flex items-center justify-end gap-1">
-                                        {!row.isPaid && (
-                                            <Button variant="outline" size="sm" className="mr-1" onClick={() => setMarkingPaid(row)}>
-                                                Mark Payment
-                                            </Button>
-                                        )}
-                                        <button onClick={() => setEditing(row)} className="w-7 h-7 rounded flex items-center justify-center text-gray-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20">
-                                            <Pencil className="w-3.5 h-3.5" />
-                                        </button>
-                                        <button onClick={() => handleDelete(row)} className="w-7 h-7 rounded flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                    </div>
+                                    {row.systemManaged ? (
+                                        <span className="text-[11px] text-gray-400">Managed by {row.referenceType?.toLowerCase()}</span>
+                                    ) : (
+                                        <div className="flex items-center justify-end gap-1">
+                                            {row.isPaid ? (
+                                                <Button variant="outline" size="sm" className="mr-1" onClick={() => handleUndo(row)} disabled={undoMutation.isPending}>
+                                                    <Undo2 className="w-3.5 h-3.5 mr-1" /> Undo payment
+                                                </Button>
+                                            ) : (
+                                                <Button variant="outline" size="sm" className="mr-1" onClick={() => setMarkingPaid(row)}>
+                                                    Pay
+                                                </Button>
+                                            )}
+                                            <button onClick={() => setEditing(row)} aria-label="Edit expense" className="w-7 h-7 rounded flex items-center justify-center text-gray-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20">
+                                                <Pencil className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button onClick={() => handleDelete(row)} aria-label="Delete expense" className="w-7 h-7 rounded flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    )}
                                 </TableCell>
                             </TableRow>
                         ))}

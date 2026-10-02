@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, AlertCircle } from "lucide-react";
 import { AccountSelect } from "@/features/accounts/components/account-select";
-import { useMarkSaleLatexPaid, useMarkSaleCropPaid } from "@/features/financials/hooks/use-financials";
+import { useMarkSalePaid } from "@/features/financials/hooks/use-financials";
+import { saleCategoryLabel } from "@/features/financials/utils/sale-labels";
 import type { SalesLedgerRow } from "@/features/financials/types/financials.types";
 import { toLocalDateInputValue } from "@/lib/utils";
 
@@ -28,20 +29,14 @@ export function MarkPaymentDialog({ open, onOpenChange, row }: MarkPaymentDialog
     const [paymentDate, setPaymentDate] = useState(toLocalDateInputValue());
     const [error, setError] = useState<string | null>(null);
 
-    const markLatexPaid = useMarkSaleLatexPaid();
-    const markCropPaid = useMarkSaleCropPaid();
-
-    const isSubmitting = markLatexPaid.isPending || markCropPaid.isPending;
+    const markPaid = useMarkSalePaid();
+    const isSubmitting = markPaid.isPending;
 
     async function handleConfirm() {
         if (!row || !accountCode) return;
         setError(null);
         try {
-            if (row.category === "latex") {
-                await markLatexPaid.mutateAsync({ id: row.saleId, payload: { accountCode, paymentDate } });
-            } else {
-                await markCropPaid.mutateAsync({ category: row.category, id: row.saleId, payload: { accountCode, paymentDate } });
-            }
+            await markPaid.mutateAsync({ type: row.saleType, id: row.saleId, payload: { accountCode, paymentDate } });
             setAccountCode("");
             onOpenChange(false);
         } catch (err) {
@@ -58,7 +53,8 @@ export function MarkPaymentDialog({ open, onOpenChange, row }: MarkPaymentDialog
                 <div className="space-y-4 py-2">
                     {row && (
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Load <span className="font-mono">{row.loadId.slice(0, 8).toUpperCase()}</span> - LKR {row.amount.toLocaleString()}
+                            {saleCategoryLabel(row.category)} sale of {row.saleDate}
+                            {row.buyerName ? ` to ${row.buyerName}` : ""} - LKR {row.amount.toLocaleString()}
                         </p>
                     )}
                     {error && (

@@ -7,11 +7,14 @@ import { RevenueDistribution } from "./revenue-distribution";
 import { RecordSaleForm } from "./record-sale-form";
 import { SalesTable } from "./sales-table";
 import { MarkPaymentDialog } from "./mark-payment-dialog";
+import { EditSaleDialog } from "./edit-sale-dialog";
+import { ReceivablesCard } from "./receivables-card";
 import type { SalesLedgerRow } from "@/features/financials/types/financials.types";
 
 export function SalesScreen() {
     const [markPaymentOpen, setMarkPaymentOpen] = useState(false);
     const [selectedSale, setSelectedSale] = useState<SalesLedgerRow | null>(null);
+    const [editingSale, setEditingSale] = useState<SalesLedgerRow | null>(null);
 
     function handleMarkPayment(row: SalesLedgerRow) {
         setSelectedSale(row);
@@ -28,7 +31,8 @@ export function SalesScreen() {
                 <RevenueDistribution />
             </div>
             <RecordSaleForm />
-            <SalesTable onMarkPayment={handleMarkPayment} />
+            <SalesTable onMarkPayment={handleMarkPayment} onEdit={setEditingSale} />
+            <ReceivablesCard />
             <MarkPaymentDialog
                 open={markPaymentOpen}
                 onOpenChange={(open) => {
@@ -37,6 +41,7 @@ export function SalesScreen() {
                 }}
                 row={selectedSale}
             />
+            <EditSaleDialog row={editingSale} onClose={() => setEditingSale(null)} />
         </div>
     );
 }

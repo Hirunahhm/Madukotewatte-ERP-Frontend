@@ -16,20 +16,21 @@ import {
 import { useLoads } from "@/features/production/hooks/use-production";
 import { LoadDialog } from "@/features/production/components/load-dialog";
 import {
-    useCreateSaleLatex, useMarkSaleLatexPaid,
-    useCreateSaleCrop,
+    useCreateSaleLatex, useMarkSalePaid,
+    useCreateSaleCrop, useCreateSaleGeneral, useSaleGeneralOptions,
 } from "@/features/financials/hooks/use-financials";
-import type { SaleCategory } from "@/features/financials/types/financials.types";
+import type { SaleCategory, SaleType } from "@/features/financials/types/financials.types";
 import { AccountSelect } from "@/features/accounts/components/account-select";
 import { metrolacToMassFactor } from "@/features/financials/utils/latex-conversion";
 import { toLocalDateInputValue } from "@/lib/utils";
 
-const CATEGORIES: { id: SaleCategory; label: string }[] = [
+const CATEGORIES: { id: SaleType; label: string }[] = [
     { id: "latex", label: "Latex" },
     { id: "rubber-solid", label: "Rubber Solid" },
     { id: "manioc", label: "Manioc" },
     { id: "coconut", label: "Coconut" },
     { id: "banana", label: "Banana" },
+    { id: "general", label: "Other products" },
 ];
 
 const CATEGORY_LOAD_TYPE: Record<SaleCategory, string> = {
@@ -44,7 +45,7 @@ const today = () => toLocalDateInputValue();
 
 export function RecordSaleForm() {
     const [isOpen, setIsOpen] = useState(false);
-    const [category, setCategory] = useState<SaleCategory>("latex");
+    const [category, setCategory] = useState<SaleType>("latex");
     const [loadDialogOpen, setLoadDialogOpen] = useState(false);
 
     const [loadId, setLoadId] = useState("");
@@ -54,17 +55,29 @@ export function RecordSaleForm() {
     const [mass, setMass] = useState("");
     const [metrolacReading, setMetrolacReading] = useState("");
     const [unitPrice, setUnitPrice] = useState("");
+    const [buyerName, setBuyerName] = useState("");
+    const [dueDate, setDueDate] = useState("");
+
+    // general (other products)
+    const [product, setProduct] = useState("Cocoa");
+    const [description, setDescription] = useState("");
+    const [quantity, setQuantity] = useState("");
+    const [unit, setUnit] = useState("kg");
 
     const [isPaymentReceived, setIsPaymentReceived] = useState(false);
     const [accountCode, setAccountCode] = useState("");
     const [error, setError] = useState<string | null>(null);
 
-    const { data: loadsData } = useLoads({ loadType: CATEGORY_LOAD_TYPE[category], size: 50 });
-    const loads = loadsData?.content ?? [];
+    const isGeneral = category === "general";
+    const loadType = isGeneral ? undefined : CATEGORY_LOAD_TYPE[category];
+    const { data: loadsData } = useLoads({ loadType: loadType ?? "", size: 50 });
+    const loads = isGeneral ? [] : (loadsData?.content ?? []);
+    const { data: generalOptions } = useSaleGeneralOptions();
 
     const createLatex = useCreateSaleLatex();
-    const markLatexPaid = useMarkSaleLatexPaid();
+    const markPaid = useMarkSalePaid();
     const createCrop = useCreateSaleCrop();
+    const createGeneral = useCreateSaleGeneral();
 
     useEffect(() => {
         if (category === "latex" && litres && metrolacReading) {
@@ -74,7 +87,8 @@ export function RecordSaleForm() {
     }, [litres, metrolacReading, category]);
 
     const needsType = category === "manioc" || category === "coconut" || category === "banana";
-    const isSubmitting = createLatex.isPending || createCrop.isPending || markLatexPaid.isPending;
+    const isSubmitting = createLatex.isPending || createCrop.isPending || markPaid.isPending || createGeneral.isPending;
+    const generalTotal = quantity && unitPrice ? parseFloat(quantity) * parseFloat(unitPrice) : 0;
 
     function resetFields() {
         setLoadId("");
@@ -83,34 +97,52 @@ export function RecordSaleForm() {
         setMass("");
         setMetrolacReading("");
         setUnitPrice("");
+        setBuyerName("");
+        setDueDate("");
+        setDescription("");
+        setQuantity("");
         setIsPaymentReceived(false);
         setAccountCode("");
     }
 
     async function handleSubmit() {
-        if (!loadId || !unitPrice) return;
+        if (!unitPrice) return;
         if (isPaymentReceived && !accountCode) return;
         setError(null);
+        const buyer = buyerName.trim() || undefined;
+        const due = dueDate || undefined;
 
         try {
-            if (category === "latex") {
-                if (!litres || !mass) return;
+            if (category === "general") {
+                if (!quantity || !saleDate) return;
+                await createGeneral.mutateAsync({
+                    product, description: description.trim() || undefined, quantity: parseFloat(quantity), unit,
+                    unitPrice: parseFloat(unitPrice), buyerName: buyer, saleDate, dueDate: due,
+                    isPaid: isPaymentReceived || undefined,
+                    accountCode: isPaymentReceived ? accountCode : undefined,
+                    paymentDate: isPaymentReceived ? saleDate : undefined,
+                });
+            } else if (category === "latex") {
+                if (!loadId || !litres || !mass) return;
                 const sale = await createLatex.mutateAsync({
                     loadId,
                     mass: parseFloat(mass),
                     litres: parseFloat(litres),
                     metrolacReading: metrolacReading ? parseFloat(metrolacReading) : undefined,
                     unitPrice: parseFloat(unitPrice),
+                    buyerName: buyer,
+                    dueDate: due,
                 });
                 if (isPaymentReceived) {
-                    await markLatexPaid.mutateAsync({ id: sale.saleId, payload: { accountCode, paymentDate: saleDate } });
+                    await markPaid.mutateAsync({ type: "latex", id: sale.saleId, payload: { accountCode, paymentDate: saleDate } });
                 }
             } else {
-                if (!mass || !saleDate || (needsType && !type)) return;
+                if (!loadId || !mass || !saleDate || (needsType && !type)) return;
                 await createCrop.mutateAsync({
                     category,
                     payload: {
                         loadId, type: needsType ? type : undefined, saleDate, mass: parseFloat(mass), unitPrice: parseFloat(unitPrice),
+                        buyerName: buyer, dueDate: due,
                         isPaid: isPaymentReceived || undefined,
                         accountCode: isPaymentReceived ? accountCode : undefined,
                         paymentDate: isPaymentReceived ? saleDate : undefined,
@@ -123,6 +155,8 @@ export function RecordSaleForm() {
         }
         resetFields();
     }
+
+    const canSubmit = isGeneral ? !!quantity && !!unitPrice : !!loadId && !!unitPrice;
 
     return (
         <Card className="shadow-sm gap-0 overflow-hidden">
@@ -158,28 +192,41 @@ export function RecordSaleForm() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                            <Label>Load</Label>
-                            <div className="flex gap-2">
-                                <Select value={loadId} onValueChange={(v) => { if (v) setLoadId(v); }}>
-                                    <SelectTrigger className="flex-1">
-                                        <SelectValue placeholder="Select Load…" />
-                                    </SelectTrigger>
+                        {!isGeneral && (
+                            <div className="space-y-1.5">
+                                <Label>Load</Label>
+                                <div className="flex gap-2">
+                                    <Select value={loadId} onValueChange={(v) => { if (v) setLoadId(v); }}>
+                                        <SelectTrigger className="flex-1">
+                                            <SelectValue placeholder="Select Load…" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {loads.map((l) => (
+                                                <SelectItem key={l.loadId} value={l.loadId}>
+                                                    {l.loadId.slice(0, 8).toUpperCase()} — {new Date(l.startDate).toLocaleDateString()}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Button type="button" variant="outline" size="icon" onClick={() => setLoadDialogOpen(true)} title="Create new load">
+                                        <Plus className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                        {isGeneral && (
+                            <div className="space-y-1.5">
+                                <Label>Product</Label>
+                                <Select value={product} onValueChange={(v) => { if (v) setProduct(v); }}>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
-                                        {loads.map((l) => (
-                                            <SelectItem key={l.loadId} value={l.loadId}>
-                                                {l.loadId.slice(0, 8).toUpperCase()} — {new Date(l.startDate).toLocaleDateString()}
-                                            </SelectItem>
-                                        ))}
+                                        {(generalOptions?.products ?? [product]).map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
-                                <Button type="button" variant="outline" size="icon" onClick={() => setLoadDialogOpen(true)} title="Create new load">
-                                    <Plus className="w-4 h-4" />
-                                </Button>
                             </div>
-                        </div>
+                        )}
                         <div className="space-y-1.5">
-                            <Label>Date</Label>
+                            <Label>Sale date</Label>
                             <Input type="date" value={saleDate} onChange={(e) => setSaleDate(e.target.value)} />
                         </div>
                     </div>
@@ -216,7 +263,7 @@ export function RecordSaleForm() {
                         </>
                     )}
 
-                    {category !== "latex" && (
+                    {category !== "latex" && !isGeneral && (
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1.5">
                                 <Label>Mass (kg)</Label>
@@ -228,6 +275,48 @@ export function RecordSaleForm() {
                             </div>
                         </div>
                     )}
+
+                    {isGeneral && (
+                        <>
+                            <div className="space-y-1.5">
+                                <Label>Description (optional)</Label>
+                                <Input placeholder="e.g. Dried cocoa beans, grade A" value={description} onChange={(e) => setDescription(e.target.value)} />
+                            </div>
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="space-y-1.5">
+                                    <Label>Quantity</Label>
+                                    <Input type="number" placeholder="0.00" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label>Unit</Label>
+                                    <Select value={unit} onValueChange={(v) => { if (v) setUnit(v); }}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            {(generalOptions?.units ?? [unit]).map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label>Unit Price (LKR)</Label>
+                                    <Input type="number" placeholder="0.00" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} />
+                                </div>
+                            </div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                Total: <span className="font-semibold text-gray-900 dark:text-gray-100">LKR {generalTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                            </p>
+                        </>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <Label>Buyer (optional)</Label>
+                            <Input placeholder="e.g. Perera Traders" value={buyerName} onChange={(e) => setBuyerName(e.target.value)} />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label>Payment due date (optional)</Label>
+                            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+                        </div>
+                    </div>
 
                     {isPaymentReceived && (
                         <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
@@ -246,7 +335,7 @@ export function RecordSaleForm() {
                             variant="outline"
                             className="flex-1"
                             onClick={handleSubmit}
-                            disabled={isSubmitting || !loadId || !unitPrice}
+                            disabled={isSubmitting || !canSubmit}
                         >
                             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Record Sale"}
                         </Button>
@@ -260,12 +349,14 @@ export function RecordSaleForm() {
                 </div>
             )}
 
-            <LoadDialog
-                open={loadDialogOpen}
-                onOpenChange={setLoadDialogOpen}
-                initialData={null}
-                defaultLoadType={CATEGORY_LOAD_TYPE[category]}
-            />
+            {!isGeneral && (
+                <LoadDialog
+                    open={loadDialogOpen}
+                    onOpenChange={setLoadDialogOpen}
+                    initialData={null}
+                    defaultLoadType={CATEGORY_LOAD_TYPE[category]}
+                />
+            )}
         </Card>
     );
 }
