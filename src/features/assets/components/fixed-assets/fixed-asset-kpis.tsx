@@ -3,23 +3,21 @@
 import { Card, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useFixedAssetSummary } from "@/features/assets/hooks/use-assets";
-
-function formatLkr(value: number): string {
-    return `LKR ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-}
+import { formatLkr } from "@/features/accounts/utils/format";
 
 export function FixedAssetKpis() {
     const { data: summary, isLoading } = useFixedAssetSummary();
 
     const stats = [
-        { label: "Total Current Value", value: formatLkr(summary?.totalCurrentValue ?? 0) },
-        { label: "Total Acquisition Value", value: formatLkr(summary?.totalAcquisitionValue ?? 0) },
-        { label: "Asset Count", value: String(summary?.totalCount ?? 0) },
+        { label: "Net Book Value", value: formatLkr(summary?.totalCurrentValue ?? 0) },
+        { label: "Cost", value: formatLkr(summary?.totalAcquisitionValue ?? 0) },
+        { label: "Accumulated Depreciation", value: formatLkr(summary?.totalAccumulatedDepreciation ?? 0) },
+        { label: "Active Assets", value: String(summary?.totalCount ?? 0) },
     ];
 
     return (
         <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {stats.map((stat) => (
                     <Card key={stat.label} className="p-5 shadow-sm gap-0 relative">
                         {isLoading && <div className="absolute top-4 right-4"><Loader2 className="w-4 h-4 animate-spin text-brand-500" /></div>}
@@ -30,7 +28,7 @@ export function FixedAssetKpis() {
             </div>
             {summary && summary.byCategory.length > 0 && (
                 <Card className="p-5 shadow-sm gap-0">
-                    <CardTitle className="text-sm font-semibold mb-3">By Category</CardTitle>
+                    <CardTitle className="text-sm font-semibold mb-3">Net Book Value by Category</CardTitle>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                         {summary.byCategory.map((c) => (
                             <div key={c.category} className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">

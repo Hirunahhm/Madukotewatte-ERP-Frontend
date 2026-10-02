@@ -3,6 +3,7 @@
 import { FixedAssetKpis } from "./fixed-asset-kpis";
 import { AddFixedAssetForm } from "./add-fixed-asset-form";
 import { FixedAssetsTable } from "./fixed-assets-table";
+import { DepreciationScheduleCard } from "./depreciation-schedule-card";
 
 export function FixedAssetsScreen() {
     return (
@@ -10,6 +11,7 @@ export function FixedAssetsScreen() {
             <FixedAssetKpis />
             <AddFixedAssetForm />
             <FixedAssetsTable />
+            <DepreciationScheduleCard />
         </div>
     );
 }

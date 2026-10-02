@@ -35,8 +35,8 @@ export function StatsScreen() {
 
     const totalCash = (balances ?? []).filter((b) => b.type !== "CREDIT_CARD").reduce((sum, b) => sum + b.balance, 0);
     const cardsOwed = (balances ?? []).filter((b) => b.type === "CREDIT_CARD").reduce((sum, b) => sum + Math.max(-b.balance, 0), 0);
-    const totalDebt = cardsOwed
-        + (estateLoans ?? []).filter((l) => l.isActive).reduce((sum, l) => sum + l.currentBalance, 0);
+    const loansOwed = (estateLoans ?? []).filter((l) => l.isActive).reduce((sum, l) => sum + l.currentBalance, 0);
+    const totalDebt = cardsOwed + loansOwed;
     const totalFixedAssets = fixedAssetSummary?.totalCurrentValue ?? 0;
     const netWorth = totalCash + totalFixedAssets - totalDebt;
 
@@ -61,14 +61,16 @@ export function StatsScreen() {
         {
             label: "Total Debt",
             value: formatLkr(totalDebt),
+            sub: `Loans ${formatLkr(loansOwed)} + cards ${formatLkr(cardsOwed)}`,
             icon: TrendingDown,
             iconClass: "text-red-600 dark:text-red-400",
             valueClass: "text-red-600 dark:text-red-400",
             bgClass: "bg-red-50 dark:bg-red-900/20",
         },
         {
-            label: "Total Fixed Assets",
+            label: "Fixed Assets (Net Book Value)",
             value: formatLkr(totalFixedAssets),
+            sub: `Cost ${formatLkr(fixedAssetSummary?.totalAcquisitionValue ?? 0)} less depreciation ${formatLkr(fixedAssetSummary?.totalAccumulatedDepreciation ?? 0)}`,
             icon: Landmark,
             iconClass: "text-amber-600 dark:text-amber-400",
             valueClass: "text-amber-600 dark:text-amber-400",
@@ -98,6 +100,7 @@ export function StatsScreen() {
                                 </div>
                             </div>
                             <p className={`text-xl font-bold ${kpi.valueClass}`}>{kpi.value}</p>
+                            {"sub" in kpi && kpi.sub && <p className="text-[11px] text-gray-400 mt-1">{kpi.sub}</p>}
                         </Card>
                     );
                 })}

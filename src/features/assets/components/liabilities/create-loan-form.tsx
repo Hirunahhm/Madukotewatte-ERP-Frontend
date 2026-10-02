@@ -12,9 +12,13 @@ import { toLocalDateInputValue } from "@/lib/utils";
 
 export function CreateLoanForm() {
     const [name, setName] = useState("");
+    const [lender, setLender] = useState("");
     const [principalAmount, setPrincipalAmount] = useState("");
     const [issuedDate, setIssuedDate] = useState(toLocalDateInputValue());
     const [interestRate, setInterestRate] = useState("");
+    const [termMonths, setTermMonths] = useState("");
+    const [installment, setInstallment] = useState("");
+    const [notes, setNotes] = useState("");
     const [receivedInto, setReceivedInto] = useState("");
     const [error, setError] = useState<string | null>(null);
 
@@ -32,12 +36,20 @@ export function CreateLoanForm() {
                 principalAmount: Number(principalAmount),
                 issuedDate,
                 interestRate: interestRate ? Number(interestRate) : undefined,
+                lender: lender.trim() || undefined,
+                termMonths: termMonths ? parseInt(termMonths, 10) : undefined,
+                installmentAmount: installment ? Number(installment) : undefined,
+                notes: notes.trim() || undefined,
                 receivedIntoAccountCode: receivedInto || undefined,
             });
             setName("");
+            setLender("");
             setPrincipalAmount("");
             setIssuedDate(toLocalDateInputValue());
             setInterestRate("");
+            setTermMonths("");
+            setInstallment("");
+            setNotes("");
             setReceivedInto("");
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to create loan.");
@@ -57,7 +69,12 @@ export function CreateLoanForm() {
 
                 <div className="space-y-1.5">
                     <Label>Loan Name</Label>
-                    <Input placeholder="e.g. Loan from Mother" value={name} onChange={(e) => setName(e.target.value)} />
+                    <Input placeholder="e.g. Seylan term loan" value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+
+                <div className="space-y-1.5">
+                    <Label>Lender</Label>
+                    <Input placeholder="Optional" value={lender} onChange={(e) => setLender(e.target.value)} />
                 </div>
 
                 <div className="space-y-1.5">
@@ -76,9 +93,28 @@ export function CreateLoanForm() {
                     </div>
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                        <Label>Term (months)</Label>
+                        <Input type="number" placeholder="Optional" min={1} value={termMonths} onChange={(e) => setTermMonths(e.target.value)} />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label>Instalment (LKR)</Label>
+                        <Input type="number" placeholder="Optional" min={0} value={installment} onChange={(e) => setInstallment(e.target.value)} />
+                    </div>
+                </div>
+
+                <div className="space-y-1.5">
+                    <Label>Notes</Label>
+                    <Input placeholder="Optional" value={notes} onChange={(e) => setNotes(e.target.value)} />
+                </div>
+
                 <div className="space-y-1.5">
                     <Label>Received Into (optional)</Label>
-                    <AccountSelect value={receivedInto} onValueChange={setReceivedInto} allowedTypes={["CASH", "BANK"]} placeholder="Already spent / not deposited" />
+                    <div className="flex gap-2">
+                        <AccountSelect value={receivedInto} onValueChange={setReceivedInto} allowedTypes={["CASH", "BANK"]} placeholder="Already spent / not deposited" />
+                        {receivedInto && <Button type="button" variant="outline" onClick={() => setReceivedInto("")}>Clear</Button>}
+                    </div>
                 </div>
 
                 <Button

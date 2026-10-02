@@ -5,56 +5,24 @@ import { Card, CardTitle } from "@/components/ui/card";
 import {
     Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
-import {
-    Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2, AlertCircle } from "lucide-react";
-import { useEstateLoans, useRecordEstateLoanPayment } from "@/features/assets/hooks/use-assets";
+import { Loader2 } from "lucide-react";
+import { useEstateLoans } from "@/features/assets/hooks/use-assets";
 import { formatLkr } from "@/features/accounts/utils/format";
-import { AccountSelect } from "@/features/accounts/components/account-select";
 import type { EstateLoan } from "@/features/assets/types/assets.types";
+import { DrawdownDialog, EditLoanDialog, LoanHistoryDialog, RepaymentDialog } from "./loan-dialogs";
 
+type DialogKind = "repay" | "drawdown" | "history" | "edit";
 
 export function LoansList() {
     const { data: loans, isLoading } = useEstateLoans();
-    const [payingLoan, setPayingLoan] = useState<EstateLoan | null>(null);
-    const [amount, setAmount] = useState("");
-    const [accountCode, setAccountCode] = useState("");
-    const [error, setError] = useState<string | null>(null);
+    const [active, setActive] = useState<{ kind: DialogKind; loan: EstateLoan } | null>(null);
 
-    const recordPayment = useRecordEstateLoanPayment();
-
-    function openPaymentDialog(loan: EstateLoan) {
-        setPayingLoan(loan);
-        setAmount("");
-        setAccountCode("");
-        setError(null);
+    function open(kind: DialogKind, loan: EstateLoan) {
+        setActive({ kind, loan });
     }
-
-    async function handleSubmitPayment() {
-        if (!payingLoan) return;
-        setError(null);
-        if (!amount || Number(amount) <= 0) {
-            setError("Enter a valid amount.");
-            return;
-        }
-        if (!accountCode) {
-            setError("Choose the account to pay from.");
-            return;
-        }
-        try {
-            await recordPayment.mutateAsync({
-                loanId: payingLoan.loanId,
-                payload: { amount: Number(amount), accountCode },
-            });
-            setPayingLoan(null);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to record payment.");
-        }
-    }
+    const close = () => setActive(null);
+    const forKind = (kind: DialogKind) => (active?.kind === kind ? active.loan : null);
 
     return (
         <>
@@ -66,25 +34,34 @@ export function LoansList() {
                             <TableRow>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Issued</TableHead>
-                                <TableHead className="text-right">Principal</TableHead>
+                                <TableHead className="text-right">Borrowed</TableHead>
                                 <TableHead className="text-right">Balance</TableHead>
+                                <TableHead>Terms</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Action</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {isLoading && (
-                                <TableRow><TableCell colSpan={6} className="text-center py-8 text-gray-400"><Loader2 className="w-5 h-5 animate-spin inline-block" /></TableCell></TableRow>
+                                <TableRow><TableCell colSpan={7} className="text-center py-8 text-gray-400"><Loader2 className="w-5 h-5 animate-spin inline-block" /></TableCell></TableRow>
                             )}
                             {!isLoading && (loans?.length ?? 0) === 0 && (
-                                <TableRow><TableCell colSpan={6} className="text-center py-8 text-gray-400">No loans recorded yet.</TableCell></TableRow>
+                                <TableRow><TableCell colSpan={7} className="text-center py-8 text-gray-400">No loans recorded yet.</TableCell></TableRow>
                             )}
                             {loans?.map((loan) => (
                                 <TableRow key={loan.loanId}>
-                                    <TableCell className="font-medium text-gray-900 dark:text-gray-100">{loan.name}</TableCell>
+                                    <TableCell className="font-medium text-gray-900 dark:text-gray-100">
+                                        {loan.name}
+                                        {loan.lender && <div className="text-[11px] font-normal text-gray-400">{loan.lender}</div>}
+                                    </TableCell>
                                     <TableCell className="text-sm text-gray-500 dark:text-gray-400">{loan.issuedDate}</TableCell>
                                     <TableCell className="text-right text-sm">{formatLkr(loan.principalAmount)}</TableCell>
                                     <TableCell className="text-right text-sm font-semibold">{formatLkr(loan.currentBalance)}</TableCell>
+                                    <TableCell className="text-xs text-gray-500 dark:text-gray-400">
+                                        {loan.interestRate != null ? `${loan.interestRate}% p.a.` : "No interest"}
+                                        {loan.termMonths ? `, ${loan.termMonths} mo` : ""}
+                                        {loan.installmentAmount ? `, ${formatLkr(loan.installmentAmount)}/mo` : ""}
+                                    </TableCell>
                                     <TableCell>
                                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
                                             loan.isActive
@@ -95,11 +72,14 @@ export function LoansList() {
                                         </span>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        {loan.isActive && (
-                                            <Button size="sm" variant="outline" onClick={() => openPaymentDialog(loan)}>
-                                                Make Payment
-                                            </Button>
-                                        )}
+                                        <div className="flex flex-wrap justify-end gap-2">
+                                            {loan.isActive && (
+                                                <Button size="sm" variant="outline" onClick={() => open("repay", loan)}>Repay</Button>
+                                            )}
+                                            <Button size="sm" variant="outline" onClick={() => open("drawdown", loan)}>Draw down</Button>
+                                            <Button size="sm" variant="ghost" onClick={() => open("history", loan)}>History</Button>
+                                            <Button size="sm" variant="ghost" onClick={() => open("edit", loan)}>Edit</Button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -108,40 +88,10 @@ export function LoansList() {
                 </div>
             </Card>
 
-            <Dialog open={!!payingLoan} onOpenChange={(o) => !o && setPayingLoan(null)}>
-                <DialogContent className="sm:max-w-sm">
-                    <DialogHeader>
-                        <DialogTitle>Make Payment — {payingLoan?.name}</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-3 pt-2">
-                        {error && (
-                            <div role="alert" className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/30 px-3 py-2 text-xs text-red-600 dark:text-red-400">
-                                <AlertCircle className="w-4 h-4 shrink-0" />
-                                {error}
-                            </div>
-                        )}
-                        <div className="space-y-1.5">
-                            <Label>Amount (LKR)</Label>
-                            <Input type="number" min={0} value={amount} onChange={(e) => setAmount(e.target.value)} />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label>Pay From</Label>
-                            <AccountSelect value={accountCode} onValueChange={setAccountCode} allowedTypes={["CASH", "BANK"]} />
-                        </div>
-                        <div className="flex gap-3 pt-2">
-                            <Button variant="outline" className="flex-1" onClick={() => setPayingLoan(null)}>Cancel</Button>
-                            <Button
-                                className="flex-1 bg-brand-500 hover:bg-brand-600"
-                                disabled={recordPayment.isPending}
-                                onClick={handleSubmitPayment}
-                            >
-                                {recordPayment.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                Record Payment
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
+            <RepaymentDialog loan={forKind("repay")} onClose={close} />
+            <DrawdownDialog loan={forKind("drawdown")} onClose={close} />
+            <LoanHistoryDialog loan={forKind("history") ? (loans?.find((l) => l.loanId === active?.loan.loanId) ?? active?.loan ?? null) : null} onClose={close} />
+            <EditLoanDialog loan={forKind("edit")} onClose={close} />
         </>
     );
 }

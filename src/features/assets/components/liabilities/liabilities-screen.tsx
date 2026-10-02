@@ -4,6 +4,7 @@ import { LiabilityKpis } from "./liability-kpis";
 import { CreditCardsPanel } from "./credit-cards-panel";
 import { CreateLoanForm } from "./create-loan-form";
 import { LoansList } from "./loans-list";
+import { BorrowingScheduleCard } from "./borrowing-schedule-card";
 import { BalanceTrendChart } from "@/features/assets/components/assets/balance-trend-chart";
 import { AccountStatementCard } from "@/features/accounts/components/account-statement-card";
 
@@ -19,6 +20,7 @@ export function DebtScreen() {
                 </div>
                 <CreateLoanForm />
             </div>
+            <BorrowingScheduleCard />
             <AccountStatementCard title="Credit card statement" allowedTypes={["CREDIT_CARD"]} />
         </div>
     );
