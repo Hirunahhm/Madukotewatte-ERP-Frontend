@@ -1,7 +1,7 @@
 import type { PageResponse } from "@/features/employees/types/common.types";
 import type { Employee, EmployeeRequest, EmployeeSummary, PaymentSummary } from "@/features/employees/types/employee.types";
 import type { Attendance, EmployeeAttendanceStats } from "@/features/employees/types/attendance.types";
-import type { EmployeeSalaryPaymentRequest, EmployeeTransaction, EmployeeTransactionStats } from "@/features/employees/types/transaction.types";
+import type { EmployeeLoanDeductionRequest, EmployeeSalaryPaymentRequest, EmployeeTransaction, EmployeeTransactionStats } from "@/features/employees/types/transaction.types";
 
 async function handleResponse<T>(res: Response): Promise<T> {
     if (res.status === 204) return undefined as T;
@@ -113,6 +113,15 @@ export async function getEmployeeTransactionStats(id: string, params: { from?: s
 
 export async function recordSalaryPayment(payload: EmployeeSalaryPaymentRequest): Promise<EmployeeTransaction> {
     const res = await fetch("/api/employee-transactions/salary-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+    return handleResponse(res);
+}
+
+export async function applyLoanDeduction(payload: EmployeeLoanDeductionRequest): Promise<EmployeeTransaction> {
+    const res = await fetch("/api/employee-transactions/loan-deduction", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

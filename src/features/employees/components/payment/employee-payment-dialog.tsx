@@ -18,6 +18,8 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useEmployeePaymentDetail } from "@/features/employees/hooks/use-employee-detail";
 import { useRecordSalaryPayment } from "@/features/employees/hooks/use-employee-mutations";
 import { isTapperPosition } from "@/features/employees/utils/positions";
+import { PayrollCalculatorCard } from "./payroll-calculator-card";
+import { ASSET_TYPES, type AssetType } from "@/features/assets/types/assets.types";
 
 const TRANSACTION_LABELS: Record<string, string> = {
     Manual_Labor: "Labour Payment",
@@ -74,7 +76,7 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
     // Salary payment dialog
     const [salaryPaymentOpen, setSalaryPaymentOpen] = useState(false);
     const [salaryPaymentAmount, setSalaryPaymentAmount] = useState("");
-    const [salaryPaymentType, setSalaryPaymentType] = useState<"cash" | "bank_transfer">("cash");
+    const [salaryPaymentType, setSalaryPaymentType] = useState<AssetType>("Cash");
     const [salaryPaymentDate, setSalaryPaymentDate] = useState(toLocalDateInputValue());
     const [salaryPaymentError, setSalaryPaymentError] = useState<string | null>(null);
     const recordSalaryPayment = useRecordSalaryPayment();
@@ -121,7 +123,7 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
 
     function openSalaryPaymentDialog() {
         setSalaryPaymentAmount(employee.data?.salary ? String(employee.data.salary) : "");
-        setSalaryPaymentType("cash");
+        setSalaryPaymentType("Cash");
         setSalaryPaymentDate(toLocalDateInputValue());
         setSalaryPaymentError(null);
         setSalaryPaymentOpen(true);
@@ -223,14 +225,21 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
                                         </Button>
                                     </div>
                                 )}
-                                <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
-                                    <StatCard label="Total Earned" value={transactionStats.data ? formatLkr(transactionStats.data.totalAmount) : "-"} accent />
+                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                                     <StatCard label="Latex Tap" value={transactionStats.data ? formatLkr(transactionStats.data.latexTap) : "-"} />
-                                    <StatCard label="Salary Payments" value={transactionStats.data ? formatLkr(transactionStats.data.salaryPayments) : "-"} />
                                     <StatCard label="Labour" value={transactionStats.data ? formatLkr(transactionStats.data.manualLabor) : "-"} />
-                                    <StatCard label="Advances" value={transactionStats.data ? formatLkr(transactionStats.data.advances) : "-"} />
+                                    <StatCard label="Total Earned" value={transactionStats.data ? formatLkr(transactionStats.data.totalAmount) : "-"} accent />
                                     <StatCard label="Loan Deductions" value={transactionStats.data ? formatLkr(transactionStats.data.loanPayments) : "-"} />
+                                    <StatCard label="Balance" value={transactionStats.data ? formatLkr(transactionStats.data.totalAmount - transactionStats.data.loanPayments) : "-"} accent />
                                 </div>
+
+                                <PayrollCalculatorCard
+                                    employeeId={employeeId}
+                                    latexTap={transactionStats.data?.latexTap ?? 0}
+                                    manualLabor={transactionStats.data?.manualLabor ?? 0}
+                                    loans={loans.data ?? []}
+                                    isAdmin={isAdmin}
+                                />
 
                                 <div className="flex flex-wrap items-end gap-3">
                                     <div className="space-y-1">
@@ -391,11 +400,12 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
                     </div>
                     <div className="space-y-1.5">
                         <Label>Payment Type</Label>
-                        <Select value={salaryPaymentType} onValueChange={(v) => { if (v) setSalaryPaymentType(v as "cash" | "bank_transfer"); }}>
+                        <Select value={salaryPaymentType} onValueChange={(v) => { if (v) setSalaryPaymentType(v as AssetType); }}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="cash">Cash</SelectItem>
-                                <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                                {ASSET_TYPES.map((type) => (
+                                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>

@@ -1,9 +1,9 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createEmployee, updateEmployee, recordSalaryPayment } from "@/features/employees/services/employee-service";
+import { createEmployee, updateEmployee, recordSalaryPayment, applyLoanDeduction } from "@/features/employees/services/employee-service";
 import type { EmployeeRequest } from "@/features/employees/types/employee.types";
-import type { EmployeeSalaryPaymentRequest } from "@/features/employees/types/transaction.types";
+import type { EmployeeLoanDeductionRequest, EmployeeSalaryPaymentRequest } from "@/features/employees/types/transaction.types";
 
 export function useCreateEmployee() {
     const queryClient = useQueryClient();
@@ -32,6 +32,18 @@ export function useRecordSalaryPayment() {
         mutationFn: (payload: EmployeeSalaryPaymentRequest) => recordSalaryPayment(payload),
         onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ["employee", variables.employeeId] });
+        },
+    });
+}
+
+export function useApplyLoanDeduction() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: EmployeeLoanDeductionRequest) => applyLoanDeduction(payload),
+        onSuccess: (_data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["employee", variables.employeeId] });
+            queryClient.invalidateQueries({ queryKey: ["loans"] });
+            queryClient.invalidateQueries({ queryKey: ["payment-summary"] });
         },
     });
 }
