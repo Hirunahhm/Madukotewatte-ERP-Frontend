@@ -10,7 +10,9 @@ import {
 } from "@/components/ui/select";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useCreateEmployee } from "@/features/employees/hooks/use-employee-mutations";
-import { POSITIONS, isTapperPosition } from "@/features/employees/utils/positions";
+import { POSITIONS, defaultPayTypeForPosition } from "@/features/employees/utils/positions";
+import { PayTypeFields, payFieldsError } from "./pay-type-fields";
+import type { PayType } from "@/features/employees/types/employee.types";
 
 interface AddEmployeeDialogProps {
     open: boolean;
@@ -23,10 +25,11 @@ export function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDialogProps
     const [salary, setSalary] = useState("");
     const [position, setPosition] = useState("");
     const [ratePerTree, setRatePerTree] = useState("");
+    const [hourlyRate, setHourlyRate] = useState("");
+    const [payType, setPayType] = useState<PayType>("FIXED_MONTHLY");
     const [error, setError] = useState<string | null>(null);
 
     const createEmployee = useCreateEmployee();
-    const isTapper = isTapperPosition(position);
 
     function handleClose() {
         setName("");
@@ -34,6 +37,8 @@ export function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDialogProps
         setSalary("");
         setPosition("");
         setRatePerTree("");
+        setHourlyRate("");
+        setPayType("FIXED_MONTHLY");
         setError(null);
         onOpenChange(false);
     }
@@ -44,20 +49,19 @@ export function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDialogProps
             setError("Name and date of joining are required.");
             return;
         }
-        if (isTapper && !ratePerTree) {
-            setError("Rate per tree is required for tapper positions.");
-            return;
-        }
-        if (!isTapper && !salary) {
-            setError("Salary is required.");
+        const payError = payFieldsError({ payType, salary, ratePerTree, hourlyRate });
+        if (payError) {
+            setError(payError);
             return;
         }
         try {
             await createEmployee.mutateAsync({
                 name: name.trim(),
                 joinedDate: dateOfJoining,
-                salary: salary ? Number(salary) : undefined,
-                ratePerTree: isTapper && ratePerTree ? Number(ratePerTree) : undefined,
+                payType,
+                salary: payType === "FIXED_MONTHLY" ? Number(salary) : undefined,
+                ratePerTree: payType === "PER_TREE" ? Number(ratePerTree) : undefined,
+                hourlyRate: payType === "HOURLY" ? Number(hourlyRate) : undefined,
                 position: position || undefined,
             });
             handleClose();
@@ -105,7 +109,7 @@ export function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDialogProps
 
                     <div className="space-y-1.5">
                         <Label>Position</Label>
-                        <Select value={position} onValueChange={(v) => { if (v !== null) setPosition(v); }}>
+                        <Select value={position} onValueChange={(v) => { if (v !== null) { setPosition(v); setPayType(defaultPayTypeForPosition(v)); } }}>
                             <SelectTrigger className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                                 <SelectValue placeholder="Select position..." />
                             </SelectTrigger>
@@ -117,31 +121,15 @@ export function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDialogProps
                         </Select>
                     </div>
 
-                    {isTapper ? (
-                        <div className="space-y-1.5">
-                            <Label htmlFor="emp-rate-per-tree">Rate per Tree (LKR)</Label>
-                            <Input
-                                id="emp-rate-per-tree"
-                                type="number"
-                                placeholder="e.g. 5.00"
-                                value={ratePerTree}
-                                onChange={(e) => setRatePerTree(e.target.value)}
-                                className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                            />
-                        </div>
-                    ) : (
-                        <div className="space-y-1.5">
-                            <Label htmlFor="emp-salary">Salary</Label>
-                            <Input
-                                id="emp-salary"
-                                type="number"
-                                placeholder="e.g. 45000"
-                                value={salary}
-                                onChange={(e) => setSalary(e.target.value)}
-                                className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                            />
-                        </div>
-                    )}
+                    <PayTypeFields
+                        value={{ payType, salary, ratePerTree, hourlyRate }}
+                        onChange={(patch) => {
+                            if (patch.payType !== undefined) setPayType(patch.payType);
+                            if (patch.salary !== undefined) setSalary(patch.salary);
+                            if (patch.ratePerTree !== undefined) setRatePerTree(patch.ratePerTree);
+                            if (patch.hourlyRate !== undefined) setHourlyRate(patch.hourlyRate);
+                        }}
+                    />
 
                     <div className="flex gap-3 pt-2">
                         <Button variant="outline" className="flex-1" onClick={handleClose}>Cancel</Button>

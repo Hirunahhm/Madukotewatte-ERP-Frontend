@@ -12,30 +12,33 @@ import {
 import {
     Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
-import { X, Loader2, AlertCircle, ChevronLeft, ChevronRight, Wallet } from "lucide-react";
+import { X, Loader2, AlertCircle, ChevronLeft, ChevronRight, HandCoins } from "lucide-react";
 import { cn, toLocalDateInputValue } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmployeePaymentDetail } from "@/features/employees/hooks/use-employee-detail";
-import { useRecordSalaryPayment } from "@/features/employees/hooks/use-employee-mutations";
-import { isTapperPosition } from "@/features/employees/utils/positions";
-import { PayrollCalculatorCard } from "./payroll-calculator-card";
-import { AccountSelect } from "@/features/accounts/components/account-select";
+import { useDeleteAdvance, useDeleteLoanRepayment, useEmployeePayrollPreview } from "@/features/employees/hooks/use-payroll";
+import { PAY_TYPE_LABELS } from "@/features/employees/types/employee.types";
+import type { EmployeeLoan } from "@/features/employees/types/loan.types";
+import { GiveAdvanceDialog } from "./give-advance-dialog";
+import { RepayLoanDialog } from "./repay-loan-dialog";
+import { PayslipHistory } from "./payslip-history";
 
 const TRANSACTION_LABELS: Record<string, string> = {
-    Manual_Labor: "Labour Payment",
-    Advance: "Advance",
-    Loan_Payment: "Loan Payment",
-    Latex_Tap: "Latex Tap Earnings",
-    Salary_Payment: "Salary Payment",
+    Manual_Labor: "Labour (paid on the spot)",
+    Advance: "Advance given",
+    Advance_Recovery: "Advance recovered",
+    Loan_Payment: "Loan deduction",
+    Latex_Tap: "Tapping earnings",
+    Salary_Payment: "Salary payment (legacy)",
 };
 
-const TRANSACTION_TYPES = ["Manual_Labor", "Advance", "Loan_Payment", "Latex_Tap", "Salary_Payment"];
+const TRANSACTION_TYPES = ["Latex_Tap", "Manual_Labor", "Advance", "Advance_Recovery", "Loan_Payment", "Salary_Payment"];
 
-type Tab = "transactions" | "loans";
+type Tab = "transactions" | "payslips" | "loans";
 type LoanFilter = "all" | "active" | "closed";
 
 function formatLkr(value: number) {
-    return `LKR ${value.toLocaleString()}`;
+    return `LKR ${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 
 function toIsoStart(date: string) {
@@ -55,36 +58,44 @@ function StatCard({ label, value, accent }: { label: string; value: string | num
     );
 }
 
+function ErrorBanner({ message }: { message: string }) {
+    return (
+        <div role="alert" className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/30 px-3 py-2 text-xs text-red-600 dark:text-red-400">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            {message}
+        </div>
+    );
+}
+
 interface Props {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     employeeId: string | null;
 }
 
+/**
+ * One employee: what they have earned this month and not yet been paid, outstanding advance and loan, the
+ * transaction trail, their payslips and loans (with cash repayments).
+ */
 export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props) {
     const [tab, setTab] = useState<Tab>("transactions");
 
-    // Transaction filters
     const [transactionsPage, setTransactionsPage] = useState(0);
     const [transactionsFrom, setTransactionsFrom] = useState("");
     const [transactionsTo, setTransactionsTo] = useState("");
     const [transactionsType, setTransactionsType] = useState("all");
-
-    // Loans filter (client-side)
     const [loansFilter, setLoansFilter] = useState<LoanFilter>("all");
 
-    // Salary payment dialog
-    const [salaryPaymentOpen, setSalaryPaymentOpen] = useState(false);
-    const [salaryPaymentAmount, setSalaryPaymentAmount] = useState("");
-    const [salaryAccountCode, setSalaryAccountCode] = useState("");
-    const [salaryPaymentDate, setSalaryPaymentDate] = useState(toLocalDateInputValue());
-    const [salaryPaymentError, setSalaryPaymentError] = useState<string | null>(null);
-    const recordSalaryPayment = useRecordSalaryPayment();
+    const [advanceOpen, setAdvanceOpen] = useState(false);
+    const [repayLoan, setRepayLoan] = useState<EmployeeLoan | null>(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
 
-    const role = useAuthStore((s) => s.role);
-    const isAdmin = role === "ROLE_ADMIN";
+    const isAdmin = useAuthStore((s) => s.role) === "ROLE_ADMIN";
+    const deleteAdvance = useDeleteAdvance();
+    const deleteRepayment = useDeleteLoanRepayment();
 
-    const { employee, transactions, transactionStats, loans } = useEmployeePaymentDetail(
+    const { employee, transactions, loans } = useEmployeePaymentDetail(
         employeeId,
         {
             page: transactionsPage,
@@ -94,21 +105,17 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
         },
     );
 
+    // earnings to date: this month so far, as the payroll run would compute them
+    const today = toLocalDateInputValue();
+    const monthStart = `${today.slice(0, 8)}01`;
+    const preview = useEmployeePayrollPreview(employeeId, monthStart, today);
+    const row = preview.data?.[0];
+
     const filteredLoans = useMemo(() => {
         const all = loans.data ?? [];
         if (loansFilter === "all") return all;
         return all.filter((l) => (loansFilter === "active" ? l.isActive : !l.isActive));
     }, [loans.data, loansFilter]);
-
-    const loanStats = useMemo(() => {
-        const all = loans.data ?? [];
-        return {
-            totalBorrowed: all.reduce((sum, l) => sum + l.principalAmount, 0),
-            totalOutstanding: all.filter((l) => l.isActive).reduce((sum, l) => sum + l.currentBalance, 0),
-            activeCount: all.filter((l) => l.isActive).length,
-            totalCount: all.length,
-        };
-    }, [loans.data]);
 
     useEffect(() => {
         if (!open) {
@@ -118,49 +125,40 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
             setTransactionsTo("");
             setTransactionsType("all");
             setLoansFilter("all");
+            setConfirmDeleteId(null);
+            setActionError(null);
         }
     }, [open]);
 
-    function openSalaryPaymentDialog() {
-        setSalaryPaymentAmount(employee.data?.salary ? String(employee.data.salary) : "");
-        setSalaryAccountCode("");
-        setSalaryPaymentDate(toLocalDateInputValue());
-        setSalaryPaymentError(null);
-        setSalaryPaymentOpen(true);
+    async function handleDeleteAdvance(id: string) {
+        setActionError(null);
+        try {
+            await deleteAdvance.mutateAsync(id);
+            setConfirmDeleteId(null);
+        } catch (err) {
+            setConfirmDeleteId(null);
+            setActionError(err instanceof Error ? err.message : "Failed to delete the advance.");
+        }
     }
 
-    async function handleRecordSalaryPayment() {
-        if (!employeeId) return;
-        setSalaryPaymentError(null);
-        if (!salaryPaymentAmount || Number(salaryPaymentAmount) <= 0) {
-            setSalaryPaymentError("Enter a valid amount.");
-            return;
-        }
-        if (!salaryAccountCode) {
-            setSalaryPaymentError("Choose the account to pay from.");
-            return;
-        }
+    async function handleDeleteRepayment(loanId: string, repaymentId: string) {
+        setActionError(null);
         try {
-            await recordSalaryPayment.mutateAsync({
-                employeeId,
-                accountCode: salaryAccountCode,
-                amount: Number(salaryPaymentAmount),
-                timestamp: `${salaryPaymentDate}T00:00:00`,
-            });
-            setSalaryPaymentOpen(false);
+            await deleteRepayment.mutateAsync({ loanId, repaymentId });
         } catch (err) {
-            setSalaryPaymentError(err instanceof Error ? err.message : "Failed to record salary payment.");
+            setActionError(err instanceof Error ? err.message : "Failed to delete the repayment.");
         }
     }
 
     const transactionFiltersActive = transactionsFrom || transactionsTo || transactionsType !== "all";
+    const emp = employee.data;
 
     return (
         <>
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>{employee.data?.name ?? "Employee Payments"}</DialogTitle>
+                    <DialogTitle>{emp?.name ?? "Employee Payments"}</DialogTitle>
                 </DialogHeader>
 
                 {employee.isLoading && (
@@ -169,82 +167,70 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
                     </div>
                 )}
 
-                {employee.data && (
+                {emp && (
                     <div className="space-y-5">
-                        {/* Read-only info */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                             <div>
                                 <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Position</p>
-                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.position ?? "-"}</p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{emp.position ?? "-"}</p>
                             </div>
-                            {isTapperPosition(employee.data.position) ? (
-                                <div>
-                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Rate per Tree</p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.ratePerTree ? formatLkr(employee.data.ratePerTree) : "Not set"}</p>
-                                </div>
-                            ) : (
-                                <div>
-                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Salary</p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.salary != null ? formatLkr(employee.data.salary) : "-"}</p>
-                                </div>
-                            )}
+                            <div>
+                                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">{PAY_TYPE_LABELS[emp.payType]}</p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">
+                                    {emp.payType === "PER_TREE" && (emp.ratePerTree ? `${formatLkr(emp.ratePerTree)} / tree` : "Rate not set")}
+                                    {emp.payType === "HOURLY" && (emp.hourlyRate ? `${formatLkr(emp.hourlyRate)} / hour` : "Rate not set")}
+                                    {emp.payType === "FIXED_MONTHLY" && (emp.salary != null ? `${formatLkr(emp.salary)} / month` : "Salary not set")}
+                                </p>
+                            </div>
                             <div>
                                 <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Joined</p>
-                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.joinedDate ?? "-"}</p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{emp.joinedDate ?? "-"}</p>
                             </div>
                             <div>
                                 <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Status</p>
                                 <Badge variant="outline" className={cn(
                                     "text-[10px] font-bold uppercase border-transparent mt-1",
-                                    employee.data.isActive ? "bg-emerald-50 text-brand-600" : "bg-gray-100 text-gray-500"
+                                    emp.isActive ? "bg-emerald-50 text-brand-600" : "bg-gray-100 text-gray-500"
                                 )}>
-                                    {employee.data.isActive ? "Active" : "Inactive"}
+                                    {emp.isActive ? "Active" : "Inactive"}
                                 </Badge>
                             </div>
                         </div>
 
-                        {/* Tab switcher */}
-                        <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1 w-fit">
-                            {([
-                                { id: "transactions", label: "Salary & Transactions" },
-                                { id: "loans", label: "Loans" },
-                            ] as { id: Tab; label: string }[]).map((t) => (
-                                <button
-                                    key={t.id}
-                                    onClick={() => setTab(t.id)}
-                                    className={`h-8 px-3 rounded-md text-xs font-medium transition-colors ${tab === t.id ? "bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-gray-100" : "text-gray-500 hover:text-gray-700"}`}
-                                >
-                                    {t.label}
-                                </button>
-                            ))}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <StatCard label="Unpaid earnings (this month)" value={row ? formatLkr(row.grossPay) : "-"} accent />
+                            <StatCard label="Outstanding advance" value={row ? formatLkr(row.outstandingAdvances) : "-"} />
+                            <StatCard label="Loan balance" value={row ? formatLkr(row.activeLoan?.balance ?? 0) : "-"} />
+                            <StatCard label="Suggested net pay" value={row ? formatLkr(row.netPay) : "-"} />
                         </div>
 
-                        {/* Transactions tab */}
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1 w-fit">
+                                {([
+                                    { id: "transactions", label: "Transactions" },
+                                    { id: "payslips", label: "Payslips" },
+                                    { id: "loans", label: "Loans" },
+                                ] as { id: Tab; label: string }[]).map((t) => (
+                                    <button
+                                        key={t.id}
+                                        onClick={() => setTab(t.id)}
+                                        className={`h-8 px-3 rounded-md text-xs font-medium transition-colors ${tab === t.id ? "bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-gray-100" : "text-gray-500 hover:text-gray-700"}`}
+                                    >
+                                        {t.label}
+                                    </button>
+                                ))}
+                            </div>
+                            {isAdmin && emp.isActive && (
+                                <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAdvanceOpen(true)}>
+                                    <HandCoins className="w-3.5 h-3.5" /> Give Advance
+                                </Button>
+                            )}
+                        </div>
+
+                        {actionError && <ErrorBanner message={actionError} />}
+
                         {tab === "transactions" && (
                             <div className="space-y-3">
-                                {isAdmin && (
-                                    <div className="flex justify-end">
-                                        <Button size="sm" className="gap-1.5 bg-brand-500 hover:bg-brand-600" onClick={openSalaryPaymentDialog}>
-                                            <Wallet className="w-3.5 h-3.5" /> Record Salary Payment
-                                        </Button>
-                                    </div>
-                                )}
-                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                                    <StatCard label="Latex Tap" value={transactionStats.data ? formatLkr(transactionStats.data.latexTap) : "-"} />
-                                    <StatCard label="Labour" value={transactionStats.data ? formatLkr(transactionStats.data.manualLabor) : "-"} />
-                                    <StatCard label="Total Earned" value={transactionStats.data ? formatLkr(transactionStats.data.totalAmount) : "-"} accent />
-                                    <StatCard label="Loan Deductions" value={transactionStats.data ? formatLkr(transactionStats.data.loanPayments) : "-"} />
-                                    <StatCard label="Balance" value={transactionStats.data ? formatLkr(transactionStats.data.totalAmount - transactionStats.data.loanPayments) : "-"} accent />
-                                </div>
-
-                                <PayrollCalculatorCard
-                                    employeeId={employeeId}
-                                    latexTap={transactionStats.data?.latexTap ?? 0}
-                                    manualLabor={transactionStats.data?.manualLabor ?? 0}
-                                    loans={loans.data ?? []}
-                                    isAdmin={isAdmin}
-                                />
-
                                 <div className="flex flex-wrap items-end gap-3">
                                     <div className="space-y-1">
                                         <Label className="text-xs text-gray-500">From</Label>
@@ -259,7 +245,7 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
                                     <div className="space-y-1">
                                         <Label className="text-xs text-gray-500">Type</Label>
                                         <Select value={transactionsType} onValueChange={(v) => { if (v) { setTransactionsType(v); setTransactionsPage(0); } }}>
-                                            <SelectTrigger className="h-8 text-xs w-44"><SelectValue /></SelectTrigger>
+                                            <SelectTrigger className="h-8 text-xs w-48"><SelectValue /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="all">All</SelectItem>
                                                 {TRANSACTION_TYPES.map((t) => <SelectItem key={t} value={t}>{TRANSACTION_LABELS[t]}</SelectItem>)}
@@ -280,23 +266,48 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
                                             <TableRow>
                                                 <TableHead>Date</TableHead>
                                                 <TableHead>Type</TableHead>
-                                                <TableHead>Payment Method</TableHead>
+                                                <TableHead>Account</TableHead>
+                                                <TableHead>Status</TableHead>
                                                 <TableHead className="text-right">Amount</TableHead>
+                                                <TableHead />
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {transactions.isLoading && (
-                                                <TableRow><TableCell colSpan={4} className="text-center py-8 text-gray-400"><Loader2 className="w-5 h-5 animate-spin inline-block" /></TableCell></TableRow>
+                                                <TableRow><TableCell colSpan={6} className="text-center py-8 text-gray-400"><Loader2 className="w-5 h-5 animate-spin inline-block" /></TableCell></TableRow>
                                             )}
                                             {!transactions.isLoading && (transactions.data?.content.length ?? 0) === 0 && (
-                                                <TableRow><TableCell colSpan={4} className="text-center py-8 text-gray-400">No transactions match these filters.</TableCell></TableRow>
+                                                <TableRow><TableCell colSpan={6} className="text-center py-8 text-gray-400">No transactions match these filters.</TableCell></TableRow>
                                             )}
                                             {transactions.data?.content.map((tx) => (
                                                 <TableRow key={tx.transactionRecordId}>
                                                     <TableCell className="text-sm">{new Date(tx.timestamp).toLocaleDateString()}</TableCell>
-                                                    <TableCell className="text-sm">{TRANSACTION_LABELS[tx.type] ?? tx.type}</TableCell>
+                                                    <TableCell className="text-sm">
+                                                        {TRANSACTION_LABELS[tx.type] ?? tx.type}
+                                                        {tx.note && <span className="block text-[11px] text-gray-400">{tx.note}</span>}
+                                                    </TableCell>
                                                     <TableCell className="text-sm text-gray-500 dark:text-gray-400">{tx.accountCode ?? "-"}</TableCell>
+                                                    <TableCell className="text-xs text-gray-500">
+                                                        {tx.type === "Latex_Tap" && (tx.payslipId ? "On payslip" : "Unpaid")}
+                                                        {(tx.type === "Advance_Recovery" || tx.type === "Loan_Payment") && tx.payslipId && "On payslip"}
+                                                    </TableCell>
                                                     <TableCell className="text-right text-sm font-medium">{formatLkr(tx.amount)}</TableCell>
+                                                    <TableCell className="text-right whitespace-nowrap">
+                                                        {isAdmin && tx.type === "Advance" && (
+                                                            confirmDeleteId === tx.transactionRecordId ? (
+                                                                <Button size="sm" variant="ghost" className="h-7 text-xs text-red-600"
+                                                                    disabled={deleteAdvance.isPending}
+                                                                    onClick={() => handleDeleteAdvance(tx.transactionRecordId)}>
+                                                                    Confirm delete
+                                                                </Button>
+                                                            ) : (
+                                                                <Button size="sm" variant="ghost" className="h-7 text-xs text-gray-500"
+                                                                    onClick={() => setConfirmDeleteId(tx.transactionRecordId)}>
+                                                                    Delete
+                                                                </Button>
+                                                            )
+                                                        )}
+                                                    </TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -316,16 +327,12 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
                             </div>
                         )}
 
-                        {/* Loans tab */}
+                        {tab === "payslips" && employeeId && (
+                            <PayslipHistory employeeId={employeeId} pageSize={5} title="Payslips" />
+                        )}
+
                         {tab === "loans" && (
                             <div className="space-y-3">
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                    <StatCard label="Total Borrowed" value={formatLkr(loanStats.totalBorrowed)} />
-                                    <StatCard label="Total Outstanding" value={formatLkr(loanStats.totalOutstanding)} accent />
-                                    <StatCard label="Active Loans" value={loanStats.activeCount} />
-                                    <StatCard label="Total Loans" value={loanStats.totalCount} />
-                                </div>
-
                                 <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1 w-fit">
                                     {([
                                         { id: "all", label: "All" },
@@ -342,43 +349,67 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
                                     ))}
                                 </div>
 
-                                <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                                    <Table>
-                                        <TableHeader className="bg-gray-50/50 dark:bg-gray-800/50">
-                                            <TableRow>
-                                                <TableHead>Principal</TableHead>
-                                                <TableHead className="text-right">Installment</TableHead>
-                                                <TableHead className="text-right">Balance</TableHead>
-                                                <TableHead className="text-right">Interest</TableHead>
-                                                <TableHead>Status</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {loans.isLoading && (
-                                                <TableRow><TableCell colSpan={5} className="text-center py-8 text-gray-400"><Loader2 className="w-5 h-5 animate-spin inline-block" /></TableCell></TableRow>
-                                            )}
-                                            {!loans.isLoading && filteredLoans.length === 0 && (
-                                                <TableRow><TableCell colSpan={5} className="text-center py-8 text-gray-400">No loans match this filter.</TableCell></TableRow>
-                                            )}
-                                            {filteredLoans.map((loan) => (
-                                                <TableRow key={loan.loanId}>
-                                                    <TableCell className="text-sm">{formatLkr(loan.principalAmount)}</TableCell>
-                                                    <TableCell className="text-right text-sm">{formatLkr(loan.installment)}</TableCell>
-                                                    <TableCell className="text-right text-sm font-medium">{formatLkr(loan.currentBalance)}</TableCell>
-                                                    <TableCell className="text-right text-sm text-gray-500 dark:text-gray-400">{loan.interest}%</TableCell>
-                                                    <TableCell>
-                                                        <Badge variant="outline" className={cn(
-                                                            "text-[10px] font-bold uppercase border-transparent",
-                                                            loan.isActive ? "bg-emerald-50 text-brand-600" : "bg-gray-100 text-gray-500"
-                                                        )}>
-                                                            {loan.isActive ? "Active" : "Closed"}
-                                                        </Badge>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
+                                {loans.isLoading && <Loader2 className="w-5 h-5 animate-spin text-gray-400" />}
+                                {!loans.isLoading && filteredLoans.length === 0 && (
+                                    <p className="text-sm text-gray-400 py-6 text-center">No loans match this filter.</p>
+                                )}
+                                {filteredLoans.map((loan) => (
+                                    <div key={loan.loanId} className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+                                        <div className="flex flex-wrap items-start justify-between gap-3">
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-1 text-sm">
+                                                <div><p className="text-[10px] uppercase text-gray-500">Issued</p>{loan.issuedDate}</div>
+                                                <div><p className="text-[10px] uppercase text-gray-500">Principal</p>{formatLkr(loan.principalAmount)}</div>
+                                                <div><p className="text-[10px] uppercase text-gray-500">Installment</p>{formatLkr(loan.installment)}</div>
+                                                <div><p className="text-[10px] uppercase text-gray-500">Balance</p><span className="font-semibold">{formatLkr(loan.currentBalance)}</span></div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="outline" className={cn(
+                                                    "text-[10px] font-bold uppercase border-transparent",
+                                                    loan.isActive ? "bg-emerald-50 text-brand-600" : "bg-gray-100 text-gray-500"
+                                                )}>
+                                                    {loan.isActive ? "Active" : "Closed"}
+                                                </Badge>
+                                                {isAdmin && loan.isActive && (
+                                                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setRepayLoan(loan)}>
+                                                        Record repayment
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {loan.repayments.length > 0 && (
+                                            <Table>
+                                                <TableHeader className="bg-gray-50/50 dark:bg-gray-800/50">
+                                                    <TableRow>
+                                                        <TableHead>Date</TableHead>
+                                                        <TableHead>Source</TableHead>
+                                                        <TableHead>Account</TableHead>
+                                                        <TableHead className="text-right">Amount</TableHead>
+                                                        <TableHead />
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {loan.repayments.map((r) => (
+                                                        <TableRow key={r.repaymentId}>
+                                                            <TableCell className="text-sm">{r.repaymentDate}</TableCell>
+                                                            <TableCell className="text-sm">{r.source === "PAYSLIP" ? "Payslip deduction" : "Cash / bank"}</TableCell>
+                                                            <TableCell className="text-sm text-gray-500">{r.accountCode ?? "-"}</TableCell>
+                                                            <TableCell className="text-right text-sm font-medium">{formatLkr(r.amount)}</TableCell>
+                                                            <TableCell className="text-right">
+                                                                {isAdmin && r.source === "CASH" && (
+                                                                    <Button size="sm" variant="ghost" className="h-7 text-xs text-gray-500"
+                                                                        disabled={deleteRepayment.isPending}
+                                                                        onClick={() => handleDeleteRepayment(loan.loanId, r.repaymentId)}>
+                                                                        Undo
+                                                                    </Button>
+                                                                )}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
@@ -386,44 +417,10 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
             </DialogContent>
         </Dialog>
 
-        <Dialog open={salaryPaymentOpen} onOpenChange={setSalaryPaymentOpen}>
-            <DialogContent className="sm:max-w-sm">
-                <DialogHeader>
-                    <DialogTitle>Record Salary Payment</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3 pt-2">
-                    {salaryPaymentError && (
-                        <div role="alert" className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/30 px-3 py-2 text-xs text-red-600 dark:text-red-400">
-                            <AlertCircle className="w-4 h-4 shrink-0" />
-                            {salaryPaymentError}
-                        </div>
-                    )}
-                    <div className="space-y-1.5">
-                        <Label>Amount (LKR)</Label>
-                        <Input type="number" min={0} value={salaryPaymentAmount} onChange={(e) => setSalaryPaymentAmount(e.target.value)} />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label>Pay from</Label>
-                        <AccountSelect value={salaryAccountCode} onValueChange={setSalaryAccountCode} allowedTypes={["CASH", "BANK"]} />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label>Date</Label>
-                        <Input type="date" value={salaryPaymentDate} onChange={(e) => setSalaryPaymentDate(e.target.value)} />
-                    </div>
-                    <div className="flex gap-3 pt-2">
-                        <Button variant="outline" className="flex-1" onClick={() => setSalaryPaymentOpen(false)}>Cancel</Button>
-                        <Button
-                            className="flex-1 bg-brand-500 hover:bg-brand-600"
-                            disabled={recordSalaryPayment.isPending}
-                            onClick={handleRecordSalaryPayment}
-                        >
-                            {recordSalaryPayment.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                            Record Payment
-                        </Button>
-                    </div>
-                </div>
-            </DialogContent>
-        </Dialog>
+        {isAdmin && employeeId && (
+            <GiveAdvanceDialog open={advanceOpen} onOpenChange={setAdvanceOpen} employeeId={employeeId} />
+        )}
+        <RepayLoanDialog loan={repayLoan} onOpenChange={(o) => { if (!o) setRepayLoan(null); }} />
         </>
     );
 }

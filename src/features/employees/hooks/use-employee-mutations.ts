@@ -1,10 +1,8 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createEmployee, updateEmployee, recordSalaryPayment, applyLoanDeduction } from "@/features/employees/services/employee-service";
-import { invalidateAccountQueries } from "@/features/accounts/hooks/use-accounts";
+import { createEmployee, updateEmployee } from "@/features/employees/services/employee-service";
 import type { EmployeeRequest } from "@/features/employees/types/employee.types";
-import type { EmployeeLoanDeductionRequest, EmployeeSalaryPaymentRequest } from "@/features/employees/types/transaction.types";
 
 export function useCreateEmployee() {
     const queryClient = useQueryClient();
@@ -12,6 +10,7 @@ export function useCreateEmployee() {
         mutationFn: createEmployee,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["employees"] });
+            queryClient.invalidateQueries({ queryKey: ["payroll"] });
         },
     });
 }
@@ -23,29 +22,7 @@ export function useUpdateEmployee() {
         onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ["employees"] });
             queryClient.invalidateQueries({ queryKey: ["employee", variables.id] });
-        },
-    });
-}
-
-export function useRecordSalaryPayment() {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: (payload: EmployeeSalaryPaymentRequest) => recordSalaryPayment(payload),
-        onSuccess: (_data, variables) => {
-            invalidateAccountQueries(queryClient);
-            queryClient.invalidateQueries({ queryKey: ["employee", variables.employeeId] });
-        },
-    });
-}
-
-export function useApplyLoanDeduction() {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: (payload: EmployeeLoanDeductionRequest) => applyLoanDeduction(payload),
-        onSuccess: (_data, variables) => {
-            queryClient.invalidateQueries({ queryKey: ["employee", variables.employeeId] });
-            queryClient.invalidateQueries({ queryKey: ["loans"] });
-            queryClient.invalidateQueries({ queryKey: ["payment-summary"] });
+            queryClient.invalidateQueries({ queryKey: ["payroll"] });
         },
     });
 }

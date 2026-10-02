@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle } from "lucide-react";
+import { AccountSelect } from "@/features/accounts/components/account-select";
+import { toLocalDateInputValue } from "@/lib/utils";
 import { getEmployeesSummary } from "@/features/employees/services/employee-service";
 import { useCreateLoan } from "@/features/employees/hooks/use-loan-mutations";
 
@@ -18,6 +20,8 @@ export function GiveLoanForm() {
     const [principalAmount, setPrincipalAmount] = useState("");
     const [interest, setInterest] = useState("");
     const [installment, setInstallment] = useState("");
+    const [accountCode, setAccountCode] = useState("");
+    const [issuedDate, setIssuedDate] = useState(toLocalDateInputValue());
     const [error, setError] = useState<string | null>(null);
 
     const { data: employees } = useQuery({ queryKey: ["employees", "summary"], queryFn: getEmployeesSummary });
@@ -29,17 +33,25 @@ export function GiveLoanForm() {
             setError("All fields are required.");
             return;
         }
+        if (!accountCode) {
+            setError("Choose the account the loan is paid from.");
+            return;
+        }
         try {
             await createLoan.mutateAsync({
                 employeeId,
                 principalAmount: Number(principalAmount),
                 interest: Number(interest),
                 installment: Number(installment),
+                accountCode,
+                issuedDate,
             });
             setEmployeeId("");
             setPrincipalAmount("");
             setInterest("");
             setInstallment("");
+            setAccountCode("");
+            setIssuedDate(toLocalDateInputValue());
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to issue loan.");
         }
@@ -83,6 +95,17 @@ export function GiveLoanForm() {
                     <div className="space-y-1.5">
                         <Label>Installment (LKR)</Label>
                         <Input type="number" placeholder="0.00" min={0} value={installment} onChange={(e) => setInstallment(e.target.value)} />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                        <Label>Paid from</Label>
+                        <AccountSelect value={accountCode} onValueChange={setAccountCode} allowedTypes={["CASH", "BANK"]} />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label>Issue date</Label>
+                        <Input type="date" value={issuedDate} onChange={(e) => setIssuedDate(e.target.value)} />
                     </div>
                 </div>
 

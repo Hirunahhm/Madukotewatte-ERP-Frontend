@@ -18,7 +18,9 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useEmployeeAttendanceDetail } from "@/features/employees/hooks/use-employee-detail";
 import { useUpdateEmployee } from "@/features/employees/hooks/use-employee-mutations";
 import { ABSENCE_REASONS } from "@/features/employees/types/attendance.types";
-import { POSITIONS, isTapperPosition } from "@/features/employees/utils/positions";
+import { POSITIONS } from "@/features/employees/utils/positions";
+import { PayTypeFields, payFieldsError } from "./pay-type-fields";
+import { PAY_TYPE_LABELS, type PayType } from "@/features/employees/types/employee.types";
 
 function reasonLabel(noWork: string) {
     return ABSENCE_REASONS.find((r) => r.value === noWork)?.label ?? noWork;
@@ -59,6 +61,8 @@ export function EmployeeProfileDialog({ open, onOpenChange, employeeId }: Props)
     const [position, setPosition] = useState("");
     const [salary, setSalary] = useState("");
     const [ratePerTree, setRatePerTree] = useState("");
+    const [hourlyRate, setHourlyRate] = useState("");
+    const [payType, setPayType] = useState<PayType>("FIXED_MONTHLY");
     const [joinedDate, setJoinedDate] = useState("");
     const [isActive, setIsActive] = useState(true);
 
@@ -88,6 +92,8 @@ export function EmployeeProfileDialog({ open, onOpenChange, employeeId }: Props)
             setPosition(employee.data.position ?? "");
             setSalary(String(employee.data.salary ?? ""));
             setRatePerTree(String(employee.data.ratePerTree ?? "0"));
+            setHourlyRate(String(employee.data.hourlyRate ?? ""));
+            setPayType(employee.data.payType);
             setJoinedDate(employee.data.joinedDate ?? "");
             setIsActive(employee.data.isActive);
         }
@@ -104,8 +110,6 @@ export function EmployeeProfileDialog({ open, onOpenChange, employeeId }: Props)
         }
     }, [open]);
 
-    const isTapper = isTapperPosition(position);
-
     async function handleSave() {
         if (!employeeId) return;
         setError(null);
@@ -113,12 +117,9 @@ export function EmployeeProfileDialog({ open, onOpenChange, employeeId }: Props)
             setError("Name and date of joining are required.");
             return;
         }
-        if (isTapper && !ratePerTree) {
-            setError("Rate per tree is required for tapper positions.");
-            return;
-        }
-        if (!isTapper && !salary) {
-            setError("Salary is required.");
+        const payError = payFieldsError({ payType, salary, ratePerTree, hourlyRate });
+        if (payError) {
+            setError(payError);
             return;
         }
         try {
@@ -127,8 +128,10 @@ export function EmployeeProfileDialog({ open, onOpenChange, employeeId }: Props)
                 payload: {
                     name: name.trim(),
                     joinedDate,
+                    payType,
                     salary: salary ? Number(salary) : undefined,
                     ratePerTree: ratePerTree ? Number(ratePerTree) : 0,
+                    hourlyRate: hourlyRate ? Number(hourlyRate) : undefined,
                     position: position || undefined,
                     isActive,
                 },
@@ -145,6 +148,8 @@ export function EmployeeProfileDialog({ open, onOpenChange, employeeId }: Props)
             setPosition(employee.data.position ?? "");
             setSalary(String(employee.data.salary ?? ""));
             setRatePerTree(String(employee.data.ratePerTree ?? "0"));
+            setHourlyRate(String(employee.data.hourlyRate ?? ""));
+            setPayType(employee.data.payType);
             setJoinedDate(employee.data.joinedDate ?? "");
             setIsActive(employee.data.isActive);
         }
@@ -200,17 +205,15 @@ export function EmployeeProfileDialog({ open, onOpenChange, employeeId }: Props)
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                    {isTapper ? (
-                                        <div className="space-y-1.5">
-                                            <Label>Rate per Tree (LKR)</Label>
-                                            <Input type="number" min={0} step="0.01" value={ratePerTree} onChange={(e) => setRatePerTree(e.target.value)} />
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-1.5">
-                                            <Label>Salary (LKR)</Label>
-                                            <Input type="number" value={salary} onChange={(e) => setSalary(e.target.value)} />
-                                        </div>
-                                    )}
+                                    <PayTypeFields
+                                        value={{ payType, salary, ratePerTree, hourlyRate }}
+                                        onChange={(patch) => {
+                                            if (patch.payType !== undefined) setPayType(patch.payType);
+                                            if (patch.salary !== undefined) setSalary(patch.salary);
+                                            if (patch.ratePerTree !== undefined) setRatePerTree(patch.ratePerTree);
+                                            if (patch.hourlyRate !== undefined) setHourlyRate(patch.hourlyRate);
+                                        }}
+                                    />
                                     <div className="space-y-1.5">
                                         <Label>Date of Joining</Label>
                                         <Input type="date" value={joinedDate} onChange={(e) => setJoinedDate(e.target.value)} />
@@ -243,17 +246,14 @@ export function EmployeeProfileDialog({ open, onOpenChange, employeeId }: Props)
                                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Position</p>
                                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.position ?? "-"}</p>
                                 </div>
-                                {isTapperPosition(employee.data.position) ? (
-                                    <div>
-                                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Rate per Tree</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.ratePerTree ? formatLkr(employee.data.ratePerTree) : "Not set"}</p>
-                                    </div>
-                                ) : (
-                                    <div>
-                                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Salary</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.salary != null ? formatLkr(employee.data.salary) : "-"}</p>
-                                    </div>
-                                )}
+                                <div>
+                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">{PAY_TYPE_LABELS[employee.data.payType]}</p>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">
+                                        {employee.data.payType === "PER_TREE" && (employee.data.ratePerTree ? `${formatLkr(employee.data.ratePerTree)} / tree` : "Not set")}
+                                        {employee.data.payType === "HOURLY" && (employee.data.hourlyRate ? `${formatLkr(employee.data.hourlyRate)} / hour` : "Not set")}
+                                        {employee.data.payType === "FIXED_MONTHLY" && (employee.data.salary != null ? `${formatLkr(employee.data.salary)} / month` : "-")}
+                                    </p>
+                                </div>
                                 <div>
                                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Joined</p>
                                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{employee.data.joinedDate ?? "-"}</p>
