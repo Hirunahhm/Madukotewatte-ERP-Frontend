@@ -1,5 +1,3 @@
-import type { AssetType } from "@/features/assets/types/assets.types";
-
 export type TransactionType = "Manual_Labor" | "Advance" | "Loan_Payment" | "Latex_Tap" | "Salary_Payment";
 
 export interface EmployeeTransaction {
@@ -7,7 +5,7 @@ export interface EmployeeTransaction {
     employeeId: string;
     employeeName: string;
     type: TransactionType;
-    paymentType: string | null;
+    accountCode: string | null;
     amount: number;
     timestamp: string;
     createdAt: string;
@@ -15,7 +13,8 @@ export interface EmployeeTransaction {
 
 export interface EmployeeSalaryPaymentRequest {
     employeeId: string;
-    paymentType: AssetType;
+    /** Cash/bank account the salary is paid from. */
+    accountCode: string;
     amount: number;
     timestamp: string;
 }

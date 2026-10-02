@@ -13,11 +13,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { useCreateExpense, useSettlePayment } from "@/features/financials/hooks/use-financials";
-import { PAYMENT_TYPES } from "@/features/financials/types/financials.types";
+import { useCreateExpense } from "@/features/financials/hooks/use-financials";
+import { AccountSelect } from "@/features/accounts/components/account-select";
 import { toLocalDateInputValue } from "@/lib/utils";
 
-const EXPENSE_TYPES = ["Fertilizer", "Labor", "Maintenance", "Chemicals", "Utilities", "Logistics", "Other"];
+const EXPENSE_TYPES = ["Fertilizer", "Labour", "Maintenance", "Chemicals", "Utilities", "Logistics", "Other"];
 
 const today = () => toLocalDateInputValue();
 
@@ -26,42 +26,35 @@ export function RecordExpenseForm() {
     const [type, setType] = useState("");
     const [amount, setAmount] = useState("");
     const [isPaid, setIsPaid] = useState(false);
-    const [paymentType, setPaymentType] = useState("");
+    const [accountCode, setAccountCode] = useState("");
+    const [error, setError] = useState<string | null>(null);
 
     const createExpense = useCreateExpense();
-    const { settle, isPending: isSettling } = useSettlePayment();
-    const isSubmitting = createExpense.isPending || isSettling;
+    const isSubmitting = createExpense.isPending;
 
     async function handleSubmit() {
         if (!type || !amount || !date) return;
-        if (isPaid && !paymentType) return;
+        if (isPaid && !accountCode) return;
+        setError(null);
 
-        const amountValue = parseFloat(amount);
-
-        if (isPaid) {
-            const { monetaryTransactionId, estateLoanTransactionId } = await settle(paymentType, amountValue, "out");
+        try {
             await createExpense.mutateAsync({
                 type,
-                amount: amountValue,
+                amount: parseFloat(amount),
                 timestamp: `${date}T00:00:00`,
-                isPaid: true,
-                paymentType,
-                monetaryTransactionId,
-                estateLoanTransactionId,
+                isPaid,
+                accountCode: isPaid ? accountCode : undefined,
+                paymentDate: isPaid ? date : undefined,
             });
-        } else {
-            await createExpense.mutateAsync({
-                type,
-                amount: amountValue,
-                timestamp: `${date}T00:00:00`,
-                isPaid: false,
-            });
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to record the expense.");
+            return;
         }
 
         setType("");
         setAmount("");
         setIsPaid(false);
-        setPaymentType("");
+        setAccountCode("");
     }
 
     return (
@@ -98,21 +91,14 @@ export function RecordExpenseForm() {
                     <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
                         <p className="text-xs font-semibold tracking-wider text-gray-500 dark:text-gray-400 uppercase">Payment Details</p>
                         <div className="space-y-1.5">
-                            <Label>Payment Type</Label>
-                            <Select value={paymentType} onValueChange={(v) => { if (v) setPaymentType(v); }}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select payment type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {PAYMENT_TYPES.map((pt) => (
-                                        <SelectItem key={pt} value={pt}>{pt}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Label>Pay from</Label>
+                            <AccountSelect value={accountCode} onValueChange={setAccountCode} />
                         </div>
                     </div>
                 )}
             </div>
+
+            {error && <p role="alert" className="text-sm text-red-500 mt-3">{error}</p>}
 
             <div className="flex gap-3 mt-6">
                 <Button

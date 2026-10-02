@@ -54,6 +54,10 @@ This allows the JWT token to be stored as an **httpOnly cookie** (set by the Nex
 - `src/app/api/auth/login/route.ts` — proxies to Java `/auth/login`, sets `auth_token` httpOnly cookie
 - `src/app/api/auth/logout/route.ts` — clears the `auth_token` cookie
 
+Route handlers should use the `bffProxy(req, backendPath, { status? })` helper from `src/lib/bff.ts` (forwards method, query and JSON body; maps backend errors and 503). Example: `export const GET = (req: NextRequest) => bffProxy(req, "/accounts");`
+
+**Accounts:** every payment/receipt account (cash, banks, credit cards) comes from `GET /api/accounts` via `useAccounts()` / `<AccountSelect />` in `src/features/accounts/`. Never hardcode account or payment-type lists; send `accountCode`. Any mutation that moves money should call `invalidateAccountQueries(queryClient)`.
+
 When adding new backend integrations, follow this same pattern: create a Next.js route in `src/app/api/`, call the backend server-side using `AUTH_API_URL`, and pass results to the client without exposing credentials.
 
 ### Route Protection via `src/lib/proxy.ts`
@@ -94,6 +98,7 @@ src/features/<domain>/
 | `financials` | `/financials` | `financialsTab`: `sales \| expenses \| stats` |
 | `assets` | `/assets` | `assetsTab`: `assets \| liabilities \| stats` |
 | `weather` | `/weather` | — |
+| `accounts` | (shared; surfaces on `/assets` cash & debt tabs) | — |
 
 ### Page Pattern (RSC → Client boundary)
 

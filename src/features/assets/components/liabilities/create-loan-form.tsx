@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useCreateEstateLoanRecord } from "@/features/assets/hooks/use-assets";
+import { AccountSelect } from "@/features/accounts/components/account-select";
 import { toLocalDateInputValue } from "@/lib/utils";
 
 export function CreateLoanForm() {
@@ -14,6 +15,7 @@ export function CreateLoanForm() {
     const [principalAmount, setPrincipalAmount] = useState("");
     const [issuedDate, setIssuedDate] = useState(toLocalDateInputValue());
     const [interestRate, setInterestRate] = useState("");
+    const [receivedInto, setReceivedInto] = useState("");
     const [error, setError] = useState<string | null>(null);
 
     const createLoan = useCreateEstateLoanRecord();
@@ -30,11 +32,13 @@ export function CreateLoanForm() {
                 principalAmount: Number(principalAmount),
                 issuedDate,
                 interestRate: interestRate ? Number(interestRate) : undefined,
+                receivedIntoAccountCode: receivedInto || undefined,
             });
             setName("");
             setPrincipalAmount("");
             setIssuedDate(toLocalDateInputValue());
             setInterestRate("");
+            setReceivedInto("");
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to create loan.");
         }
@@ -70,6 +74,11 @@ export function CreateLoanForm() {
                         <Label>Interest Rate (%)</Label>
                         <Input type="number" placeholder="Optional" min={0} step={0.1} value={interestRate} onChange={(e) => setInterestRate(e.target.value)} />
                     </div>
+                </div>
+
+                <div className="space-y-1.5">
+                    <Label>Received Into (optional)</Label>
+                    <AccountSelect value={receivedInto} onValueChange={setReceivedInto} allowedTypes={["CASH", "BANK"]} placeholder="Already spent / not deposited" />
                 </div>
 
                 <Button

@@ -17,10 +17,10 @@ import { useLoads } from "@/features/production/hooks/use-production";
 import { LoadDialog } from "@/features/production/components/load-dialog";
 import {
     useCreateSaleLatex, useMarkSaleLatexPaid,
-    useCreateSaleCrop, useMarkSaleCropPaid,
-    useSettlePayment,
+    useCreateSaleCrop,
 } from "@/features/financials/hooks/use-financials";
-import { SALE_PAYMENT_TYPES, type SaleCategory } from "@/features/financials/types/financials.types";
+import type { SaleCategory } from "@/features/financials/types/financials.types";
+import { AccountSelect } from "@/features/accounts/components/account-select";
 import { metrolacToMassFactor } from "@/features/financials/utils/latex-conversion";
 import { toLocalDateInputValue } from "@/lib/utils";
 
@@ -56,7 +56,8 @@ export function RecordSaleForm() {
     const [unitPrice, setUnitPrice] = useState("");
 
     const [isPaymentReceived, setIsPaymentReceived] = useState(false);
-    const [paymentType, setPaymentType] = useState("");
+    const [accountCode, setAccountCode] = useState("");
+    const [error, setError] = useState<string | null>(null);
 
     const { data: loadsData } = useLoads({ loadType: CATEGORY_LOAD_TYPE[category], size: 50 });
     const loads = loadsData?.content ?? [];
@@ -64,8 +65,6 @@ export function RecordSaleForm() {
     const createLatex = useCreateSaleLatex();
     const markLatexPaid = useMarkSaleLatexPaid();
     const createCrop = useCreateSaleCrop();
-    const markCropPaid = useMarkSaleCropPaid();
-    const { settle, isPending: isSettling } = useSettlePayment();
 
     useEffect(() => {
         if (category === "latex" && litres && metrolacReading) {
@@ -75,8 +74,7 @@ export function RecordSaleForm() {
     }, [litres, metrolacReading, category]);
 
     const needsType = category === "manioc" || category === "coconut" || category === "banana";
-    const isSubmitting = createLatex.isPending || createCrop.isPending || markLatexPaid.isPending
-        || markCropPaid.isPending || isSettling;
+    const isSubmitting = createLatex.isPending || createCrop.isPending || markLatexPaid.isPending;
 
     function resetFields() {
         setLoadId("");
@@ -86,36 +84,42 @@ export function RecordSaleForm() {
         setMetrolacReading("");
         setUnitPrice("");
         setIsPaymentReceived(false);
-        setPaymentType("");
+        setAccountCode("");
     }
 
     async function handleSubmit() {
         if (!loadId || !unitPrice) return;
-        if (isPaymentReceived && !paymentType) return;
+        if (isPaymentReceived && !accountCode) return;
+        setError(null);
 
-        if (category === "latex") {
-            if (!litres || !mass) return;
-            const sale = await createLatex.mutateAsync({
-                loadId,
-                mass: parseFloat(mass),
-                litres: parseFloat(litres),
-                metrolacReading: metrolacReading ? parseFloat(metrolacReading) : undefined,
-                unitPrice: parseFloat(unitPrice),
-            });
-            if (isPaymentReceived) {
-                const { monetaryTransactionId } = await settle(paymentType, sale.totalAmount, "in");
-                await markLatexPaid.mutateAsync({ id: sale.saleId, payload: { monetaryTransactionId } });
+        try {
+            if (category === "latex") {
+                if (!litres || !mass) return;
+                const sale = await createLatex.mutateAsync({
+                    loadId,
+                    mass: parseFloat(mass),
+                    litres: parseFloat(litres),
+                    metrolacReading: metrolacReading ? parseFloat(metrolacReading) : undefined,
+                    unitPrice: parseFloat(unitPrice),
+                });
+                if (isPaymentReceived) {
+                    await markLatexPaid.mutateAsync({ id: sale.saleId, payload: { accountCode, paymentDate: saleDate } });
+                }
+            } else {
+                if (!mass || !saleDate || (needsType && !type)) return;
+                await createCrop.mutateAsync({
+                    category,
+                    payload: {
+                        loadId, type: needsType ? type : undefined, saleDate, mass: parseFloat(mass), unitPrice: parseFloat(unitPrice),
+                        isPaid: isPaymentReceived || undefined,
+                        accountCode: isPaymentReceived ? accountCode : undefined,
+                        paymentDate: isPaymentReceived ? saleDate : undefined,
+                    },
+                });
             }
-        } else {
-            if (!mass || !saleDate || (needsType && !type)) return;
-            const sale = await createCrop.mutateAsync({
-                category,
-                payload: { loadId, type: needsType ? type : undefined, saleDate, mass: parseFloat(mass), unitPrice: parseFloat(unitPrice) },
-            });
-            if (isPaymentReceived) {
-                await settle(paymentType, sale.totalAmount, "in");
-                await markCropPaid.mutateAsync({ category, id: sale.saleId, payload: { paymentType } });
-            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to record the sale.");
+            return;
         }
         resetFields();
     }
@@ -229,20 +233,13 @@ export function RecordSaleForm() {
                         <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
                             <p className="text-xs font-semibold tracking-wider text-gray-500 dark:text-gray-400 uppercase">Payment Details</p>
                             <div className="space-y-1.5">
-                                <Label>Payment Type</Label>
-                                <Select value={paymentType} onValueChange={(v) => { if (v) setPaymentType(v); }}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select payment type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {SALE_PAYMENT_TYPES.map((pt) => (
-                                            <SelectItem key={pt} value={pt}>{pt}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Label>Received into</Label>
+                                <AccountSelect value={accountCode} onValueChange={setAccountCode} allowedTypes={["CASH", "BANK"]} />
                             </div>
                         </div>
                     )}
+
+                    {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
 
                     <div className="flex gap-3 pt-1">
                         <Button

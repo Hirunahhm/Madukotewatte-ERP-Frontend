@@ -1,5 +1,3 @@
-export type PaymentType = "bank_transfer" | "cash";
-
 export interface Labour {
     labourId: string;
     employeeId: string;
@@ -12,7 +10,8 @@ export interface Labour {
     workType: string;
     description: string | null;
     timestamp: string;
-    paymentType: PaymentType | null;
+    /** Cash/bank account the labour was paid from (null while unpaid). */
+    accountCode: string | null;
     createdAt: string;
     updatedAt: string;
 }
@@ -27,5 +26,6 @@ export interface LabourRequest {
     workType: string;
     description?: string;
     timestamp?: string;
-    paymentType?: PaymentType;
+    /** Required when isPaid is true. */
+    accountCode?: string;
 }

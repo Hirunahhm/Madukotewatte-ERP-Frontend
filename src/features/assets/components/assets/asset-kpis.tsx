@@ -2,21 +2,20 @@
 
 import { Card } from "@/components/ui/card";
 import { Wallet, Building2, Clock, Loader2 } from "lucide-react";
-import { useAssetBalances } from "@/features/assets/hooks/use-assets";
+import { useAccountBalances } from "@/features/accounts/hooks/use-accounts";
+import { formatLkr } from "@/features/accounts/utils/format";
 import { useSalesSummary, useExpenseSummary } from "@/features/financials/hooks/use-financials";
 
-function formatLkr(value: number): string {
-    return `LKR ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-}
-
 export function AssetKpis() {
-    const { data: balances, isLoading } = useAssetBalances();
+    const { data: balances, isLoading } = useAccountBalances();
     const { data: salesSummary } = useSalesSummary();
     const { data: expenseSummary } = useExpenseSummary();
 
-    const cashInHand = balances?.find((b) => b.assetType === "Cash")?.balance ?? 0;
+    const cashInHand = (balances ?? [])
+        .filter((b) => b.type === "CASH")
+        .reduce((sum, b) => sum + b.balance, 0);
     const bankBalance = (balances ?? [])
-        .filter((b) => b.assetType !== "Cash")
+        .filter((b) => b.type === "BANK")
         .reduce((sum, b) => sum + b.balance, 0);
     const pendingCashFlows = (salesSummary?.pending ?? 0) - (expenseSummary?.pending ?? 0);
 

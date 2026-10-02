@@ -20,7 +20,7 @@ import { useExpenses, useUpdateExpense, useDeleteExpense } from "@/features/fina
 import { MarkExpensePaymentDialog } from "./mark-expense-payment-dialog";
 import type { Expense } from "@/features/financials/types/financials.types";
 
-const EXPENSE_TYPES = ["Fertilizer", "Labor", "Maintenance", "Chemicals", "Utilities", "Logistics", "Other"];
+const EXPENSE_TYPES = ["Fertilizer", "Labour", "Maintenance", "Chemicals", "Utilities", "Logistics", "Other"];
 
 function formatLkr(value: number): string {
     return `LKR ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;

@@ -1,22 +1,21 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { Landmark, CreditCard, AlertCircle, Loader2 } from "lucide-react";
-import { useLoanBalances, useEstateLoans } from "@/features/assets/hooks/use-assets";
-
-function formatLkr(value: number): string {
-    return `LKR ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-}
+import { Landmark, CreditCard, ShieldCheck, Loader2 } from "lucide-react";
+import { useEstateLoans } from "@/features/assets/hooks/use-assets";
+import { useAccounts } from "@/features/accounts/hooks/use-accounts";
+import { formatLkr } from "@/features/accounts/utils/format";
 
 export function LiabilityKpis() {
-    const { data: balances, isLoading } = useLoanBalances();
+    const { data: accounts, isLoading } = useAccounts();
     const { data: loans, isLoading: loansLoading } = useEstateLoans();
 
+    const cards = (accounts ?? []).filter((a) => a.type === "CREDIT_CARD" && a.isActive);
     const currentLoans = (loans ?? [])
         .filter((l) => l.isActive)
         .reduce((sum, l) => sum + l.currentBalance, 0);
-    const peoplesCard = balances?.find((b) => b.loanType === "credit-card - Peoples")?.balance ?? 0;
-    const sampathCard = balances?.find((b) => b.loanType === "credit-card - Sampath")?.balance ?? 0;
+    const cardsOwed = cards.reduce((sum, c) => sum + Math.max(-c.balance, 0), 0);
+    const availableCredit = cards.reduce((sum, c) => sum + (c.availableCredit ?? 0), 0);
 
     const kpis = [
         {
@@ -28,20 +27,20 @@ export function LiabilityKpis() {
             bgClass: "bg-gray-100 dark:bg-gray-700",
         },
         {
-            label: "Peoples Credit Card",
-            value: formatLkr(peoplesCard),
+            label: "Owed on Credit Cards",
+            value: formatLkr(cardsOwed),
             icon: CreditCard,
             iconClass: "text-amber-600 dark:text-amber-400",
             valueClass: "text-amber-600 dark:text-amber-400",
             bgClass: "bg-amber-50 dark:bg-amber-900/20",
         },
         {
-            label: "Sampath Credit Card",
-            value: formatLkr(sampathCard),
-            icon: AlertCircle,
-            iconClass: "text-red-500 dark:text-red-400",
-            valueClass: "text-red-500 dark:text-red-400",
-            bgClass: "bg-red-50 dark:bg-red-900/20",
+            label: "Available Card Credit",
+            value: formatLkr(availableCredit),
+            icon: ShieldCheck,
+            iconClass: "text-emerald-600 dark:text-emerald-400",
+            valueClass: "text-emerald-600 dark:text-emerald-400",
+            bgClass: "bg-emerald-50 dark:bg-emerald-900/20",
         },
     ];
 

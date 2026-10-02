@@ -31,19 +31,20 @@ export function buildReportExcel(data: ReportData): Blob {
 
     if (data.cashDebt) {
         const cd = data.cashDebt;
-        const balanceRows = [
-            ...cd.assetBalances.map((b) => ({ Account: b.assetType, Type: "Cash & Bank", Balance: b.balance })),
-            ...cd.loanBalances.map((b) => ({ Account: b.loanType, Type: "Debt", Balance: b.balance })),
-        ];
+        const balanceRows = cd.balances.map((b) => (
+            b.type === "CREDIT_CARD"
+                ? { Account: b.accountCode, Type: "Debt", Balance: Math.max(-b.balance, 0) }
+                : { Account: b.accountCode, Type: "Cash & Bank", Balance: b.balance }
+        ));
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(balanceRows), "Cash & Debt Balances");
 
         if (cd.creditCardStatements.length > 0) {
             const statementRows = cd.creditCardStatements.map((s) => ({
-                Card: s.loanType,
-                Opening: s.openingBalance,
-                Charges: s.totalCharges,
-                Payments: s.totalPayments,
-                Closing: s.closingBalance,
+                Card: s.accountCode,
+                Opening: -s.openingBalance,
+                Charges: s.totalOut,
+                Payments: s.totalIn,
+                Closing: -s.closingBalance,
             }));
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(statementRows), "Credit Card Statements");
         }

@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createEmployee, updateEmployee, recordSalaryPayment, applyLoanDeduction } from "@/features/employees/services/employee-service";
+import { invalidateAccountQueries } from "@/features/accounts/hooks/use-accounts";
 import type { EmployeeRequest } from "@/features/employees/types/employee.types";
 import type { EmployeeLoanDeductionRequest, EmployeeSalaryPaymentRequest } from "@/features/employees/types/transaction.types";
 
@@ -31,6 +32,7 @@ export function useRecordSalaryPayment() {
     return useMutation({
         mutationFn: (payload: EmployeeSalaryPaymentRequest) => recordSalaryPayment(payload),
         onSuccess: (_data, variables) => {
+            invalidateAccountQueries(queryClient);
             queryClient.invalidateQueries({ queryKey: ["employee", variables.employeeId] });
         },
     });

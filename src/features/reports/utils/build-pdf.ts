@@ -69,21 +69,23 @@ export function buildReportPdf(data: ReportData): Blob {
         const cd = data.cashDebt;
         if (y > 240) { doc.addPage(); y = 20; }
         y = addSectionTitle(doc, "Cash & Debt", y);
-        const totalCash = cd.assetBalances.reduce((s, b) => s + b.balance, 0);
-        const totalDebt = cd.loanBalances.reduce((s, b) => s + b.balance, 0);
+        const cashAccounts = cd.balances.filter((b) => b.type !== "CREDIT_CARD");
+        const cardAccounts = cd.balances.filter((b) => b.type === "CREDIT_CARD");
+        const totalCash = cashAccounts.reduce((s, b) => s + b.balance, 0);
+        const totalDebt = cardAccounts.reduce((s, b) => s + Math.max(-b.balance, 0), 0);
         y = table(doc, y, [["Account", "Balance (LKR)"]], [
-            ...cd.assetBalances.map((b) => [b.assetType, formatLkr(b.balance)]),
+            ...cashAccounts.map((b) => [b.accountCode, formatLkr(b.balance)]),
             ["Total Cash & Bank", formatLkr(totalCash)],
-            ...cd.loanBalances.map((b) => [b.loanType, formatLkr(b.balance)]),
+            ...cardAccounts.map((b) => [b.accountCode, formatLkr(Math.max(-b.balance, 0))]),
             ["Total Debt", formatLkr(totalDebt)],
         ]);
         for (const stmt of cd.creditCardStatements) {
             if (y > 250) { doc.addPage(); y = 20; }
-            y = table(doc, y, [[`${stmt.loanType} Statement`, ""]], [
-                ["Opening Balance", formatLkr(stmt.openingBalance)],
-                ["Total Charges", formatLkr(stmt.totalCharges)],
-                ["Total Payments", formatLkr(stmt.totalPayments)],
-                ["Closing Balance", formatLkr(stmt.closingBalance)],
+            y = table(doc, y, [[`${stmt.accountCode} Statement`, ""]], [
+                ["Opening Balance", formatLkr(-stmt.openingBalance)],
+                ["Total Charges", formatLkr(stmt.totalOut)],
+                ["Total Payments", formatLkr(stmt.totalIn)],
+                ["Closing Balance", formatLkr(-stmt.closingBalance)],
             ]);
         }
     }

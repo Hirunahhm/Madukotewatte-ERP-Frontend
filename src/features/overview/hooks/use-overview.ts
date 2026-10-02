@@ -7,7 +7,8 @@ import { getAttendanceByRange } from "@/features/employees/services/attendance-s
 import { getEmployeesSummary } from "@/features/employees/services/employee-service";
 import { getRangeForScale } from "@/features/employees/utils/date-buckets";
 import { useSalesSummary, useExpenseSummary } from "@/features/financials/hooks/use-financials";
-import { useAssetBalances, useLoanBalances, useEstateLoans } from "@/features/assets/hooks/use-assets";
+import { useEstateLoans } from "@/features/assets/hooks/use-assets";
+import { useAccountBalances } from "@/features/accounts/hooks/use-accounts";
 import { toLocalDateInputValue, toLocalDateTimeString } from "@/lib/utils";
 
 function toIso(date: Date): string {
@@ -169,8 +170,7 @@ export function useWorkforceEngagement() {
 // ─── Liquidity Summary ────────────────────────────────────────────────────────
 
 export function useLiquiditySummary() {
-    const { data: assetBalances, isLoading: isLoadingAssets } = useAssetBalances();
-    const { data: loanBalances, isLoading: isLoadingLoans } = useLoanBalances();
+    const { data: balances, isLoading: isLoadingAssets } = useAccountBalances();
     const { data: estateLoans, isLoading: isLoadingEstateLoans } = useEstateLoans();
 
     const thisMonth = monthRange(0);
@@ -180,8 +180,8 @@ export function useLiquiditySummary() {
     const { data: salesLastMonth, isLoading: isLoadingSalesLast } = useSalesSummary(lastMonth);
     const { data: expenseThisMonth, isLoading: isLoadingExpenseThis } = useExpenseSummary(thisMonth);
 
-    const totalCash = (assetBalances ?? []).reduce((s, b) => s + b.balance, 0);
-    const totalDebt = (loanBalances ?? []).reduce((s, b) => s + b.balance, 0)
+    const totalCash = (balances ?? []).filter((b) => b.type !== "CREDIT_CARD").reduce((s, b) => s + b.balance, 0);
+    const totalDebt = (balances ?? []).filter((b) => b.type === "CREDIT_CARD").reduce((s, b) => s + Math.max(-b.balance, 0), 0)
         + (estateLoans ?? []).filter((l) => l.isActive).reduce((s, l) => s + l.currentBalance, 0);
     const totalLiquidity = totalCash + totalDebt;
     const cashPct = totalLiquidity > 0 ? Math.round((totalCash / totalLiquidity) * 100) : 0;
@@ -193,7 +193,7 @@ export function useLiquiditySummary() {
     const expenseRatioPct = salesMtd > 0 ? Math.round((expenseMtd / salesMtd) * 100) : 0;
 
     return {
-        isLoading: isLoadingAssets || isLoadingLoans || isLoadingEstateLoans || isLoadingSalesThis || isLoadingSalesLast || isLoadingExpenseThis,
+        isLoading: isLoadingAssets || isLoadingEstateLoans || isLoadingSalesThis || isLoadingSalesLast || isLoadingExpenseThis,
         totalCash,
         totalDebt,
         cashPct,

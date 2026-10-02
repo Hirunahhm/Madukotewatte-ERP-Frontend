@@ -16,9 +16,8 @@ import { Button } from "@/components/ui/button";
 import { NoSSR } from "@/components/ui/no-ssr";
 import { chartColors } from "@/lib/theme";
 import { Wallet, TrendingDown, Landmark, Loader2 } from "lucide-react";
-import {
-    useAssetBalances, useLoanBalances, useMonetaryTrend, useLoanTrend, useFixedAssetSummary, useEstateLoans,
-} from "@/features/assets/hooks/use-assets";
+import { useFixedAssetSummary, useEstateLoans } from "@/features/assets/hooks/use-assets";
+import { useAccountBalances, useAccountTrend } from "@/features/accounts/hooks/use-accounts";
 import { ReportGeneratorPanel } from "@/features/reports/components/report-generator-panel";
 import type { TrendScale } from "@/features/assets/types/assets.types";
 
@@ -29,30 +28,26 @@ function formatLkr(value: number): string {
 export function StatsScreen() {
     const [scale, setScale] = useState<TrendScale>("month");
 
-    const { data: assetBalances } = useAssetBalances();
-    const { data: loanBalances } = useLoanBalances();
+    const { data: balances } = useAccountBalances();
     const { data: estateLoans } = useEstateLoans();
     const { data: fixedAssetSummary } = useFixedAssetSummary();
-    const { data: assetTrend, isLoading: isLoadingAssetTrend } = useMonetaryTrend(scale);
-    const { data: loanTrend, isLoading: isLoadingLoanTrend } = useLoanTrend(scale);
+    const { data: trend, isLoading } = useAccountTrend(scale);
 
-    const totalCash = (assetBalances ?? []).reduce((sum, b) => sum + b.balance, 0);
-    const totalDebt = (loanBalances ?? []).reduce((sum, b) => sum + b.balance, 0)
+    const totalCash = (balances ?? []).filter((b) => b.type !== "CREDIT_CARD").reduce((sum, b) => sum + b.balance, 0);
+    const cardsOwed = (balances ?? []).filter((b) => b.type === "CREDIT_CARD").reduce((sum, b) => sum + Math.max(-b.balance, 0), 0);
+    const totalDebt = cardsOwed
         + (estateLoans ?? []).filter((l) => l.isActive).reduce((sum, l) => sum + l.currentBalance, 0);
     const totalFixedAssets = fixedAssetSummary?.totalCurrentValue ?? 0;
     const netWorth = totalCash + totalFixedAssets - totalDebt;
 
-    const chartData = useMemo(() => {
-        const cash = assetTrend ?? [];
-        const debt = loanTrend ?? [];
-        return cash.map((point, i) => ({
+    const chartData = useMemo(
+        () => (trend ?? []).map((point) => ({
             name: point.name,
-            cash: point.total,
-            debt: debt[i]?.total ?? 0,
-        }));
-    }, [assetTrend, loanTrend]);
-
-    const isLoading = isLoadingAssetTrend || isLoadingLoanTrend;
+            cash: point.cashAndBank,
+            debt: Math.abs(Math.min(point.creditCards, 0)),
+        })),
+        [trend],
+    );
 
     const kpis = [
         {

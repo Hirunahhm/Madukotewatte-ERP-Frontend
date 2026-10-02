@@ -19,7 +19,7 @@ import { useEmployeePaymentDetail } from "@/features/employees/hooks/use-employe
 import { useRecordSalaryPayment } from "@/features/employees/hooks/use-employee-mutations";
 import { isTapperPosition } from "@/features/employees/utils/positions";
 import { PayrollCalculatorCard } from "./payroll-calculator-card";
-import { ASSET_TYPES, type AssetType } from "@/features/assets/types/assets.types";
+import { AccountSelect } from "@/features/accounts/components/account-select";
 
 const TRANSACTION_LABELS: Record<string, string> = {
     Manual_Labor: "Labour Payment",
@@ -76,7 +76,7 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
     // Salary payment dialog
     const [salaryPaymentOpen, setSalaryPaymentOpen] = useState(false);
     const [salaryPaymentAmount, setSalaryPaymentAmount] = useState("");
-    const [salaryPaymentType, setSalaryPaymentType] = useState<AssetType>("Cash");
+    const [salaryAccountCode, setSalaryAccountCode] = useState("");
     const [salaryPaymentDate, setSalaryPaymentDate] = useState(toLocalDateInputValue());
     const [salaryPaymentError, setSalaryPaymentError] = useState<string | null>(null);
     const recordSalaryPayment = useRecordSalaryPayment();
@@ -123,7 +123,7 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
 
     function openSalaryPaymentDialog() {
         setSalaryPaymentAmount(employee.data?.salary ? String(employee.data.salary) : "");
-        setSalaryPaymentType("Cash");
+        setSalaryAccountCode("");
         setSalaryPaymentDate(toLocalDateInputValue());
         setSalaryPaymentError(null);
         setSalaryPaymentOpen(true);
@@ -136,10 +136,14 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
             setSalaryPaymentError("Enter a valid amount.");
             return;
         }
+        if (!salaryAccountCode) {
+            setSalaryPaymentError("Choose the account to pay from.");
+            return;
+        }
         try {
             await recordSalaryPayment.mutateAsync({
                 employeeId,
-                paymentType: salaryPaymentType,
+                accountCode: salaryAccountCode,
                 amount: Number(salaryPaymentAmount),
                 timestamp: `${salaryPaymentDate}T00:00:00`,
             });
@@ -291,7 +295,7 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
                                                 <TableRow key={tx.transactionRecordId}>
                                                     <TableCell className="text-sm">{new Date(tx.timestamp).toLocaleDateString()}</TableCell>
                                                     <TableCell className="text-sm">{TRANSACTION_LABELS[tx.type] ?? tx.type}</TableCell>
-                                                    <TableCell className="text-sm text-gray-500 dark:text-gray-400">{tx.paymentType ?? "-"}</TableCell>
+                                                    <TableCell className="text-sm text-gray-500 dark:text-gray-400">{tx.accountCode ?? "-"}</TableCell>
                                                     <TableCell className="text-right text-sm font-medium">{formatLkr(tx.amount)}</TableCell>
                                                 </TableRow>
                                             ))}
@@ -399,15 +403,8 @@ export function EmployeePaymentDialog({ open, onOpenChange, employeeId }: Props)
                         <Input type="number" min={0} value={salaryPaymentAmount} onChange={(e) => setSalaryPaymentAmount(e.target.value)} />
                     </div>
                     <div className="space-y-1.5">
-                        <Label>Payment Type</Label>
-                        <Select value={salaryPaymentType} onValueChange={(v) => { if (v) setSalaryPaymentType(v as AssetType); }}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                {ASSET_TYPES.map((type) => (
-                                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <Label>Pay from</Label>
+                        <AccountSelect value={salaryAccountCode} onValueChange={setSalaryAccountCode} allowedTypes={["CASH", "BANK"]} />
                     </div>
                     <div className="space-y-1.5">
                         <Label>Date</Label>

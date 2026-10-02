@@ -4,8 +4,6 @@ import type {
     SaleCrop, SaleCropRequest, SaleMarkPaidRequest,
     SalesLedgerRow, SalesSummary, CategoryTotal, TrendPoint, TrendScale,
     Expense, ExpenseRequest, ExpenseMarkPaidRequest, ExpenseSummary,
-    MonetaryAssetTransactionRequest, MonetaryAssetTransactionResponse,
-    EstateLoanTransactionRequest, EstateLoanTransactionResponse,
 } from "@/features/financials/types/financials.types";
 
 async function handleResponse<T>(res: Response): Promise<T> {
@@ -165,25 +163,5 @@ export async function getExpenseDistribution(range?: { from?: string; to?: strin
 
 export async function getExpenseTrend(scale: TrendScale): Promise<TrendPoint[]> {
     const res = await fetch(`/api/expenses/trend?scale=${scale}`);
-    return handleResponse(res);
-}
-
-// ─── Ledger transactions (used to compose the "mark paid" flow) ───────────
-
-export async function createMonetaryTransaction(payload: MonetaryAssetTransactionRequest): Promise<MonetaryAssetTransactionResponse> {
-    const res = await fetch("/api/monetary-assets/transactions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-    });
-    return handleResponse(res);
-}
-
-export async function createEstateLoanTransaction(payload: EstateLoanTransactionRequest): Promise<EstateLoanTransactionResponse> {
-    const res = await fetch("/api/estate-loans/transactions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-    });
     return handleResponse(res);
 }

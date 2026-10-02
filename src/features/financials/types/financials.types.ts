@@ -4,27 +4,6 @@ export type { PageResponse };
 
 export type SaleCategory = "latex" | "rubber-solid" | "manioc" | "coconut" | "banana";
 
-/** All payment types recognized by the Expense CHECK constraint. */
-export const PAYMENT_TYPES = [
-    "Cash",
-    "Bank Transfer-BOC",
-    "Bank Transfer-Seylan",
-    "Bank Transfer-Peoples",
-    "Credit Card-Peoples",
-] as const;
-
-/**
- * Payment types offered for Sales — excludes "Credit Card-Peoples" because that maps to the
- * estate's credit-card *liability* ledger; posting incoming sale revenue there would incorrectly
- * increase what the estate owes instead of recording money received.
- */
-export const SALE_PAYMENT_TYPES = [
-    "Cash",
-    "Bank Transfer-BOC",
-    "Bank Transfer-Seylan",
-    "Bank Transfer-Peoples",
-] as const;
-
 // ─── Sales Latex ────────────────────────────────────────────────────────────
 
 export interface SaleLatex {
@@ -37,6 +16,8 @@ export interface SaleLatex {
     totalAmount: number;
     isPaymentReceived: boolean;
     transactionId: string | null;
+    accountCode: string | null;
+    paymentDate: string | null;
     createdAt: string;
     updatedAt: string;
 }
@@ -62,7 +43,10 @@ export interface SaleCrop {
     totalAmount: number;
     isPaid: boolean;
     status: string;
-    paymentType: string | null;
+    /** Cash/bank account the money was received into (null while unpaid). */
+    accountCode: string | null;
+    paymentDate: string | null;
+    transactionId: string | null;
     createdAt: string;
     updatedAt: string;
 }
@@ -73,15 +57,18 @@ export interface SaleCropRequest {
     saleDate: string;      // "YYYY-MM-DD"
     mass: number;
     unitPrice: number;
+    /** Record the sale as already paid: needs accountCode (cash or bank). */
+    isPaid?: boolean;
+    accountCode?: string;
+    paymentDate?: string;
 }
 
 export interface SaleMarkPaidRequest {
-    paymentType: string;
+    accountCode: string;
+    paymentDate?: string;
 }
 
-export interface SaleLatexMarkPaidRequest {
-    monetaryTransactionId?: string;
-}
+export type SaleLatexMarkPaidRequest = SaleMarkPaidRequest;
 
 // ─── Sales Ledger + Stats (cross-category) ─────────────────────────────────
 
@@ -92,7 +79,7 @@ export interface SalesLedgerRow {
     saleDate: string;
     amount: number;
     status: "paid" | "pending";
-    paymentType: string | null;
+    accountCode: string | null;
 }
 
 export interface SalesSummary {
@@ -118,11 +105,16 @@ export type TrendScale = "week" | "month" | "year";
 export interface Expense {
     expenseId: string;
     type: string;
-    paymentType: string | null;
+    /** Account the expense was paid from (cash, bank or credit card); null while unpaid. */
+    accountCode: string | null;
     amount: number;
     timestamp: string;
-    monetaryTransactionId: string | null;
-    estateLoanTransactionId: string | null;
+    /** Ledger entry that paid the expense. */
+    transactionId: string | null;
+    paymentDate: string | null;
+    /** Set on system-created expenses, e.g. LABOUR. */
+    referenceType: string | null;
+    referenceId: string | null;
     isPaid: boolean;
     status: string;
     createdAt: string;
@@ -130,54 +122,20 @@ export interface Expense {
 
 export interface ExpenseRequest {
     type: string;
-    paymentType?: string;
+    accountCode?: string;
     amount: number;
     timestamp: string;      // ISO date-time
-    monetaryTransactionId?: string;
-    estateLoanTransactionId?: string;
+    paymentDate?: string;   // "YYYY-MM-DD"
     isPaid?: boolean;
 }
 
 export interface ExpenseMarkPaidRequest {
-    paymentType: string;
-    monetaryTransactionId?: string;
-    estateLoanTransactionId?: string;
+    accountCode: string;
+    paymentDate?: string;
 }
 
 export interface ExpenseSummary {
     totalExpenses: number;
     paid: number;
     pending: number;
-}
-
-// ─── Monetary / Loan ledger transactions (needed to compose "mark paid") ───
-
-export interface MonetaryAssetTransactionRequest {
-    transactionType: "money in" | "money out";
-    assetType: string;
-    amount: number;
-}
-
-export interface MonetaryAssetTransactionResponse {
-    id: string;
-    transactionType: string;
-    assetType: string;
-    lastAmount: number;
-    newAmount: number;
-    createdAt: string;
-}
-
-export interface EstateLoanTransactionRequest {
-    loanType: string;
-    transactionType: "borrow" | "repay";
-    amount: number;
-}
-
-export interface EstateLoanTransactionResponse {
-    id: string;
-    loanType: string;
-    transactionType: string;
-    lastAmount: number;
-    newAmount: number;
-    createdAt: string;
 }

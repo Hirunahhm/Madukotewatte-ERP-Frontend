@@ -7,16 +7,15 @@ import {
     getSalesLedger, getSalesSummary, getSalesDistribution, getSalesTrend,
     getExpenses, createExpense, updateExpense, deleteExpense, markExpensePaid,
     getExpenseSummary, getExpenseDistribution, getExpenseTrend,
-    createMonetaryTransaction, createEstateLoanTransaction,
 } from "@/features/financials/services/financials-service";
 import type {
     SaleCategory, SaleLatexRequest, SaleLatexMarkPaidRequest, SaleCropRequest, SaleMarkPaidRequest,
     TrendScale, ExpenseRequest, ExpenseMarkPaidRequest,
-    MonetaryAssetTransactionRequest, EstateLoanTransactionRequest,
 } from "@/features/financials/types/financials.types";
-import { PAYMENT_TYPE_TO_LEDGER } from "@/features/financials/utils/payment-mapping";
+import { invalidateAccountQueries } from "@/features/accounts/hooks/use-accounts";
 
 function invalidateSales(qc: ReturnType<typeof useQueryClient>) {
+    invalidateAccountQueries(qc);
     qc.invalidateQueries({ queryKey: ["sales-ledger"] });
     qc.invalidateQueries({ queryKey: ["sales-summary"] });
     qc.invalidateQueries({ queryKey: ["sales-distribution"] });
@@ -24,6 +23,7 @@ function invalidateSales(qc: ReturnType<typeof useQueryClient>) {
 }
 
 function invalidateExpenses(qc: ReturnType<typeof useQueryClient>) {
+    invalidateAccountQueries(qc);
     qc.invalidateQueries({ queryKey: ["expenses"] });
     qc.invalidateQueries({ queryKey: ["expense-summary"] });
     qc.invalidateQueries({ queryKey: ["expense-distribution"] });
@@ -158,47 +158,4 @@ export function useExpenseTrend(scale: TrendScale) {
         queryKey: ["expense-trend", scale],
         queryFn: () => getExpenseTrend(scale),
     });
-}
-
-// ─── Ledger transactions (compose the "mark paid" flow) ────────────────────
-
-export function useCreateMonetaryTransaction() {
-    return useMutation({
-        mutationFn: (payload: MonetaryAssetTransactionRequest) => createMonetaryTransaction(payload),
-    });
-}
-
-export function useCreateEstateLoanTransaction() {
-    return useMutation({
-        mutationFn: (payload: EstateLoanTransactionRequest) => createEstateLoanTransaction(payload),
-    });
-}
-
-export interface SettledPayment {
-    monetaryTransactionId?: string;
-    estateLoanTransactionId?: string;
-}
-
-/**
- * Composes the "mark paid" flow: posts a ledger transaction (cash/bank vs. credit,
- * decided by `PAYMENT_TYPE_TO_LEDGER`) for the given amount, then returns whichever
- * ledger's transaction id was created so the caller can link it (Sales-crop rows don't
- * link either id since they carry no ledger FK; Expenses can link both).
- */
-export function useSettlePayment() {
-    const createMonetaryTx = useCreateMonetaryTransaction();
-    const createLoanTx = useCreateEstateLoanTransaction();
-
-    async function settle(paymentType: string, amount: number, direction: "in" | "out" = "in"): Promise<SettledPayment> {
-        const mapping = PAYMENT_TYPE_TO_LEDGER[paymentType];
-        if (!mapping) return {};
-        if (mapping.kind === "monetary") {
-            const tx = await createMonetaryTx.mutateAsync({ transactionType: direction === "in" ? "money in" : "money out", assetType: mapping.ledgerType, amount });
-            return { monetaryTransactionId: tx.id };
-        }
-        const tx = await createLoanTx.mutateAsync({ loanType: mapping.ledgerType, transactionType: "borrow", amount });
-        return { estateLoanTransactionId: tx.id };
-    }
-
-    return { settle, isPending: createMonetaryTx.isPending || createLoanTx.isPending };
 }

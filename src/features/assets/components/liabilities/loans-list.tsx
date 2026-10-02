@@ -11,22 +11,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useEstateLoans, useRecordEstateLoanPayment } from "@/features/assets/hooks/use-assets";
-import { ASSET_TYPES, type AssetType, type EstateLoan } from "@/features/assets/types/assets.types";
+import { formatLkr } from "@/features/accounts/utils/format";
+import { AccountSelect } from "@/features/accounts/components/account-select";
+import type { EstateLoan } from "@/features/assets/types/assets.types";
 
-function formatLkr(value: number): string {
-    return `LKR ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-}
 
 export function LoansList() {
     const { data: loans, isLoading } = useEstateLoans();
     const [payingLoan, setPayingLoan] = useState<EstateLoan | null>(null);
     const [amount, setAmount] = useState("");
-    const [paymentType, setPaymentType] = useState<AssetType>("Cash");
+    const [accountCode, setAccountCode] = useState("");
     const [error, setError] = useState<string | null>(null);
 
     const recordPayment = useRecordEstateLoanPayment();
@@ -34,7 +30,7 @@ export function LoansList() {
     function openPaymentDialog(loan: EstateLoan) {
         setPayingLoan(loan);
         setAmount("");
-        setPaymentType("Cash");
+        setAccountCode("");
         setError(null);
     }
 
@@ -45,10 +41,14 @@ export function LoansList() {
             setError("Enter a valid amount.");
             return;
         }
+        if (!accountCode) {
+            setError("Choose the account to pay from.");
+            return;
+        }
         try {
             await recordPayment.mutateAsync({
                 loanId: payingLoan.loanId,
-                payload: { amount: Number(amount), paymentType },
+                payload: { amount: Number(amount), accountCode },
             });
             setPayingLoan(null);
         } catch (err) {
@@ -126,14 +126,7 @@ export function LoansList() {
                         </div>
                         <div className="space-y-1.5">
                             <Label>Pay From</Label>
-                            <Select value={paymentType} onValueChange={(v) => { if (v) setPaymentType(v as AssetType); }}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    {ASSET_TYPES.map((type) => (
-                                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <AccountSelect value={accountCode} onValueChange={setAccountCode} allowedTypes={["CASH", "BANK"]} />
                         </div>
                         <div className="flex gap-3 pt-2">
                             <Button variant="outline" className="flex-1" onClick={() => setPayingLoan(null)}>Cancel</Button>

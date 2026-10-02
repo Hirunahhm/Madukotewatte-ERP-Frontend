@@ -1,31 +1,25 @@
 "use client";
 
 import { LiabilityKpis } from "./liability-kpis";
-import { CreditGrowthChart } from "./credit-growth-chart";
-import { RecordLiabilityForm } from "./record-liability-form";
-import { BorrowsCard } from "./borrows-card";
-import { RecurringPaymentForm } from "./recurring-payment-form";
-import { CreditCardTable } from "./credit-card-table";
+import { CreditCardsPanel } from "./credit-cards-panel";
 import { CreateLoanForm } from "./create-loan-form";
 import { LoansList } from "./loans-list";
+import { BalanceTrendChart } from "@/features/assets/components/assets/balance-trend-chart";
+import { AccountStatementCard } from "@/features/accounts/components/account-statement-card";
 
 export function DebtScreen() {
     return (
         <div className="space-y-6">
             <LiabilityKpis />
-            <CreditGrowthChart />
+            <CreditCardsPanel />
+            <BalanceTrendChart series="cards" />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
-                    <RecordLiabilityForm />
+                <div className="lg:col-span-2">
                     <LoansList />
                 </div>
-                <div className="space-y-6">
-                    <BorrowsCard />
-                    <CreateLoanForm />
-                </div>
+                <CreateLoanForm />
             </div>
-            <RecurringPaymentForm />
-            <CreditCardTable />
+            <AccountStatementCard title="Credit card statement" allowedTypes={["CREDIT_CARD"]} />
         </div>
     );
 }

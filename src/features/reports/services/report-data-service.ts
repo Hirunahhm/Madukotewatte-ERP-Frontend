@@ -1,12 +1,11 @@
 import {
     getSalesSummary, getSalesDistribution, getExpenseSummary, getExpenseDistribution,
 } from "@/features/financials/services/financials-service";
-import {
-    getAssetBalances, getLoanBalances, getCreditCardStatement, getFixedAssets, getFixedAssetSummary,
-} from "@/features/assets/services/assets-service";
-import { CREDIT_CARD_TYPES } from "@/features/assets/types/assets.types";
+import { getFixedAssets, getFixedAssetSummary } from "@/features/assets/services/assets-service";
+import { getAccountBalances, getAccounts, getStatement } from "@/features/accounts/services/accounts-service";
+import type { AccountBalance, AccountStatement } from "@/features/accounts/types/accounts.types";
 import type { SalesSummary, ExpenseSummary, CategoryTotal } from "@/features/financials/types/financials.types";
-import type { AssetBalance, EstateLoanBalance, CreditCardStatement, FixedAsset, FixedAssetSummary } from "@/features/assets/types/assets.types";
+import type { FixedAsset, FixedAssetSummary } from "@/features/assets/types/assets.types";
 import type { ReportScope, ResolvedRange } from "@/features/reports/types/report.types";
 
 export interface FinancialsReportData {
@@ -17,9 +16,10 @@ export interface FinancialsReportData {
 }
 
 export interface CashDebtReportData {
-    assetBalances: AssetBalance[];
-    loanBalances: EstateLoanBalance[];
-    creditCardStatements: CreditCardStatement[];
+    /** Balances of every account as of the period end (credit cards are negative when owed). */
+    balances: AccountBalance[];
+    /** Statements of every credit card for the period. */
+    creditCardStatements: AccountStatement[];
 }
 
 export interface AssetsReportData {
@@ -46,12 +46,10 @@ async function fetchFinancials(range: ResolvedRange): Promise<FinancialsReportDa
 }
 
 async function fetchCashDebt(range: ResolvedRange): Promise<CashDebtReportData> {
-    const [assetBalances, loanBalances, creditCardStatements] = await Promise.all([
-        getAssetBalances(range.to),
-        getLoanBalances(range.to),
-        Promise.all(CREDIT_CARD_TYPES.map((loanType) => getCreditCardStatement(loanType, range.from, range.to))),
-    ]);
-    return { assetBalances, loanBalances, creditCardStatements };
+    const [balances, accounts] = await Promise.all([getAccountBalances(range.to), getAccounts()]);
+    const cards = accounts.filter((a) => a.type === "CREDIT_CARD");
+    const creditCardStatements = await Promise.all(cards.map((card) => getStatement(card.code, range.from, range.to)));
+    return { balances, creditCardStatements };
 }
 
 async function fetchAssets(): Promise<AssetsReportData> {

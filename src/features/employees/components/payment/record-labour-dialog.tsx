@@ -14,15 +14,10 @@ import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle } from "lucide-react";
 import { getEmployeesSummary } from "@/features/employees/services/employee-service";
 import { useCreateLabour } from "@/features/employees/hooks/use-labour-mutations";
-import type { PaymentType } from "@/features/employees/types/labour.types";
+import { AccountSelect } from "@/features/accounts/components/account-select";
 import { toLocalDateInputValue } from "@/lib/utils";
 
 const WORK_TYPES = ["Weeding", "Clearing", "Spraying", "Maintenance", "Other"];
-
-const PAYMENT_TYPES: { value: PaymentType; label: string }[] = [
-    { value: "bank_transfer", label: "Bank Transfer" },
-    { value: "cash", label: "Cash" },
-];
 
 interface Props {
     open: boolean;
@@ -37,7 +32,7 @@ export function RecordLabourDialog({ open, onOpenChange }: Props) {
     const [workType, setWorkType] = useState("");
     const [description, setDescription] = useState("");
     const [isPaid, setIsPaid] = useState(false);
-    const [paymentType, setPaymentType] = useState<PaymentType | "">("");
+    const [accountCode, setAccountCode] = useState("");
     const [error, setError] = useState<string | null>(null);
 
     const { data: employees } = useQuery({ queryKey: ["employees", "summary"], queryFn: getEmployeesSummary });
@@ -57,7 +52,7 @@ export function RecordLabourDialog({ open, onOpenChange }: Props) {
         setWorkType("");
         setDescription("");
         setIsPaid(false);
-        setPaymentType("");
+        setAccountCode("");
         setError(null);
         onOpenChange(false);
     }
@@ -68,8 +63,8 @@ export function RecordLabourDialog({ open, onOpenChange }: Props) {
             setError("Employee, worked hours, hourly rate, and work type are required.");
             return;
         }
-        if (paid && !paymentType) {
-            setError("Payment type is required to mark this as paid.");
+        if (paid && !accountCode) {
+            setError("Choose the account to pay from.");
             return;
         }
         try {
@@ -82,7 +77,7 @@ export function RecordLabourDialog({ open, onOpenChange }: Props) {
                 description: description || undefined,
                 timestamp: `${date}T00:00:00`,
                 isPaid: paid,
-                paymentType: paid ? (paymentType as PaymentType) : undefined,
+                accountCode: paid ? accountCode : undefined,
             });
             handleClose();
         } catch (err) {
@@ -165,17 +160,8 @@ export function RecordLabourDialog({ open, onOpenChange }: Props) {
 
                     {isPaid && (
                         <div className="space-y-1.5">
-                            <Label>Payment Type</Label>
-                            <Select value={paymentType} onValueChange={(v) => { if (v !== null) setPaymentType(v as PaymentType); }}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select payment method" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {PAYMENT_TYPES.map((type) => (
-                                        <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Label>Pay from</Label>
+                            <AccountSelect value={accountCode} onValueChange={setAccountCode} allowedTypes={["CASH", "BANK"]} />
                         </div>
                     )}
                 </div>
