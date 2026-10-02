@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type ProductionTab = 'latex' | 'ammonia' | 'rubber';
-export type CropProductionTab = 'banana' | 'coconut' | 'manioc';
+export type CropProductionTab = 'banana' | 'coconut' | 'manioc' | 'other';
 export type EmployeesTab = 'attendance' | 'payment';
 export type FinancialsTab = 'sales' | 'expenses' | 'stats';
 export type AssetsTab = 'cash' | 'debt' | 'assets' | 'stats';

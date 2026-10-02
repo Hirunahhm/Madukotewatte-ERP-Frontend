@@ -23,6 +23,10 @@ import { ManiocLoadTracker } from "./manioc/manioc-load-tracker";
 import { ManiocDataEntry } from "./manioc/manioc-data-entry";
 import { ManiocPastRecords } from "./manioc/manioc-past-records";
 
+import { HarvestChart } from "./other/harvest-chart";
+import { HarvestEntry } from "./other/harvest-entry";
+import { HarvestTable } from "./other/harvest-table";
+
 export function CropProductionPageClient() {
     const activeTab = useUiStore((state) => state.cropProductionTab);
 
@@ -70,6 +74,16 @@ export function CropProductionPageClient() {
                     </div>
                     <ManiocDataEntry />
                     <ManiocPastRecords />
+                </>
+            )}
+
+            {activeTab === "other" && (
+                <>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <HarvestChart />
+                        <HarvestEntry />
+                    </div>
+                    <HarvestTable />
                 </>
             )}
         </div>
