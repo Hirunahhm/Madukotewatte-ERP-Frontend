@@ -1,24 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { backendJson, BackendError } from "@/lib/backend-fetch";
+import { NextRequest } from "next/server";
+import { bffProxy } from "@/lib/bff";
 
-export async function GET(req: NextRequest) {
-    try {
-        const qs = req.nextUrl.searchParams.toString();
-        const data = await backendJson(`/fixed-assets${qs ? `?${qs}` : ""}`);
-        return NextResponse.json(data);
-    } catch (err) {
-        if (err instanceof BackendError) return NextResponse.json({ message: err.message }, { status: err.status });
-        return NextResponse.json({ message: "Unable to reach the server." }, { status: 503 });
-    }
-}
-
-export async function POST(req: NextRequest) {
-    try {
-        const body = await req.json();
-        const data = await backendJson("/fixed-assets", { method: "POST", body: JSON.stringify(body) });
-        return NextResponse.json(data, { status: 201 });
-    } catch (err) {
-        if (err instanceof BackendError) return NextResponse.json({ message: err.message }, { status: err.status });
-        return NextResponse.json({ message: "Unable to reach the server." }, { status: 503 });
-    }
-}
+export const GET = (req: NextRequest) => bffProxy(req, "/fixed-assets");
+export const POST = (req: NextRequest) => bffProxy(req, "/fixed-assets", { status: 201 });

@@ -1,14 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
-import { backendJson, BackendError } from "@/lib/backend-fetch";
+import { NextRequest } from "next/server";
+import { bffProxy } from "@/lib/bff";
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-    try {
-        const { id } = await params;
-        const body = await req.json();
-        const data = await backendJson(`/fixed-assets/${id}`, { method: "PATCH", body: JSON.stringify(body) });
-        return NextResponse.json(data);
-    } catch (err) {
-        if (err instanceof BackendError) return NextResponse.json({ message: err.message }, { status: err.status });
-        return NextResponse.json({ message: "Unable to reach the server." }, { status: 503 });
-    }
+type Ctx = { params: Promise<{ id: string }> };
+
+export async function GET(req: NextRequest, { params }: Ctx) {
+    const { id } = await params;
+    return bffProxy(req, `/fixed-assets/${id}`);
+}
+
+export async function PATCH(req: NextRequest, { params }: Ctx) {
+    const { id } = await params;
+    return bffProxy(req, `/fixed-assets/${id}`);
+}
+
+export async function DELETE(req: NextRequest, { params }: Ctx) {
+    const { id } = await params;
+    return bffProxy(req, `/fixed-assets/${id}`);
 }
