@@ -12,7 +12,7 @@ export function useCreateLabour() {
             invalidateAccountQueries(queryClient);
             queryClient.invalidateQueries({ queryKey: ["labour"] });
             queryClient.invalidateQueries({ queryKey: ["payment-summary"] });
-            queryClient.invalidateQueries({ queryKey: ["salary-table"] });
+            queryClient.invalidateQueries({ queryKey: ["payroll"] });
         },
     });
 }
@@ -26,7 +26,7 @@ export function useUpdateLabour() {
             invalidateAccountQueries(queryClient);
             queryClient.invalidateQueries({ queryKey: ["labour"] });
             queryClient.invalidateQueries({ queryKey: ["payment-summary"] });
-            queryClient.invalidateQueries({ queryKey: ["salary-table"] });
+            queryClient.invalidateQueries({ queryKey: ["payroll"] });
         },
     });
 }

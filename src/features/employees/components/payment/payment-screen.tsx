@@ -1,20 +1,24 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ClipboardList, Eye } from "lucide-react";
+import { ClipboardList, Eye, HandCoins } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PaymentKpis } from "./payment-kpis";
 import { SalaryChart } from "./salary-chart";
 import { GiveLoanForm } from "./give-loan-form";
+import { GiveAdvanceDialog } from "./give-advance-dialog";
 import { RecordLabourDialog } from "./record-labour-dialog";
 import { ActiveLoansDialog } from "./active-loans-dialog";
-import { SalaryTable } from "./salary-table";
+import { PayrollRun } from "./payroll-run";
+import { PayslipHistory } from "./payslip-history";
 import { useActiveLoans } from "@/features/employees/hooks/use-loan-mutations";
 import { useAuthStore } from "@/stores/auth-store";
 
+/** The Payroll tab: KPIs, the payroll run (period, earnings, deductions, pay), payslip history, advances and loans. */
 export function PaymentScreen() {
     const [labourOpen, setLabourOpen] = useState(false);
+    const [advanceOpen, setAdvanceOpen] = useState(false);
     const [loansOpen, setLoansOpen] = useState(false);
 
     const role = useAuthStore((s) => s.role);
@@ -29,6 +33,25 @@ export function PaymentScreen() {
     return (
         <div className="space-y-6">
             <PaymentKpis />
+
+            {isAdmin && (
+                <div className="flex flex-wrap justify-end gap-3">
+                    <Button variant="outline" className="gap-2" onClick={() => setAdvanceOpen(true)}>
+                        <HandCoins className="w-4 h-4" />
+                        Give Advance
+                    </Button>
+                    <Button
+                        className="gap-2 bg-brand-500 hover:bg-brand-600 text-white shadow-sm"
+                        onClick={() => setLabourOpen(true)}
+                    >
+                        <ClipboardList className="w-4 h-4" />
+                        Record Labour
+                    </Button>
+                </div>
+            )}
+
+            <PayrollRun />
+            <PayslipHistory />
             <SalaryChart />
 
             {isAdmin && (
@@ -43,6 +66,9 @@ export function PaymentScreen() {
                             <p className="text-sm text-gray-600 dark:text-gray-300">
                                 Total outstanding: <span className="font-semibold text-blue-600 dark:text-blue-400">LKR {totalOutstanding.toLocaleString()}</span>
                             </p>
+                            <p className="text-xs text-gray-500 mt-2">
+                                Installments are deducted from payslips; employees can also repay in cash from the loans list.
+                            </p>
                         </div>
                         <Button
                             variant="outline"
@@ -56,19 +82,8 @@ export function PaymentScreen() {
                 </div>
             )}
 
-            <div className="flex justify-end">
-                <Button
-                    className="gap-2 bg-brand-500 hover:bg-brand-600 text-white shadow-sm"
-                    onClick={() => setLabourOpen(true)}
-                >
-                    <ClipboardList className="w-4 h-4" />
-                    Record Labour
-                </Button>
-            </div>
-
-            <SalaryTable />
-
             <RecordLabourDialog open={labourOpen} onOpenChange={setLabourOpen} />
+            {isAdmin && <GiveAdvanceDialog open={advanceOpen} onOpenChange={setAdvanceOpen} />}
             {isAdmin && <ActiveLoansDialog open={loansOpen} onOpenChange={setLoansOpen} />}
         </div>
     );

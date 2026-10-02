@@ -23,3 +23,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         return NextResponse.json({ message: "Unable to reach the server." }, { status: 503 });
     }
 }
+
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    try {
+        await backendJson(`/employee-loans/${id}`, { method: "DELETE" });
+        return new NextResponse(null, { status: 204 });
+    } catch (err) {
+        if (err instanceof BackendError) return NextResponse.json({ message: err.message }, { status: err.status });
+        return NextResponse.json({ message: "Unable to reach the server." }, { status: 503 });
+    }
+}

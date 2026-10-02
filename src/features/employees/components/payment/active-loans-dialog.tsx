@@ -6,7 +6,11 @@ import {
 import {
     Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { RepayLoanDialog } from "./repay-loan-dialog";
+import type { EmployeeLoan } from "@/features/employees/types/loan.types";
 import { useActiveLoans } from "@/features/employees/hooks/use-loan-mutations";
 
 interface Props {
@@ -16,8 +20,10 @@ interface Props {
 
 export function ActiveLoansDialog({ open, onOpenChange }: Props) {
     const { data: loans, isLoading } = useActiveLoans();
+    const [repayLoan, setRepayLoan] = useState<EmployeeLoan | null>(null);
 
     return (
+        <>
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-3xl">
                 <DialogHeader>
@@ -33,19 +39,20 @@ export function ActiveLoansDialog({ open, onOpenChange }: Props) {
                                 <TableHead className="text-gray-500 dark:text-gray-400 font-semibold text-right">Balance</TableHead>
                                 <TableHead className="text-gray-500 dark:text-gray-400 font-semibold text-right">Interest</TableHead>
                                 <TableHead className="text-gray-500 dark:text-gray-400 font-semibold">Status</TableHead>
+                                <TableHead />
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {isLoading && (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-8 text-gray-400">
+                                    <TableCell colSpan={7} className="text-center py-8 text-gray-400">
                                         <Loader2 className="w-5 h-5 animate-spin inline-block" />
                                     </TableCell>
                                 </TableRow>
                             )}
                             {!isLoading && (loans?.length ?? 0) === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-8 text-gray-400">
+                                    <TableCell colSpan={7} className="text-center py-8 text-gray-400">
                                         No active loans.
                                     </TableCell>
                                 </TableRow>
@@ -66,6 +73,11 @@ export function ActiveLoansDialog({ open, onOpenChange }: Props) {
                                             {loan.isActive ? "Active" : "Not Active"}
                                         </span>
                                     </TableCell>
+                                    <TableCell className="text-right">
+                                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setRepayLoan(loan)}>
+                                            Record repayment
+                                        </Button>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -73,5 +85,7 @@ export function ActiveLoansDialog({ open, onOpenChange }: Props) {
                 </div>
             </DialogContent>
         </Dialog>
+        <RepayLoanDialog loan={repayLoan} onOpenChange={(o) => { if (!o) setRepayLoan(null); }} />
+        </>
     );
 }

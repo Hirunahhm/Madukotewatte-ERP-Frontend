@@ -38,11 +38,13 @@ export function RecordLabourDialog({ open, onOpenChange }: Props) {
     const { data: employees } = useQuery({ queryKey: ["employees", "summary"], queryFn: getEmployeesSummary });
     const createLabour = useCreateLabour();
 
+    const employeeRate = employees?.find((e) => e.employeeId === employeeId)?.hourlyRate ?? null;
+    // the server falls back to the employee hourly rate when no rate is typed in
+    const effectiveRate = hourlyRate ? Number(hourlyRate) : (employeeRate ?? 0);
     const amount = useMemo(() => {
         const hours = Number(workedHours);
-        const rate = Number(hourlyRate);
-        return hours > 0 && rate > 0 ? hours * rate : 0;
-    }, [workedHours, hourlyRate]);
+        return hours > 0 && effectiveRate > 0 ? Math.round(hours * effectiveRate * 100) / 100 : 0;
+    }, [workedHours, effectiveRate]);
 
     function handleClose() {
         setEmployeeId("");
@@ -59,8 +61,12 @@ export function RecordLabourDialog({ open, onOpenChange }: Props) {
 
     async function handleSubmit(paid: boolean) {
         setError(null);
-        if (!employeeId || !workedHours || !hourlyRate || !workType) {
-            setError("Employee, worked hours, hourly rate, and work type are required.");
+        if (!employeeId || !workedHours || !workType) {
+            setError("Employee, worked hours and work type are required.");
+            return;
+        }
+        if (effectiveRate <= 0) {
+            setError("Enter an hourly rate (or set one on the employee).");
             return;
         }
         if (paid && !accountCode) {
@@ -71,8 +77,7 @@ export function RecordLabourDialog({ open, onOpenChange }: Props) {
             await createLabour.mutateAsync({
                 employeeId,
                 workedHours: Number(workedHours),
-                hourlyRate: Number(hourlyRate),
-                amount,
+                hourlyRate: hourlyRate ? Number(hourlyRate) : undefined,
                 workType,
                 description: description || undefined,
                 timestamp: `${date}T00:00:00`,
@@ -125,7 +130,7 @@ export function RecordLabourDialog({ open, onOpenChange }: Props) {
                         </div>
                         <div className="space-y-1.5">
                             <Label>Hourly Rate (LKR)</Label>
-                            <Input type="number" placeholder="0.00" min={0} value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} />
+                            <Input type="number" placeholder={employeeRate ? String(employeeRate) : "0.00"} min={0} value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} />
                         </div>
                     </div>
 
