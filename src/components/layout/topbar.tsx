@@ -37,6 +37,7 @@ const CROP_PRODUCTION_TABS: { id: CropProductionTab; label: string }[] = [
     { id: "banana", label: "Banana" },
     { id: "coconut", label: "Coconut" },
     { id: "manioc", label: "Manioc" },
+    { id: "other", label: "Cocoa & Others" },
 ];
 
 const EMPLOYEES_TABS: { id: EmployeesTab; label: string }[] = [

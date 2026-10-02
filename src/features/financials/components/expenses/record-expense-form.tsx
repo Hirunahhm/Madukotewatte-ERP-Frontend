@@ -13,11 +13,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { useCreateExpense } from "@/features/financials/hooks/use-financials";
+import { useCreateExpense, useExpenseCategories } from "@/features/financials/hooks/use-financials";
 import { AccountSelect } from "@/features/accounts/components/account-select";
 import { toLocalDateInputValue } from "@/lib/utils";
-
-const EXPENSE_TYPES = ["Fertilizer", "Labour", "Maintenance", "Chemicals", "Utilities", "Logistics", "Other"];
 
 const today = () => toLocalDateInputValue();
 
@@ -25,10 +23,14 @@ export function RecordExpenseForm() {
     const [date, setDate] = useState(today());
     const [type, setType] = useState("");
     const [amount, setAmount] = useState("");
+    const [payee, setPayee] = useState("");
+    const [description, setDescription] = useState("");
+    const [dueDate, setDueDate] = useState("");
     const [isPaid, setIsPaid] = useState(false);
     const [accountCode, setAccountCode] = useState("");
     const [error, setError] = useState<string | null>(null);
 
+    const { data: categories } = useExpenseCategories();
     const createExpense = useCreateExpense();
     const isSubmitting = createExpense.isPending;
 
@@ -42,6 +44,9 @@ export function RecordExpenseForm() {
                 type,
                 amount: parseFloat(amount),
                 timestamp: `${date}T00:00:00`,
+                payee: payee.trim() || undefined,
+                description: description.trim() || undefined,
+                dueDate: dueDate || undefined,
                 isPaid,
                 accountCode: isPaid ? accountCode : undefined,
                 paymentDate: isPaid ? date : undefined,
@@ -53,6 +58,9 @@ export function RecordExpenseForm() {
 
         setType("");
         setAmount("");
+        setPayee("");
+        setDescription("");
+        setDueDate("");
         setIsPaid(false);
         setAccountCode("");
     }
@@ -68,13 +76,13 @@ export function RecordExpenseForm() {
                         <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
                     </div>
                     <div className="space-y-1.5">
-                        <Label>Expense Type</Label>
+                        <Label>Category</Label>
                         <Select value={type} onValueChange={(v) => { if (v) setType(v); }}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Select type" />
+                                <SelectValue placeholder="Select category" />
                             </SelectTrigger>
                             <SelectContent>
-                                {EXPENSE_TYPES.map((t) => (
+                                {(categories ?? []).map((t) => (
                                     <SelectItem key={t} value={t}>{t}</SelectItem>
                                 ))}
                             </SelectContent>
@@ -82,9 +90,26 @@ export function RecordExpenseForm() {
                     </div>
                 </div>
 
-                <div className="space-y-1.5">
-                    <Label>Amount (LKR)</Label>
-                    <Input type="number" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                        <Label>Amount (LKR)</Label>
+                        <Input type="number" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label>Payee (optional)</Label>
+                        <Input placeholder="Supplier / person" value={payee} onChange={(e) => setPayee(e.target.value)} />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                        <Label>Description (optional)</Label>
+                        <Input placeholder="e.g. 20 bags NPK" value={description} onChange={(e) => setDescription(e.target.value)} />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label>Payment due date (optional)</Label>
+                        <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+                    </div>
                 </div>
 
                 {isPaid && (

@@ -5,6 +5,7 @@ import { ExpenseChart } from "./expense-chart";
 import { ExpenseDistribution } from "./expense-distribution";
 import { RecordExpenseForm } from "./record-expense-form";
 import { ExpensesTable } from "./expenses-table";
+import { PayablesCard } from "./payables-card";
 
 export function ExpensesScreen() {
     return (
@@ -18,6 +19,7 @@ export function ExpensesScreen() {
                 <ExpenseDistribution />
             </div>
             <ExpensesTable />
+            <PayablesCard />
         </div>
     );
 }

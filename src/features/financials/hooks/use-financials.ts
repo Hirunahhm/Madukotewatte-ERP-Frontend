@@ -2,14 +2,14 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-    createSaleLatex, markSaleLatexPaid,
-    createSaleCrop, markSaleCropPaid,
-    getSalesLedger, getSalesSummary, getSalesDistribution, getSalesTrend,
-    getExpenses, createExpense, updateExpense, deleteExpense, markExpensePaid,
-    getExpenseSummary, getExpenseDistribution, getExpenseTrend,
+    createSaleLatex, createSaleCrop, createSaleGeneral, getSaleGeneralOptions,
+    getSale, updateSale, deleteSale, markSalePaid, undoSalePayment,
+    getSalesLedger, getSalesSummary, getSalesDistribution, getSalesTrend, getReceivables,
+    getExpenseCategories, getExpenses, createExpense, updateExpense, deleteExpense, markExpensePaid, undoExpensePayment,
+    getPayables, getExpenseSummary, getExpenseDistribution, getExpenseTrend,
 } from "@/features/financials/services/financials-service";
 import type {
-    SaleCategory, SaleLatexRequest, SaleLatexMarkPaidRequest, SaleCropRequest, SaleMarkPaidRequest,
+    SaleType, SaleLatexRequest, SaleCropRequest, SaleGeneralRequest, SaleMarkPaidRequest, SaleUpdatePayload,
     TrendScale, ExpenseRequest, ExpenseMarkPaidRequest,
 } from "@/features/financials/types/financials.types";
 import { invalidateAccountQueries } from "@/features/accounts/hooks/use-accounts";
@@ -20,6 +20,8 @@ function invalidateSales(qc: ReturnType<typeof useQueryClient>) {
     qc.invalidateQueries({ queryKey: ["sales-summary"] });
     qc.invalidateQueries({ queryKey: ["sales-distribution"] });
     qc.invalidateQueries({ queryKey: ["sales-trend"] });
+    qc.invalidateQueries({ queryKey: ["sale-detail"] });
+    qc.invalidateQueries({ queryKey: ["receivables"] });
 }
 
 function invalidateExpenses(qc: ReturnType<typeof useQueryClient>) {
@@ -28,9 +30,10 @@ function invalidateExpenses(qc: ReturnType<typeof useQueryClient>) {
     qc.invalidateQueries({ queryKey: ["expense-summary"] });
     qc.invalidateQueries({ queryKey: ["expense-distribution"] });
     qc.invalidateQueries({ queryKey: ["expense-trend"] });
+    qc.invalidateQueries({ queryKey: ["payables"] });
 }
 
-// ─── Sales Latex ────────────────────────────────────────────────────────────
+// ─── Sales: create ──────────────────────────────────────────────────────────
 
 export function useCreateSaleLatex() {
     const qc = useQueryClient();
@@ -40,30 +43,65 @@ export function useCreateSaleLatex() {
     });
 }
 
-export function useMarkSaleLatexPaid() {
-    const qc = useQueryClient();
-    return useMutation({
-        mutationFn: ({ id, payload }: { id: string; payload: SaleLatexMarkPaidRequest }) => markSaleLatexPaid(id, payload),
-        onSuccess: () => invalidateSales(qc),
-    });
-}
-
-// ─── Sales Rubber Solid / Manioc / Coconut / Banana ────────────────────────
-
 export function useCreateSaleCrop() {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: ({ category, payload }: { category: Exclude<SaleCategory, "latex">; payload: SaleCropRequest }) =>
+        mutationFn: ({ category, payload }: { category: Exclude<SaleType, "latex" | "general">; payload: SaleCropRequest }) =>
             createSaleCrop(category, payload),
         onSuccess: () => invalidateSales(qc),
     });
 }
 
-export function useMarkSaleCropPaid() {
+export function useCreateSaleGeneral() {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: ({ category, id, payload }: { category: Exclude<SaleCategory, "latex">; id: string; payload: SaleMarkPaidRequest }) =>
-            markSaleCropPaid(category, id, payload),
+        mutationFn: (payload: SaleGeneralRequest) => createSaleGeneral(payload),
+        onSuccess: () => invalidateSales(qc),
+    });
+}
+
+export function useSaleGeneralOptions() {
+    return useQuery({ queryKey: ["sale-general-options"], queryFn: getSaleGeneralOptions, staleTime: Infinity });
+}
+
+// ─── Sales: any type ────────────────────────────────────────────────────────
+
+export function useSaleDetail(type: SaleType | null, id: string | null) {
+    return useQuery({
+        queryKey: ["sale-detail", type, id],
+        queryFn: () => getSale(type as SaleType, id as string),
+        enabled: type !== null && id !== null,
+    });
+}
+
+export function useUpdateSale() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ type, id, payload }: { type: SaleType; id: string; payload: SaleUpdatePayload }) => updateSale(type, id, payload),
+        onSuccess: () => invalidateSales(qc),
+    });
+}
+
+export function useDeleteSale() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ type, id }: { type: SaleType; id: string }) => deleteSale(type, id),
+        onSuccess: () => invalidateSales(qc),
+    });
+}
+
+export function useMarkSalePaid() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ type, id, payload }: { type: SaleType; id: string; payload: SaleMarkPaidRequest }) => markSalePaid(type, id, payload),
+        onSuccess: () => invalidateSales(qc),
+    });
+}
+
+export function useUndoSalePayment() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ type, id }: { type: SaleType; id: string }) => undoSalePayment(type, id),
         onSuccess: () => invalidateSales(qc),
     });
 }
@@ -98,9 +136,20 @@ export function useSalesTrend(scale: TrendScale) {
     });
 }
 
+export function useReceivables(asOf?: string) {
+    return useQuery({
+        queryKey: ["receivables", asOf ?? null],
+        queryFn: () => getReceivables(asOf),
+    });
+}
+
 // ─── Expenses ───────────────────────────────────────────────────────────────
 
-export function useExpenses(params?: { type?: string; isPaid?: boolean; from?: string; to?: string; page?: number; size?: number }) {
+export function useExpenseCategories() {
+    return useQuery({ queryKey: ["expense-categories"], queryFn: getExpenseCategories, staleTime: Infinity });
+}
+
+export function useExpenses(params?: { type?: string; payee?: string; isPaid?: boolean; from?: string; to?: string; page?: number; size?: number }) {
     return useQuery({
         queryKey: ["expenses", params],
         queryFn: () => getExpenses(params),
@@ -136,6 +185,21 @@ export function useMarkExpensePaid() {
     return useMutation({
         mutationFn: ({ id, payload }: { id: string; payload: ExpenseMarkPaidRequest }) => markExpensePaid(id, payload),
         onSuccess: () => invalidateExpenses(qc),
+    });
+}
+
+export function useUndoExpensePayment() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => undoExpensePayment(id),
+        onSuccess: () => invalidateExpenses(qc),
+    });
+}
+
+export function usePayables(asOf?: string) {
+    return useQuery({
+        queryKey: ["payables", asOf ?? null],
+        queryFn: () => getPayables(asOf),
     });
 }
 
